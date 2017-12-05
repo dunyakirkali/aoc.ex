@@ -89,7 +89,7 @@ module Day3
       end
       if sum > 277678
         puts sum
-        exit
+        return
       end
       sum
     end

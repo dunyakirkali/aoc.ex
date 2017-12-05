@@ -42,7 +42,7 @@ describe "Day 3" do
       expect(solver.run(9)).to eq(25)
     end
 
-    it "nth solution" do
+    xit "nth solution" do
       expect(solver.run(277678)).to eq(25)
     end
   end
