@@ -5,31 +5,11 @@ class Day3
 
   def self.run(destination)
     @destination = destination
-    calculate_board_size()
-    arr = (1..@board_size).step(2).to_a
-
-    arr.each_with_index do |ss, index|
-      if ss == 1
-        @mat[1] = [0, 0]
-      else
-        increment_previous
-        fill_mat_for_layer(ss)
-        clear_previous(ss)
-      end
-    end
-
+    calculate_board_size
+    return 0 if @board_size == 1
+    @mat[(@board_size - 2) * (@board_size - 2)] = [@board_size - 2 - 1, @board_size - 2 - 1]
+    fill_mat_for_layer(@board_size - 2)
     (center.first - @mat[destination].first).abs + (center.last - @mat[destination].last).abs
-  end
-
-  def self.clear_previous(ss)
-    @mat = @mat.to_a.last(ss * ss).to_h
-  end
-
-  def self.increment_previous
-    @mat.each do |key, value|
-      value[0] = value[0] + 1
-      value[1] = value[1] + 1
-    end
   end
 
   def self.center
@@ -47,33 +27,33 @@ class Day3
 
   def self.fill_mat_for_layer(ss)
     loop do
-      curr = @mat[@mat.count]
-      break if curr[0] == ss - 1
-      @mat[@mat.count + 1] = [@mat[@mat.count][0] + 1, @mat[@mat.count][1]]
+      curr = @mat[ss * ss + @mat.count - 1]
+      break if curr[0] == ss + 2 - 1
+      @mat[ss * ss + @mat.count] = [curr[0] + 1, curr[1]]
     end
 
     loop do
-      curr = @mat[@mat.count]
+      curr = @mat[ss * ss + @mat.count - 1]
       break if curr[1] == 0
-      @mat[@mat.count + 1] = [@mat[@mat.count][0], @mat[@mat.count][1] - 1]
+      @mat[ss * ss + @mat.count] = [curr[0], curr[1] - 1]
     end
 
     loop do
-      curr = @mat[@mat.count]
+      curr = @mat[ss * ss + @mat.count - 1]
       break if curr[0] == 0
-      @mat[@mat.count + 1] = [@mat[@mat.count][0] - 1, @mat[@mat.count][1]]
+      @mat[ss * ss + @mat.count] = [curr[0] - 1, curr[1]]
     end
 
     loop do
-      curr = @mat[@mat.count]
-      break if curr[1] == ss - 1
-      @mat[@mat.count + 1] = [@mat[@mat.count][0], @mat[@mat.count][1] + 1]
+      curr = @mat[ss * ss + @mat.count - 1]
+      break if curr[1] == ss + 2 - 1
+      @mat[ss * ss + @mat.count] = [curr[0], curr[1] + 1]
     end
 
     loop do
-      curr = @mat[@mat.count]
-      break if curr[0] == ss - 1
-      @mat[@mat.count + 1] = [@mat[@mat.count][0] + 1, @mat[@mat.count][1]]
+      curr = @mat[ss * ss + @mat.count - 1]
+      break if curr[0] == ss + 2 - 1
+      @mat[ss * ss + @mat.count] = [curr[0] + 1, curr[1]]
     end
   end
 end

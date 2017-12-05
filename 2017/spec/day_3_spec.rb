@@ -23,7 +23,7 @@ describe "Day 3" do
     end
 
     it "D solution" do
-      expect(day_3.run(277678)).to eq(-1)
+      expect(day_3.run(277678)).to eq(475)
     end
   end
 end
