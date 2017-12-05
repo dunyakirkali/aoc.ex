@@ -1,9 +1,9 @@
 require "spec_helper"
 
-require_relative "../day_3"
+require_relative "../../day3/part_1.rb"
 
 describe "Day 3" do
-  let(:day_3) { Day3 }
+  let(:day_3) { Day3::Part1 }
 
   describe "puzzle" do
     it "1st solution" do
