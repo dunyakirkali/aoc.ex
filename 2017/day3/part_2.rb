@@ -87,6 +87,10 @@ module Day3
           sum += item.last[2]
         end
       end
+      if sum > 277678
+        puts sum
+        exit
+      end
       sum
     end
   end
