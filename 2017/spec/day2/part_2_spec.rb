@@ -1,9 +1,9 @@
 require "spec_helper"
 
-require_relative "../day_2_2"
+require_relative "../../day2/part_2"
 
 describe "Day 2 2" do
-  let(:day_2_2) { Day2_2 }
+  let(:solver) { Day2::Part2 }
 
   describe "puzzle" do
     it "1st solution" do
@@ -12,7 +12,7 @@ describe "Day 2 2" do
         [9, 4, 7, 3],
         [3, 8, 6, 5],
       ]
-      expect(day_2_2.run(m)).to eq(9)
+      expect(solver.run(m)).to eq(9)
     end
 
     it "D solution" do
@@ -35,7 +35,7 @@ describe "Day 2 2" do
         [214,221,265,766,959,1038,226,1188,1122,117,458,1105,1285,1017,274,281]
       ]
 
-      expect(day_2_2.run(m)).to eq(244)
+      expect(solver.run(m)).to eq(244)
     end
   end
 end
