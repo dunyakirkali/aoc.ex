@@ -18,7 +18,6 @@ module Day10
       end
       input = input.rotate(-1 * @total_dist)
       input.each_slice(16).map { |el| el.inject(:^) }.map { |y| y.to_s(16).rjust(2, '0') }.join
-
     end
   end
 end
