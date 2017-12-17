@@ -11,7 +11,7 @@ describe "Day 17" do
     end
 
     it "D solution" do
-      expect(solver.run(369)).to eq(-1)
+      expect(solver.run(369)).to eq(1547)
     end
   end
 end
