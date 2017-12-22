@@ -30,26 +30,20 @@ module Day19
     def self.define_direction
       if @direction.first == 0
         if @matrix.row(@position.last).to_a[@position.first + 1] == " "
-          puts "W"
           @direction = [-1, 0]
         else
-          puts "E"
           @direction = [1, 0]
         end
       else
-        puts @matrix.row(@position.last + 1).to_a[@position.first]
         if @matrix.row(@position.last + 1).to_a[@position.first] == " "
-          puts "S"
           @direction = [0, -1]
         else
-          puts "N"
           @direction = [0, 1]
         end
       end
     end
 
     def self.walk(val)
-      puts "val => #{val}"
       if val == "+"
         define_direction
       end

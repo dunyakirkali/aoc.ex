@@ -13,7 +13,7 @@ describe "Day 19" do
 
     it "D solution" do
       lines = File.readlines('spec/day19/map_2.txt')
-      expect(solver.run(lines)).to eq(-1)
+      expect(solver.run(lines)).to eq(17872)
     end
   end
 end
