@@ -13,8 +13,6 @@ module Day22
       # puts @matrix.to_a.map(&:inspect)
       # puts 's---------'
       iterations.times do |i|
-        print "#{i}\r" if i % 1000 == 0
-        $stdout.flush
         burst
         # puts @matrix.to_a.map(&:inspect)
         # puts 'm---------'
