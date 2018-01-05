@@ -28,7 +28,7 @@ describe "Day 22" do
 
     it "D solution" do
       lines = File.readlines('spec/day22/pattern_2')
-      expect(solver.run(lines, 10_000_000)).to eq(-1)
+      expect(solver.run(lines, 10_000_000)).to eq(2512225)
     end
   end
 end
