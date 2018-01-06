@@ -1008,7 +1008,6 @@ double_letters = "abcdefghijklmnopqrstuvwxyz"
   |> Enum.map(fn(char) ->
     char <> char
   end)
-  |> IO.inspect
 
 input
   |> Enum.filter(fn(item) ->
