@@ -990,8 +990,7 @@ input
   |> String.trim
   |> String.split
   |> Enum.map(&String.to_integer/1)
-  |> List.duplicate(500)
-  |> List.flatten
+  |> Stream.cycle
   |> Enum.reduce_while({0, [0]}, fn(x, acc) ->
     {sum, visited} = acc
     visit = sum + x
