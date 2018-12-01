@@ -990,11 +990,6 @@ input = """
 input
   |> String.trim
   |> String.split
-  |> Enum.map(fn(x) ->
-    {intVal, ""} = Integer.parse(x)
-    intVal
-  end)
-  |> Enum.reduce(0, fn(x, acc) ->
-    acc + x
-  end)
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.sum
   |> IO.puts
