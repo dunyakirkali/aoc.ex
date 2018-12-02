@@ -8,11 +8,10 @@ defmodule Frequency do
   def visited(input) do
     input
       |> Stream.cycle
-      |> Enum.reduce_while({0, [0]}, fn(x, {sum, visited}) ->
+      |> Enum.reduce_while({0, MapSet.new([0])}, fn(x, {sum, visited}) ->
         visit = sum + x
-        if Enum.member?(visited, visit), do: {:halt, {visit, visited}}, else: {:cont, {visit, [visit | visited]}}
+        if Enum.member?(visited, visit), do: {:halt, visit}, else: {:cont, {visit, MapSet.put(visited, visit)}}
       end)
-      |> elem(0)
   end
 end
 
