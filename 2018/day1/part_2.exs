@@ -6,16 +6,11 @@ input = 'input.txt'
 
 defmodule Frequency do
   def visited(input) do
-    input      
+    input
       |> Stream.cycle
-      |> Enum.reduce_while({0, [0]}, fn(x, acc) ->
-        {sum, visited} = acc
+      |> Enum.reduce_while({0, [0]}, fn(x, {sum, visited}) ->
         visit = sum + x
-        if Enum.member?(visited, visit) do
-          {:halt, {visit, visited}}
-        else
-          {:cont, {visit, visited ++ [visit]}}
-        end
+        if Enum.member?(visited, visit), do: {:halt, {visit, visited}}, else: {:cont, {visit, visited ++ [visit]}}
       end)
       |> elem(0)
   end
