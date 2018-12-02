@@ -8,7 +8,7 @@ defmodule Checksum do
 
   def calculate(input) do
     counts = input
-      |> letter_frequencies_of_length(@lengths)
+      |> letter_frequencies_of_length
       |> Enum.reduce([], fn x, acc ->
         list = x
           |> Map.new
@@ -21,13 +21,13 @@ defmodule Checksum do
     Enum.count(counts, &(&1 == 2)) * Enum.count(counts, &(&1 == 3))
   end
 
-  defp letter_frequencies_of_length(input, lengths) do
+  defp letter_frequencies_of_length(input) do
     input
       |> Enum.map(&String.graphemes/1)
       |> Enum.map(fn(list) ->
         Enum.reduce(list, %{}, fn x, acc -> Map.update(acc, x, 1, &(&1 + 1)) end)
           |> Enum.filter(fn {_, val} ->
-            Enum.member?(lengths, val)
+            Enum.member?(@lengths, val)
           end)
       end)
   end
