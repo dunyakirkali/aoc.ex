@@ -11,11 +11,17 @@ defmodule Checksum do
     for row <- list,
         col <- list do
       if length(row -- col) == 1 do
-        res = row -- col
-        IO.inspect "#{row} #{col}"
-        IO.inspect "#{row -- res}"
-        # System.halt(0)
-        # FIXME: (dunyakirkali) Returns multiple candidates since we don't look at the order of characters
+        diff = row
+        |> Enum.with_index
+        |> Enum.reduce(0, fn {x, index}, acc ->
+          if x == Enum.at(col, index), do: acc, else: acc + 1
+        end)
+
+        if diff == 1 do
+          res = col -- row
+          IO.inspect "#{col -- res}"
+          System.halt(0)
+        end
       end
     end
   end
