@@ -10,7 +10,7 @@ defmodule Frequency do
       |> Stream.cycle
       |> Enum.reduce_while({0, [0]}, fn(x, {sum, visited}) ->
         visit = sum + x
-        if Enum.member?(visited, visit), do: {:halt, {visit, visited}}, else: {:cont, {visit, visited ++ [visit]}}
+        if Enum.member?(visited, visit), do: {:halt, {visit, visited}}, else: {:cont, {visit, [visit | visited]}}
       end)
       |> elem(0)
   end
