@@ -3,11 +3,12 @@ defmodule Day3Test do
   doctest Day3
 
   test "Part 1" do
-    input = 'input.txt'
-      |> File.read!
-      |> String.trim
+    input =
+      'input.txt'
+      |> File.read!()
+      |> String.trim()
       |> String.split("\n")
 
-    assert length(Day3.overlapping(input)) == 118223
+    assert length(Day3.overlapping(input)) == 118_223
   end
 end

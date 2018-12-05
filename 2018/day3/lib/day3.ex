@@ -14,7 +14,7 @@ defmodule Day3 do
   """
   def parse_claim(string) do
     Regex.named_captures(~r/#(?<a>\d+) @ (?<b>\d+),(?<c>\d+): (?<d>\d+)x(?<e>\d+)/, string)
-    |> Map.values
+    |> Map.values()
     |> Enum.map(&String.to_integer/1)
   end
 

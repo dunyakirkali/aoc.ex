@@ -1,12 +1,14 @@
 defmodule Day5 do
   def part2(polymer) do
     Enum.reduce(?a..?z, [], fn x, acc ->
-      len = clean(polymer, List.to_string([x]))
-      |> react
-      |> String.length
+      len =
+        clean(polymer, List.to_string([x]))
+        |> react
+        |> String.length()
+
       [len | acc]
     end)
-    |> Enum.min
+    |> Enum.min()
   end
 
   def clean(polymer, char) do
@@ -14,7 +16,8 @@ defmodule Day5 do
   end
 
   def react(polymer) do
-    poly_list = polymer |> String.trim |> String.split("")
+    poly_list = polymer |> String.trim() |> String.split("")
+
     Enum.reduce_while(0..100_000_000_000_000, poly_list, fn _, acc ->
       if acc == iterate(acc) do
         {:halt, acc}

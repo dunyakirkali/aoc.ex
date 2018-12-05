@@ -3,13 +3,13 @@ defmodule Day6Test do
   doctest Day6
 
   test "part_1" do
-    input = 'input.txt' |> File.read!
+    input = 'input.txt' |> File.read!()
 
     assert Day6.part_1(input) == :world
   end
 
   test "part_2" do
-    input = 'input.txt' |> File.read!
+    input = 'input.txt' |> File.read!()
 
     assert Day6.part_2(input) == :world
   end

@@ -23,21 +23,21 @@ defmodule Day5Test do
   end
 
   test "String.length" do
-    input = 'input.txt' |> File.read!
+    input = 'input.txt' |> File.read!()
 
-    assert input |> String.trim |> String.length == 50000
+    assert input |> String.trim() |> String.length() == 50000
   end
 
   test "String.split" do
-    input = 'input.txt' |> File.read!
+    input = 'input.txt' |> File.read!()
 
-    assert input |> String.trim |> String.split("", trim: true) |> length == 50000
+    assert input |> String.trim() |> String.split("", trim: true) |> length == 50000
   end
 
   test "Part 1" do
-    input = 'input.txt' |> File.read!
+    input = 'input.txt' |> File.read!()
 
-    assert input |> Day5.react |> String.length == 9390
+    assert input |> Day5.react() |> String.length() == 9390
   end
 
   test "clean 1" do
@@ -62,8 +62,8 @@ defmodule Day5Test do
 
   @tag timeout: 60_000_000
   test "Part 2" do
-    input = 'input.txt' |> File.read!
+    input = 'input.txt' |> File.read!()
 
-    assert input |> Day5.part2 == 5898
+    assert input |> Day5.part2() == 5898
   end
 end
