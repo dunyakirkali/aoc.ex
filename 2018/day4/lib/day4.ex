@@ -3,9 +3,6 @@ defmodule Day4 do
   Documentation for Day4.
   """
 
-  @doc """
-  Converts date to minute
-  """
   def parse_date(string) do
     captures = Regex.named_captures(~r/\[(?<year>\d+)-(?<month>\d+)-(?<day>\d+) (?<hour>\d+):(?<minute>\d+)\].*/, string)
     that_day = elem(NaiveDateTime.new(
@@ -19,19 +16,21 @@ defmodule Day4 do
       new_day = NaiveDateTime.add(that_day, 86_400, :second)
       {"#{new_day.month}-#{new_day.day}", 0}
     else
-      {"#{that_day.month}-#{that_day.day}", String.to_integer(captures["minute"])}
+      {"#{that_day.month}-#{that_day.day}", that_day.minute}
     end
   end
 
-  @doc """
-  Get guard with most sleep
-  """
   def guard_with_most_sleep(hsh) do
     hsh
-    |> Enum.map(fn {_, v} ->
-      {elem(v, 0), length(elem(v, 1))}
+    |> Enum.sort_by(fn {_, v} ->
+      length(elem(v, 1))
     end)
-    |> Enum.max_by(fn {_, v} ->
+    |> Enum.reduce(%{}, fn {day, data}, acc ->
+      guard_no = elem(data, 0)
+      sleeps = length(elem(data, 1))
+      Map.update(acc, guard_no, 0, &(&1 + sleeps))
+    end)
+    |> Enum.max_by(fn {k, v} ->
       v
     end)
     |> elem(0)
@@ -56,115 +55,79 @@ defmodule Day4 do
     |> elem(0)
   end
 
-  @doc """
-  Transcode
-  """
   def transcode(input) do
-    sorted_data = input
+    input
     |> String.trim
     |> String.split("\n")
-    |> Enum.sort_by(fn x ->
-      captures = Regex.named_captures(~r/\[(?<date>.*)\].*/, x)
-      captures["date"]
-    end)
-
-    sorted_data
+    |> Enum.sort
     |> Enum.reduce(%{}, fn x, acc ->
-      date = parse_date(x)
+      date = elem(parse_date(x), 0)
+      minute = elem(parse_date(x), 1)
+
       cond do
         Regex.match?(~r/begins shift/, x) ->
 
           captures = Regex.named_captures(~r/.*Guard #(?<no>\d+) begins shift/, x)
+          guard_no = String.to_integer(captures["no"])
 
-          Map.put(acc, elem(date, 0), {String.to_integer(captures["no"]), []})
+          Map.put(acc, date, {guard_no, []})
 
         Regex.match?(~r/falls asleep/, x) ->
 
-          minute = elem(date, 1)
-          old_data = Map.get(acc, elem(date, 0))
-          new_list = elem(old_data, 1) ++ [minute]
-          updated_date = {elem(old_data, 0), new_list}
-
-          Map.put(acc, elem(date, 0), updated_date)
+          Map.update!(acc, date, fn {guard_no, minutes} ->
+            {guard_no, [minute | minutes] |> Enum.sort}
+          end)
 
         true ->
 
-          minute = elem(date, 1)
-          old_data = Map.get(acc, elem(date, 0))
+          old_data = Map.get(acc, date)
           last_minute = List.last(elem(old_data, 1))
-          Enum.reduce((last_minute + 1)..(minute - 1), acc, fn x, acc ->
-            old_data = Map.get(acc, elem(date, 0))
-            new_list = elem(old_data, 1) ++ [x]
-            updated_date = {elem(old_data, 0), new_list}
-
-            Map.put(acc, elem(date, 0), updated_date)
+          range = (last_minute + 1)..(minute - 1)
+          Enum.reduce(range, acc, fn x, acc ->
+            Map.update!(acc, date, fn {guard_no, minutes} ->
+              {guard_no, [x | minutes] |> Enum.sort}
+            end)
           end)
       end
     end)
   end
 
-  @doc """
-  Strategy 1
-  """
   def strategy_1(hsh) do
-    guard = guard_with_most_sleep(hsh) |> IO.inspect(label: "guard")
-    fav = favorite_time(hsh, guard) |> IO.inspect(label: "fav")
+    guard = guard_with_most_sleep(hsh)
+    fav = favorite_time(hsh, guard)
     guard * fav
   end
 
-  @doc """
-  Strategy 2
-  """
   def strategy_2(hsh) do
     {guard, fav} = most_frequent(hsh)
     guard * fav
   end
 
   def most_frequent(hsh) do
-    guards_per_minute = hsh
-    |> Enum.reduce(%{}, fn {k, v}, acc ->
-      guard = elem(v, 0)
-      Enum.reduce(0..59, acc, fn i, acc ->
-        list = elem(v, 1)
-        if Enum.member?(list, i) do
-          if Map.get(acc, i) == nil do
-            Map.put(acc, i, [guard])
-          else
-            added = Map.get(acc, i) ++ [guard]
-            Map.put(acc, i, added)
-          end
-        else
-          acc
-        end
-      end)
+    {guard_no, {minute, count}} = hsh
+    |> Enum.reduce(%{}, fn {day, {guard_no, list}}, acc ->
+      Map.update(acc, guard_no, [], &(&1 ++ list))
     end)
-    |> Enum.max_by(fn {k, v} ->
-      length(v)
+    |> Enum.map(fn {guard_no, list} ->
+      freqs = Enum.reduce(list, %{}, fn x, c -> Map.update(c, x, 1, &(&1 + 1)) end)
+      if map_size(freqs) > 0 do
+        {guard_no, Enum.max_by(freqs, fn {k, v} -> v end)}
+      else
+        {guard_no, {0, 0}}
+      end
+    end)
+    |> Enum.max_by(fn {guard_no, {minute, count}} ->
+      count
     end)
 
-    guard = elem(guards_per_minute, 1)
-    |> Enum.reduce(%{}, fn x, acc -> Map.update(acc, x, 1, &(&1 + 1)) end)
-    |> Enum.max_by(fn {k, v} ->
-      k
-    end)
-    |> elem(0)
-    |> IO.inspect(label: "Guard")
-
-    guards_per_minute |> IO.inspect(label: "Minute")
-    {guard, elem(guards_per_minute, 0)}
+    {guard_no, minute}
   end
 
-  @doc """
-  Part 1
-  """
   def part_1(input) do
     transcode(input)
     |> strategy_1
   end
 
-  @doc """
-  Part 2
-  """
   def part_2(input) do
     transcode(input)
     |> strategy_2
