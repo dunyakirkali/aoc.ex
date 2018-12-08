@@ -1,6 +1,59 @@
 defmodule Day7 do
   import NimbleParsec
 
+  def duration(input, worker_count) do
+    tree =
+      input
+      |> String.trim()
+      |> String.split("\n")
+      |> Enum.map(&parse/1)
+      |> treeify
+
+    roots = find_roots(tree)
+    visited = []
+    time = 0
+    workers = 0..(worker_count - 1) |> Enum.map(fn x -> %{char: nil, ticks: nil} end)
+    1..999_999
+    |> Enum.to_list()
+    |> Enum.reduce_while([visited, time, workers, roots], fn _, [visited, time, workers, options] ->
+      if length(options) == 0 do
+        {:halt, [visited, time, workers, options]}
+      else
+        [new_workers, visit, remaining_options] = assign_to(tree, workers, options, visited)
+        {:cont, [[visit | visited], time + 1, new_workers, remaining_options]}
+      end
+    end)
+  end
+
+  def assign_to(tree, workers, options, visited) do
+    filtered_options =
+      options
+      |> Enum.filter(fn option ->
+        get_preq(tree, option)
+        |> Enum.all?(fn preq ->
+          Enum.member?(visited, preq)
+        end)
+      end)
+      |> Enum.sort()
+      |> IO.inspect
+    visit = List.first(filtered_options)
+
+    [workers, visit, List.delete(options, visit)]
+  end
+
+  @doc """
+      iex> Day7.seconds("A")
+      1
+
+      iex> Day7.seconds("Z")
+      26
+  """
+  def seconds(letter) do
+    to_char_list(letter)
+    |> List.first
+    |> Kernel.-(64)
+  end
+
   def path(input) do
     tree =
       input

@@ -16,6 +16,20 @@ defmodule Day7Test do
     assert Day7.path(input) == "CABDFE"
   end
 
+  test "example 2" do
+    input = """
+    Step C must be finished before step A can begin.
+    Step C must be finished before step F can begin.
+    Step A must be finished before step B can begin.
+    Step A must be finished before step D can begin.
+    Step B must be finished before step E can begin.
+    Step D must be finished before step E can begin.
+    Step F must be finished before step E can begin.
+    """
+
+    assert Day7.duration(input, 2) == 15
+  end
+
   test "part 1" do
     input =
       'input.txt'
