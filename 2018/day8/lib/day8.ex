@@ -4,95 +4,99 @@ defmodule Day8 do
   """
 
   @doc """
-      # iex> Day8.sum_metas([0, 0])
-      # 0
-      #
-      # iex> Day8.sum_metas([0, 1, 12])
-      # 12
-      #
-      # iex> Day8.sum_metas([1, 1, 0, 1, 2, 12])
-      # 14
-      #
-      # iex> Day8.sum_metas([2, 1, 0, 0, 0, 0, 12])
-      # 12
-
-      iex> Day8.sum_metas([2, 3, 0, 3, 10, 11, 12, 1, 1, 0, 1, 99, 2, 1, 1, 2])
-      138
+      iex> Day8.part_1("input.txt")
+      42798
   """
-  def sum_metas(list) do
-    list
-    |> Enum.reduce({[], [], 0, :children_count}, fn x, {children, metas, sum, state} ->
-      children |> IO.inspect(label: "Children")
-      metas |> IO.inspect(label: "Metas")
-      sum |> IO.inspect(label: "Sum")
-      state |> IO.inspect(label: "State")
+  def part_1(filename) do
+    {root, _} =
+      filename
+      |> File.read!()
+      |> String.split([" ", "\n"], trim: true)
+      |> Enum.map(&String.to_integer/1)
+      |> build_tree(0)
 
-      IO.puts("---- #{x} ----")
-
-      case state do
-        :children_count ->
-          {[x | children], metas, sum, :metas}
-        :metas ->
-          cc = List.first(children) |> IO.inspect(label: "children count")
-
-          if cc > 0 do
-            {children, [x | metas], sum, :children_count}
-          else
-            {children, [x | metas], sum, :sum}
-          end
-        :sum ->
-          IO.puts("------D-----------")
-          cc = List.first(children) |> IO.inspect(label: "children count")
-          mc = List.first(metas) |> IO.inspect(label: "meta  count")
-
-          if mc > 1 do
-            {children, List.replace_at(metas, 0, mc - 1), sum + x, :sum}
-          else
-            if cc > 1 do
-              {List.delete_at(children, 0), List.delete_at(metas, 0), sum + x, :children_count}
-            else
-              {List.delete_at(children, 0), List.delete_at(metas, 0), sum + x, :metas}
-            end
-          end
-      end
-    end)
-    |> elem(2)
+    root
+    |> count_meta()
+    |> IO.inspect
   end
 
-  # @doc """
-  #     iex> Day8.parse_node([])
-  #     []
-  #
-  #     # iex> Day8.parse_node([0, 0])
-  #     # %{metadata: [], children: []}
-  #     #
-  #     # iex> Day8.parse_node([0, 1, 12])
-  #     # %{metadata: [12], children: []}
-  #
-  #     # iex> Day8.parse_node([1, 1, 0, 0, 12])
-  #     # %{metadata: [12], children: [%{metadata: [], children: []}]}
-  #
-  #     iex> Day8.parse_node([2, 1, 0, 0, 0, 0, 12])
-  #     [%{metadata: [12], children: [%{metadata: [], children: []}, %{metadata: [], children: []}]}]
-  #
-  #     # iex> Day8.parse_node([1, 0, 0, 0])
-  #     # %{metadata: [], children: [%{metadata: [], children: []}]}
-  #     #
-  #     # iex> Day8.parse_node([0, 3, 10, 11, 12])
-  #     # %{metadata: [10, 11, 12], children: []}
-  #     #
-  #     # iex> Day8.parse_node([1, 3, 0, 1, 1, 10, 11, 12])
-  #     # %{metadata: [10, 11, 12], children: [%{metadata: [1], children: []}]}
-  # """
-  # def parse_node(list) when length(list) == 0, do: []
-  # def parse_node([children_count | tail]) do
-  #   IO.puts("parse_node")
-  #
-  #   children_count |> IO.inspect(label: "child #")
-  #   [head | rest] = tail
-  #   children = Enum.take(rest, length(rest) - head) |> IO.inspect(label: "remainder")
-  #   metas = Enum.take(rest, -1 * head) |> IO.inspect(label: "metas")
-  #
-  #   %{children: parse_node(children), metadata: metas}
-  # end
+  @doc """
+      iex> Day8.part_2("input.txt")
+      23798
+  """
+  def part_2(filename) do
+    {root, _} = filename
+    |> File.read!()
+    |> String.split([" ", "\n"], trim: true)
+    |> Enum.map(&String.to_integer/1)
+    |> build_tree(0)
+
+    root
+    |> count_meta_p2()
+  end
+
+  def count_meta_p2({_, [], meta}) do
+      Enum.sum(meta)
+  end
+
+  def count_meta_p2({_, children, meta}) do
+      Enum.map(meta, &calc_node_value(&1, children))
+      |> Enum.sum()
+  end
+
+  def calc_node_value(index, children) do
+      case Enum.at(children, index - 1) do
+      nil -> 0
+      x -> count_meta_p2(x)
+      end
+  end
+
+  def count_meta({_, children, meta}) do
+    Enum.sum(Enum.map(children, &count_meta/1)) + Enum.sum(meta)
+  end
+
+  def build_tree([num_children, 0 | tail], index) do
+    # build children
+    # collect children
+    {new_list, new_nodes, _} =
+      Enum.reduce(0..(num_children - 1), {tail, [], index}, fn _, {list, siblings, i} ->
+        {new_node, l} = build_tree(list, i + 1)
+        {l, [new_node | siblings], i + 1}
+      end)
+
+    {{index, Enum.reverse(new_nodes), []}, new_list}
+  end
+
+  def build_tree([0, num_meta | tail], index) do
+    # collect meta
+
+    {new_list, meta_entries} = collect_meta(tail, num_meta)
+
+    {{index, [], meta_entries}, new_list}
+  end
+
+  def build_tree([num_children, num_meta | tail], index) do
+    # build children
+    # collect children
+    # collect meta
+    {new_list, new_nodes, _} =
+      Enum.reduce(0..(num_children - 1), {tail, [], index}, fn _, {list, siblings, i} ->
+        {new_node, l} = build_tree(list, i + 1)
+        {l, [new_node | siblings], i + 1}
+      end)
+
+    {final_list, meta_entries} = collect_meta(new_list, num_meta)
+
+    {{index, Enum.reverse(new_nodes), meta_entries}, final_list}
+  end
+
+  def collect_meta(list, num_meta, meta_so_far \\ [])
+
+  def collect_meta(list, 0, meta_so_far) do
+      {list, Enum.reverse(meta_so_far)}
+  end
+
+  def collect_meta([head | tail], num_meta, meta_so_far) do
+      collect_meta(tail, num_meta - 1, [head | meta_so_far])
+  end
 end
