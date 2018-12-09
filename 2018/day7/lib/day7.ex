@@ -8,21 +8,7 @@ defmodule Day7 do
       |> String.split("\n")
       |> Enum.map(&parse/1)
       |> treeify
-
-    roots = find_roots(tree)
-    visited = []
-    time = 0
-    workers = 0..(worker_count - 1) |> Enum.map(fn x -> %{char: nil, ticks: nil} end)
-    1..999_999
-    |> Enum.to_list()
-    |> Enum.reduce_while([visited, time, workers, roots], fn _, [visited, time, workers, options] ->
-      if length(options) == 0 do
-        {:halt, [visited, time, workers, options]}
-      else
-        [new_workers, visit, remaining_options] = assign_to(tree, workers, options, visited)
-        {:cont, [[visit | visited], time + 1, new_workers, remaining_options]}
-      end
-    end)
+      |> IO.inspect(label: "tree")
   end
 
   def assign_to(tree, workers, options, visited) do
@@ -49,7 +35,7 @@ defmodule Day7 do
       26
   """
   def seconds(letter) do
-    to_char_list(letter)
+    Kernel.to_charlist(letter)
     |> List.first
     |> Kernel.-(64)
   end
@@ -67,8 +53,6 @@ defmodule Day7 do
     1..999_999
     |> Enum.to_list()
     |> Enum.reduce_while([[], roots], fn _, [acc, options] ->
-      last = List.first(acc)
-
       filtered_options =
         options
         |> Enum.filter(fn option ->
@@ -109,7 +93,7 @@ defmodule Day7 do
   """
   def get_preq(tree, item) do
     tree
-    |> Enum.filter(fn {from, to} ->
+    |> Enum.filter(fn {_, to} ->
       Enum.member?(to, item)
     end)
     |> Enum.map(fn hsh ->
