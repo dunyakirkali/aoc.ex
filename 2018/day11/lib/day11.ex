@@ -3,13 +3,13 @@ defmodule Day11 do
   Documentation for Day11.
   """
 
-  @doc """
-      iex> Day11.part_2(18)
-      %{coords: {90, 269}, power: 113}
-
-      # iex> Day11.part_2(42)
-      # %{coords: {232, 251}, power: 119}
-  """
+  # @doc """
+  #     iex> Day11.part_2(18)
+  #     %{coords: {90, 269}, power: 113}
+  #
+  #     # iex> Day11.part_2(42)
+  #     # %{coords: {232, 251}, power: 119}
+  # """
   def part_2(serial_number) do
     range = 1..300
     sizes = for x <- Enum.to_list(range), y <- Enum.to_list(range), do: %{x: x, y: y}
@@ -145,9 +145,7 @@ defmodule Day11 do
       3
   """
   def hundreds_digit(number) do
-    number
-    |> Integer.digits()
-    |> Enum.at(-3)
+    rem(Kernel.trunc(number / 100), 10)
   end
 
   @doc """
