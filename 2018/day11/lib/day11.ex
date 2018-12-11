@@ -4,6 +4,70 @@ defmodule Day11 do
   """
 
   @doc """
+      iex> Day11.part_2(18)
+      %{coords: {90, 269}, power: 113}
+
+      # iex> Day11.part_2(42)
+      # %{coords: {232, 251}, power: 119}
+  """
+  def part_2(serial_number) do
+    range = 1..300
+    sizes = for x <- Enum.to_list(range), y <- Enum.to_list(range), do: %{x: x, y: y}
+    result =
+      sizes
+      |> Enum.filter(fn size ->
+        size[:x] == size[:y]
+      end)
+      |> pmap(fn size ->
+        max = part_1(serial_number, size)
+        IO.puts("For #{size[:x]}x#{size[:y]} max is @#{elem(max[:coords], 0)}x#{elem(max[:coords], 1)} with power #{max[:power]}")
+        max
+      end)
+    |> Enum.sort_by(fn %{coords: _, power: power} ->
+      power
+    end)
+    |> List.last
+    |> IO.inspect
+  end
+
+  @doc """
+      iex> Day11.part_1(18)
+      %{coords: {33, 45}, power: 29}
+
+      iex> Day11.part_1(18, %{x: 16, y: 16})
+      %{coords: {90, 269}, power: 113}
+
+      iex> Day11.part_1(42, %{x: 12, y: 12})
+      %{coords: {232, 251}, power: 119}
+  """
+  def part_1(serial_number, size \\ %{x: 3, y: 3}) do
+    grid = for x <- Enum.to_list(1..(300 - size[:x] + 1)), y <- Enum.to_list(1..(300 - size[:y] + 1)), do: %{x: x, y: y}
+    result =
+      grid
+      |> Enum.map(fn cell ->
+        total_power =
+          cell
+          |> Day11.neighbours(size)
+          |> Enum.map(fn neighbour ->
+            Day11.adjusted_power_level(neighbour, serial_number)
+          end)
+          |> Enum.sum
+
+        %{coords: {cell[:x], cell[:y]}, power: total_power}
+      end)
+      |> Enum.sort_by(fn %{coords: _, power: power} ->
+        power
+      end)
+      |> List.last
+  end
+
+  def pmap(collection, func) do
+    collection
+    |> Enum.map(&(Task.async(fn -> func.(&1) end)))
+    |> Enum.map(&Task.await(&1, 60_000_000))
+  end
+
+  @doc """
       iex> Day11.rack_id(%{x: 3, y: 5})
       13
 
@@ -87,7 +151,7 @@ defmodule Day11 do
   end
 
   @doc """
-      iex> Day11.neighbours(%{x: 2, y: 2})
+      iex> Day11.neighbours(%{x: 1, y: 1})
       [
         %{x: 1, y: 1},
         %{x: 1, y: 2},
@@ -100,9 +164,9 @@ defmodule Day11 do
         %{x: 3, y: 3}
       ]
   """
-  def neighbours(cell) do
-    for x <- Enum.to_list((cell[:x] - 1)..(cell[:x] + 1)),
-        y <- Enum.to_list((cell[:y] - 1)..(cell[:y] + 1)),
+  def neighbours(cell, size \\ %{x: 3, y: 3}) do
+    for x <- Enum.to_list((cell[:x])..(cell[:x] + size[:x] - 1)),
+        y <- Enum.to_list((cell[:y])..(cell[:y] + size[:y] - 1)),
         do: %{x: x, y: y}
   end
 end
