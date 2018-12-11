@@ -6,7 +6,7 @@ defmodule Day11Test do
     assert Day11.part_1(4151) == %{coords: {20, 46}, power: 30}
   end
 
-  # test "Coordinate of the top-left fuel cell of any size square with the largest total power" do
-  #   assert Day11.part_2(4151) == %{coords: {231, 65}, power: 158}
-  # end
+  test "Coordinate of the top-left fuel cell of any size square with the largest total power" do
+    assert Day11.part_2(4151) == %{coords: {231, 65}, power: 158}
+  end
 end
