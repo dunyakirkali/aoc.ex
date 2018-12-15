@@ -1,0 +1,3 @@
+%{
+  "vivid": {:hex, :vivid, "0.4.3", "ea0abddb41a1ac778392c05f11c70118a5d36d71f0dee9e4b10bcb757a54f1c2", [:mix], [], "hexpm"},
+}
