@@ -1,298 +1,281 @@
 defmodule Day15 do
-  use Vivid
-  use Memoize
+  import Access, only: [key: 1]
 
-  @moduledoc """
-  Documentation for Day15.
-  """
+  defmodule Unit do
+    defstruct kind: nil, points: 200, power: 3, position: nil
+  end
 
-  @doc """
-  Executes a Round
-  """
-  def round(map) do
-    {map, iteration} =
-      0..100_000_000
-      |> Enum.reduce_while({map, 0}, fn _, {map, iteration} ->
-    
-        iteration = iteration + 1
-        IO.puts("Iteration: #{iteration}")
-    
-        map =
-          0..(elem(size(map), 1) - 1)
-          |> Enum.reduce(map, fn y, map ->
-            0..(elem(size(map), 0) - 1)
-            |> Enum.reduce(map, fn x, map ->
-              pos = {x, y}
-              char = map[pos]
-      
-              case char do
-                {"E", _} -> map |> move(pos) |> attack(pos)
-                {"G", _} -> map |> move(pos) |> attack(pos)
-                _ -> map
+  defmodule Game do
+    defstruct units: %{}, map: %{}, round: 0, end: false, elf_dead: false, all_or_lose: false
+  end
+  
+  def part_1(filename) do
+    game = filename |> File.read!() |> parse_game()
+    play!(game)
+  end
+  
+  def part_2(filename) do
+    game = filename |> File.read!() |> parse_game()
+    all_elfs_alive(game)
+  end
+
+  defp all_elfs_alive(game, power \\ 4) do
+    units =
+      Enum.map(game.units, fn {id, unit} ->
+        u =
+          if unit.kind == "E" do
+            %{unit | power: power}
+          else
+            unit
+          end
+
+        {id, u}
+      end)
+      |> Enum.into(%{})
+
+    elfs_game = %{game | units: units, all_or_lose: true}
+
+    case play!(elfs_game) do
+      {:error, :elf_dead} -> all_elfs_alive(game, power + 1)
+      result -> result
+    end
+  end
+
+  defp play!(%{all_or_lose: true, elf_dead: true}), do: {:error, :elf_dead}
+
+  defp play!(%{end: true} = game) do
+    forces = Enum.map(game.units, fn {_, u} -> u.points end) |> Enum.sum()
+    (game.round - 1) * forces
+  end
+
+  defp play!(game) do
+    print_game(game)
+
+    game = game.units |> Enum.sort_by(fn {_, u} -> u.position end) |> Enum.reduce(game, &turn/2)
+
+    game = update_in(game, [key(:round)], &(&1 + 1))
+
+    play!(game)
+  end
+
+  defp turn({id, _unit}, game) do
+    with unit when not is_nil(unit) <- Map.get(game.units, id),
+         targets when length(targets) > 0 <-
+           Enum.filter(game.units, fn {_tid, tunit} -> unit.kind != tunit.kind end) do
+      in_range = range_units(id, targets, game)
+
+      unit =
+        if not MapSet.member?(in_range, unit.position) do
+          move_unit(unit, in_range, game)
+        else
+          unit
+        end
+
+      # Add new unit, and attack!
+      game |> update_in([key(:units), id], fn _ -> unit end) |> attack!(unit, targets)
+    else
+      nil ->
+        # Already dead!
+        game
+
+      [] ->
+        # No targets! END!
+        update_in(game, [key(:end)], fn _ -> true end)
+    end
+  end
+
+  defp attack!(game, unit, targets) do
+    cross_attack = cross(unit.position)
+
+    opponents =
+      targets
+      |> Enum.filter(fn {_tid, tunit} -> tunit.position in cross_attack end)
+      |> Enum.sort_by(fn {_id, unit} -> {unit.points, unit.position} end)
+
+    case opponents do
+      [] ->
+        game
+
+      [{tid, tunit} | _] ->
+        new_points = tunit.points - unit.power
+
+        hit_unit(game, tid, tunit, new_points)
+    end
+  end
+
+  defp hit_unit(game, tid, tunit, new_points) when new_points <= 0 do
+    elf_dead = tunit.kind == "E"
+
+    # DEAD, remove unit
+    game
+    |> update_in([key(:units)], fn units -> Map.delete(units, tid) end)
+    |> update_in([key(:elf_dead)], fn d -> d or elf_dead end)
+  end
+
+  defp hit_unit(game, tid, _tunit, new_points) do
+    update_in(game, [key(:units), tid], fn tu -> %{tu | points: new_points} end)
+  end
+
+  defp move_unit(unit, in_range, game) do
+    pos = unit.position
+
+    occupied = MapSet.new(for {_, u} <- game.units, do: u.position)
+
+    distances =
+      calculate_distances([{pos, 0}], %{pos => {0, :self}}, MapSet.new(), occupied, game.map)
+
+    best_targets =
+      for {pos, {dist, _parent}} <- distances, MapSet.member?(in_range, pos), do: {dist, pos}
+
+    case Enum.sort(best_targets) do
+      [] ->
+        unit
+
+      [{_dist, pos} | _rest] ->
+        new_pos = find_best_pos(distances, pos)
+        %{unit | position: new_pos}
+    end
+  end
+
+  defp find_best_pos(distances, pos) do
+    case distances[pos] do
+      {d, parent} when d > 1 -> find_best_pos(distances, parent)
+      {_, _parent} -> pos
+    end
+  end
+
+  defp calculate_distances([], distances, _, _, _), do: distances
+
+  defp calculate_distances([{pos, dist} | rest], distances, seen, occupied, map) do
+    {distances, to_visit} =
+      Enum.reduce(cross(pos), {distances, rest}, fn tpos, {distances, to_visit} ->
+        cond do
+          # It's a wall!
+          Map.has_key?(map, tpos) ->
+            {distances, to_visit}
+
+          # It's another unit
+          MapSet.member?(occupied, tpos) ->
+            {distances, to_visit}
+
+          true ->
+            new_dist = dist + 1
+
+            # If not distance calculated or new distance is less, add it!
+            distances =
+              if not Map.has_key?(distances, tpos) or distances[tpos] > {new_dist, pos} do
+                # Add distance + parent, to backtrack the best path
+                Map.put(distances, tpos, {new_dist, pos})
+              else
+                distances
               end
-            end)
-          end)
-          |> remove_dead()
-    
-        if elf_count(map) == 0 or goblin_count(map) == 0 do
-          {:halt, {map, iteration}}
-        else
-          {:cont, {map, iteration}}
+
+            # If not visited and not pending to visit, let's visit it after!
+            to_visit =
+              if not MapSet.member?(seen, tpos) and
+                   Enum.all?(to_visit, fn {p, _d} -> p != tpos end) do
+                to_visit ++ [{tpos, new_dist}]
+              else
+                to_visit
+              end
+
+            {distances, to_visit}
         end
       end)
-    
-    score(map, iteration)
-    # |> IO.inspect
+
+    seen = MapSet.put(seen, pos)
+
+    calculate_distances(to_visit, distances, seen, occupied, map)
   end
 
-  def move(map, pos) do
-    if target(map, pos) do
-      map
-    else
-      enemies(map, pos)
-      |> IO.inspect(label: "e")
-      |> Enum.flat_map(fn {{x, y}, {char, hp}} ->
-        neighbours({x, y}, size(map))
+  defp range_units(id, targets, game) do
+    occupied = MapSet.new(for {tid, tunit} <- game.units, tid != id, do: tunit.position)
+
+    all_pos =
+      Enum.flat_map(targets, fn {_id, unit} ->
+        unit.position
+        |> cross
+        |> Enum.filter(fn pos ->
+          # Check walls and remove already occupied positions
+          not Map.has_key?(game.map, pos) and not MapSet.member?(occupied, pos)
+        end)
       end)
-      |> Enum.uniq
-      |> Enum.filter(fn {x, y} ->
-        reachable(map, pos, {x, y})
-      end)
-      |> IO.inspect
-      # # TODO
-      map
-    end
-  end
-  
-  def reachable(map, from, to) do
-    true
-  end
-  
-  @doc """
-      iex> Day15.enemies(%{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => {"G", 10}, {1, 1} => "."}, {0, 0})
-      %{{0, 1} => {"G", 10}}
-  """
-  def enemies(map, pos) do
-    case map[pos] do
-      {"E", _} ->
-        Enum.filter(map, fn {{x, y}, char} ->
-          if is_tuple(char) do
-            elem(char, 0) == "G"
-          else
-            false
-          end
-        end) |> Enum.into(%{})
-      {"G", _} ->
-        Enum.filter(map, fn {{x, y}, char} ->
-          if is_tuple(char) do
-            elem(char, 0) == "E"
-          else
-            false
-          end
-        end) |> Enum.into(%{})
-    end
+
+    MapSet.new(all_pos)
   end
 
-  @doc """
-      iex> Day15.remove_dead(%{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => {"G", 0}, {1, 1} => "."})
-      %{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => ".", {1, 1} => "."}
-  """
-  def remove_dead(map) do
-    map
-    |> Enum.map(fn {pos, data} ->
-      if is_tuple(data) do
-        if elem(data, 1) <= 0 do
-          {pos, "."}
-        else
-          {pos, data}
-        end
-      else
-        {pos, data}
-      end
+  defp cross({x, y}) do
+    [{x + 1, y}, {x, y + 1}, {x - 1, y}, {x, y - 1}]
+  end
+
+  defp parse_game(input) do
+    input
+    |> String.split("\n", strip: true)
+    |> Stream.with_index()
+    |> Enum.reduce(%Game{}, fn line, game ->
+      parse_line(line, game)
     end)
-    |> Enum.into(%{})
   end
-  
-  @doc """
-      iex> Day15.goblin_count(%{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => {"G", 200}, {1, 1} => "."})
-      1
-  """
-  def goblin_count(map) do
-    length(Enum.filter(map, fn {_, char} ->
-      if is_tuple(char) do
-        elem(char, 0) == "G"
-      else
-        false
-      end
-    end))
+
+  defp parse_line({line, x}, game) do
+    line
+    |> String.codepoints()
+    |> Stream.with_index()
+    |> Enum.reduce(game, fn {char, y}, game ->
+      parse_char(char, {x, y}, game)
+    end)
   end
-  
-  @doc """
-      iex> Day15.elf_count(%{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => {"G", 200}, {1, 1} => "."})
-      1
-  """
-  def elf_count(map) do
-    length(Enum.filter(map, fn {_, char} ->
-      if is_tuple(char) do
-        elem(char, 0) == "E"
-      else
-        false
-      end
-    end))
+
+  # Only count walls on the map!
+  defp parse_char("#", point, game), do: add_map(game, point, "#")
+  defp parse_char(".", _point, game), do: game
+
+  defp parse_char(u, point, game) when u in ["G", "E"] do
+    {game, _id} = add_unit(game, point, u)
+    game
+    # add_map(game, point, {:unit, id})
   end
-  
-  @doc """
-      iex> Day15.attack(%{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => {"G", 200}, {1, 1} => "."}, {0, 0})
-      %{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => {"G", 197}, {1, 1} => "."}
-  """
-  def attack(map, pos) do
-    target = target(map, pos)
-    if target do
-      Map.update!(map, target, fn {char, hp} ->
-        {char, hp - 3}
-      end)
-    else
-      map
-    end
+
+  defp add_map(game, point, u) do
+    update_in(game, [key(:map), point], fn _ -> u end)
   end
-  
-  @doc """
-      iex> Day15.target(%{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => {"G", 200}, {1, 1} => "."}, {0, 0})
-      {0, 1}
-      
-      iex> Day15.target(%{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => ".", {1, 1} => "."}, {0, 0})
-      nil
-  """
-  def target(map, pos) do
-    target = 
-      neighbours(pos, size(map))
-      |> Enum.map(fn pos ->
-        {pos, map[pos]}
-      end)
-      |> Enum.filter(fn {_, char} ->
-        if is_tuple(char) do
-          case map[pos] do
-            {"E", _} -> elem(char, 0) == "G"
-            {"G", _} -> elem(char, 0) == "E"
-          end
-        else
-          false
+
+  defp add_unit(game, point, u) do
+    unit = %Unit{kind: u, position: point}
+    id = generate_id()
+    game = update_in(game, [key(:units), id], fn _ -> unit end)
+    {game, id}
+  end
+
+  @chars "ABCDEFGHIJKLMNOPQRSTUVWXYZ" |> String.split("") |> Enum.filter(&(&1 != ""))
+  defp generate_id() do
+    1..10
+    |> Enum.reduce([], fn _i, acc ->
+      [Enum.random(@chars) | acc]
+    end)
+    |> Enum.join("")
+  end
+
+  # BEAUTY PRINT GAME!
+
+  defp print_game(%{map: map, units: units, round: round}) do
+    IO.puts("\n\nROUND: #{round}")
+    {mx, my} = Enum.max(Map.keys(map))
+
+    Enum.each(Range.new(0, mx), fn x ->
+      Enum.map(Range.new(0, my), fn y ->
+        p = {x, y}
+
+        u = Enum.find(units, fn {_u, unit} -> unit.position == p end)
+
+        cond do
+          not is_nil(map[p]) -> map[p]
+          not is_nil(u) -> elem(u, 1).kind
+          true -> "."
         end
       end)
-      |> List.first
-    
-    if target do
-      elem(target, 0)
-    else
-      nil
-    end
-  end
-  
-  @doc """
-      iex> Day15.score(%{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => {"G", 200}, {1, 1} => "."}, 2)
-      800
-  """
-  def score(map, iterations) do
-    iterations * sum_of_all_hp(map)
-  end
-  
-  @doc """
-      iex> Day15.sum_of_all_hp(%{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => {"G", 200}, {1, 1} => "."})
-      400
-      
-      iex> Day15.sum_of_all_hp(%{{0, 0} => {"E", 200}, {1, 0} => ".", {0, 1} => ".", {1, 1} => "."})
-      200
-  """
-  def sum_of_all_hp(map) do
-    map
-    |> Enum.map(fn {_, data} ->
-      if is_tuple(data) do
-        elem(data, 1)
-      else
-        0
-      end
-    end)
-    |> Enum.sum
-  end
-  
-  @doc """
-      iex> Day15.neighbours({1, 1}, {3, 3})
-      [{1, 0}, {0, 1}, {2, 1}, {1, 2}]
-  """
-  def neighbours(cell, size) do
-    cellX = elem(cell, 0)
-    cellY = elem(cell, 1)
-    cell
-    |> all_neighbours(size)
-    |> Enum.filter(fn {x, y} ->
-      cellX == x || cellY == y
-    end)
-    |> Enum.filter(fn {x, y} ->
-      cellX != x || cellY != y
-    end)
-  end
-  
-  @doc """
-      iex> Day15.size(%{{0, 0} => "."})
-      {1, 1}
-  
-      iex> Day15.size(%{{0, 0} => ".", {1, 0} => ".", {0, 1} => ".", {1, 1} => "."})
-      {2, 2}
-  """
-  defmemo size(map) do
-    keys = Map.keys(map)
-    xs = Enum.map(keys, fn {x, _} ->
-      x
-    end)
-    ys = Enum.map(keys, fn {_, y} ->
-      y
-    end)
-    {Enum.max(xs) + 1, Enum.max(ys) + 1}
-  end
-  
-  @doc """
-      iex> Day15.all_neighbours({1, 1}, {3, 3})
-      [{0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2}]
-      
-      iex> Day15.all_neighbours({0, 0}, {2, 2})
-      [{0, 0}, {1, 0}, {0, 1}, {1, 1}]
-      
-      iex> Day15.all_neighbours({1, 1}, {2, 2})
-      [{0, 0}, {1, 0}, {0, 1}, {1, 1}]
-  """
-  def all_neighbours(cell, size) do
-    cellX = elem(cell, 0)
-    cellY = elem(cell, 1)
-    minX = max(0, cellX - 1)
-    minY = max(0, cellY - 1)
-    maxX = min(elem(size, 0) - 1, cellX + 1)
-    maxY = min(elem(size, 1) - 1, cellY + 1)
-    for y <- Enum.to_list(minY..maxY),
-        x <- Enum.to_list(minX..maxX),
-        do: {x, y}
-  end
-  
-  @doc """
-  Parses the input into a Map
-  """
-  defmemo parse_map(filename) do
-    filename
-    |> File.read!()
-    |> String.split("\n")
-    |> Enum.map(fn row ->
-      String.codepoints(row)
-    end)
-    |> Enum.with_index()
-    |> Enum.reduce(%{}, fn {col, y}, acc ->
-      col
-      |> Enum.with_index()
-      |> Enum.reduce(acc, fn {char, x}, acc ->
-        if Enum.member?(["E", "G"], char) do
-          Map.put(acc, {x, y}, {char, 200})
-        else
-          Map.put(acc, {x, y}, char)
-        end
-      end)
+      |> Enum.join("")
+      |> IO.puts()
     end)
   end
 end
