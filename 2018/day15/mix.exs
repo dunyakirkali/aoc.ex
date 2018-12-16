@@ -22,6 +22,7 @@ defmodule Day15.MixProject do
   defp deps do
     [
       {:vivid, "~> 0.4.3"},
+      {:memoize, "~> 1.2"},
     ]
   end
 end
