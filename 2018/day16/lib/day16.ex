@@ -7,22 +7,85 @@ defmodule Day16 do
   Documentation for Day16.
   """
   
+  def part_2() do
+    "priv/input.txt"
+    |> changes()
+    |> find_opcodes()
+    |> run()
+  end
+  
   def part_1() do
     "priv/input.txt"
     |> changes()
     |> bahaviours()
   end
   
-  @doc """
-      iex> Day16.bahaviours([["Before: [3, 2, 1, 1]", "9 2 1 2", "After: [3, 2, 2, 1]"]])
-      1
+  def run(opcodes) do
+    "priv/input.txt"
+    |> file_part_2()
+    |> Enum.reduce([0, 0, 0, 0], fn action, acc ->
+      action_list = action |> String.split(" ") |> Enum.map(&String.to_integer/1)
+      code = List.first(action_list)
+      real_action = List.replace_at(action_list, 0, opcodes[code]) |> List.to_tuple
+      operate(acc, real_action)
+    end)
+    |> Enum.at(0)
+  end
+  
+  def find_opcodes(changes) do
+    changes
+    |> Enum.reduce(%{}, fn change, acc ->
+
+      registers_before =
+        change
+        |> Enum.at(0)
+        |> String.split(": ")
+        |> Enum.at(1)
+        |> String.slice(1..-1)
+        |> String.slice(0..-2)
+        |> String.split(", ")
+        |> Enum.map(&String.to_integer/1)
+      action =
+        change
+        |> Enum.at(1)
+        |> String.split(" ")
+        |> Enum.map(&String.to_integer/1)
+      registers_after =
+         change
+         |> Enum.at(2)
+         |> String.split(":  ")
+         |> Enum.at(1)
+         |> String.slice(1..-1)
+         |> String.slice(0..-2)
+         |> String.split(", ")
+         |> Enum.map(&String.to_integer/1)
       
-      iex> Day16.bahaviours([
-      ...>   ["Before: [3, 2, 1, 1]", "9 2 1 2", "After: [3, 2, 2, 1]"],
-      ...>   ["Before: [3, 2, 1, 1]", "9 2 1 2", "After: [3, 2, 2, 1]"]
-      ...> ])
-      2
-  """
+      findings =
+        @opcodes
+        |> Enum.filter(fn opcode ->
+          !Enum.member?(Map.values(acc), opcode)
+        end)
+        |> Enum.map(fn opcode ->
+          code = Enum.at(action, 0)
+          
+          if Enum.member?(Map.keys(acc), code) do
+            {code, opcode, false}
+          else
+            tuple_action = List.replace_at(action, 0, opcode) |> List.to_tuple
+            {code, opcode, registers_after == operate(registers_before, tuple_action)}
+          end
+        end)
+        |> Enum.filter(fn {_, _, res} -> res end)
+        
+      if length(findings) == 1 do
+        finding = List.first(findings)
+        Map.put(acc, elem(finding, 0), elem(finding, 1))
+      else
+        acc
+      end
+    end)
+  end
+  
   def bahaviours(changes) do
     changes
     |> Enum.map(fn change ->
@@ -209,6 +272,17 @@ defmodule Day16 do
     filename
     |> file()
     |> Enum.take(3103)
+  end
+  
+  @doc """
+      iex> file = Day16.file_part_2("priv/input.txt")
+      ...> length(file)
+      898
+  """
+  def file_part_2(filename) do
+    filename
+    |> file()
+    |> Enum.take(-898)
   end
   
   @doc """
