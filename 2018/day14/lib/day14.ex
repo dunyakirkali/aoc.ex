@@ -1,113 +1,99 @@
 defmodule Day14 do
-  @moduledoc """
-  Documentation for Day14.
-  """
-  
-  @doc """
-      iex> Day14.part_1(9)
-      "5158916779"
-      
-      iex> Day14.part_1(5)
-      "0124515891"
-      
-      iex> Day14.part_1(18)
-      "9251071085"
-      
-      iex> Day14.part_1(2018)
-      "5941429882"
-  """
-  def part_1(count) do
-    point = 10
-    recipes = [3, 7]
-    positions = {0, 1}
-    0..999_999_999
-    |> Enum.reduce_while({recipes, positions}, fn _, {recipes, positions} ->
-      {recipes, positions} = iterate({recipes, positions})
-      IO.puts("#{length(recipes)} > #{count + point}")
-      if length(recipes) >= count + point do
-        {:halt, {recipes, positions}}
-      else
-        {:cont, {recipes, positions}}
-      end
-    end)
-    |> elem(0)
-    |> calc(count, point)
-  end
-  
-  def do_part_1(recipes, positions, count, point) when length(recipes) >= count + point, do: recipes
-  def do_part_1(recipes, positions, count, point) do
-    {recipes, positions}
-    |> iterate()
-    |> do_part_1()
-  end
-  
-  def calc(recipes, count, point) do
-    recipes
-    |> Enum.drop(count)
-    |> Enum.take(point)
-    |> Enum.join("")
+  def part_1(input) do
+    input |> scores(10) |> Enum.join("")
   end
 
-  @doc """
-      iex> Day14.iterate({[3, 7], {0, 1}})
-      {[3, 7, 1, 0], {0, 1}}
-      
-      iex> Day14.iterate({[3, 7, 1, 0], {0, 1}})
-      {[3, 7, 1, 0, 1, 0], {4, 3}}
-      
-      iex> Day14.iterate({[3, 7, 1, 0, 1, 0], {4, 3}})
-      {[3, 7, 1, 0, 1, 0, 1], {6, 4}}
-      
-      iex> Day14.iterate({[3, 7, 1, 0, 1, 0, 1], {6, 4}})
-      {[3, 7, 1, 0, 1, 0, 1, 2], {0, 6}}
-  """
-  def iterate({recipes, positions}) do
-    rev_current_recipies = Enum.reverse(recipes)
-    new_recipes =
-      create([Enum.at(recipes, elem(positions, 0)), Enum.at(recipes, elem(positions, 1))])
-      |> Enum.reverse
-    
-    current_recipes =
-      [new_recipes | rev_current_recipies]
-      |> List.flatten
-      |> Enum.reverse
-      
-    positions = move({current_recipes, positions})
-    {current_recipes, positions}
+  def part_2(input) do
+    to_find = input |> to_string() |> String.codepoints() |> Enum.map(&String.to_integer/1)
+    find(to_find)
   end
-  
-  @doc """
-      iex> Day14.move({[3, 7], {0, 1}})
-      {0, 1}
-      
-      iex> Day14.move({[3, 7, 1, 0], {0, 1}})
-      {0, 1}
-      
-      iex> Day14.move({[3, 7, 1, 0, 1, 0], {0, 1}})
-      {4, 3}
-  """
-  def move({recipes, positions}) do
-    positions
-    |> Tuple.to_list
-    |> Enum.map(fn position ->
-      score = Enum.at(recipes, position)
-      rem(position + score + 1, length(recipes))
-    end)
-    |> List.to_tuple()
+
+  @initial %{1 => 3, 2 => 7}
+  defp scores(first, max) do
+    last = first + max
+
+    calculate(@initial, {1, 2}, 3, first + 1, last)
   end
-  
-  @doc """
-      iex> Day14.create([3, 7])
-      [1, 0]
-      
-      iex> Day14.create([90, 10])
-      [1, 0]
-  """
-  def create(current_recipes) do
-    current_recipes
-    |> Enum.flat_map(fn x -> Integer.digits(x) end)
-    |> Enum.reverse
-    |> Enum.sum
-    |> Integer.digits
+
+  defp find(to_find) do
+    find(@initial, {1, 2}, 3, [3, 7], to_find)
+  end
+
+  defp find(scores, {e1, e2}, next_score, actual, to_find) do
+    with {:cont, actual} <- found(actual, to_find) do
+      {scores, next_score, added_scores} = new_scores(scores, e1, e2, next_score)
+      {e1, e2} = new_positions(scores, e1, e2, next_score)
+
+      actual = actual ++ added_scores
+
+      find(scores, {e1, e2}, next_score, actual, to_find)
+    else
+      {:stop, x} ->
+        IO.puts("#{next_score - 1 - length(to_find) - x}")
+    end
+  end
+
+  defp found(actual, to_find) when actual == to_find, do: {:stop, 0}
+  defp found(actual, to_find) when length(actual) < length(to_find), do: {:cont, actual}
+
+  defp found(actual, to_find) when length(actual) == length(to_find),
+    do: {:cont, Enum.drop(actual, 1)}
+
+  defp found(actual, to_find) when length(actual) > length(to_find) do
+    a = Enum.take(actual, length(to_find))
+
+    case found(a, to_find) do
+      {:stop, x} -> {:stop, x + length(actual) - length(to_find)}
+      {:cont, _} -> found(Enum.drop(actual, 1), to_find)
+    end
+  end
+
+  defp calculate(scores, _pos, next_score, first, last) when next_score > last,
+    do: get_scores(scores, first, last)
+
+  defp calculate(scores, {e1, e2}, next_score, first, last) do
+    # IO.puts(board(scores, next_score))
+    # IO.puts("#{inspect({e1, e2})} -> #{next_score}")
+
+    {scores, next_score, _} = new_scores(scores, e1, e2, next_score)
+    {e1, e2} = new_positions(scores, e1, e2, next_score)
+    calculate(scores, {e1, e2}, next_score, first, last)
+  end
+
+  defp new_scores(scores, e1, e2, next_score) do
+    s = scores[e1] + scores[e2]
+
+    case {div(s, 10), rem(s, 10)} do
+      {0, x} ->
+        {Map.put(scores, next_score, x), next_score + 1, [x]}
+
+      {x, y} ->
+        {Map.put(scores, next_score, x) |> Map.put(next_score + 1, y), next_score + 2, [x, y]}
+    end
+  end
+
+  defp new_positions(scores, e1, e2, next_score) do
+    e1m = 1 + scores[e1]
+    e2m = 1 + scores[e2]
+
+    e1 = calc_next(e1, e1m, next_score)
+    e2 = calc_next(e2, e2m, next_score)
+
+    {e1, e2}
+  end
+
+  defp calc_next(e, em, next_score) do
+    case rem(e + em, next_score - 1) do
+      0 -> next_score - 1
+      o -> o
+    end
+  end
+
+  defp get_scores(scores, first, stop_i) do
+    Range.new(first, stop_i) |> Enum.map(fn i -> scores[i] end)
+  end
+
+  defp board(scores, next_score) do
+    Enum.map(Range.new(1, next_score - 1), fn i -> scores[i] end) |> Enum.join("")
   end
 end
