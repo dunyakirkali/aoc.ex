@@ -1,210 +1,123 @@
 defmodule Day17 do
-  import NimbleParsec
+  defmodule Position do
+    alias __MODULE__
+
+    @enforce_keys [:x, :y]
+    defstruct [:x, :y]
+
+    def new(x, y), do: %Position{x: x, y: y}
+
+    def left(pos), do: %Position{pos | x: pos.x - 1}
+    def right(pos), do: %Position{pos | x: pos.x + 1}
+    def down(pos), do: %Position{pos | y: pos.y + 1}
+  end
 
   @moduledoc """
   Documentation for Day17.
   """
   
-  @doc """
-      iex> map = Day17.generate_map("priv/example.txt")
-      ...> Day17.tick(map, {500, 0}, :flow)
-      []
-  """
-  def tick(map, pos, action) do
-    maxY = Map.keys(map) |> Enum.map(fn x -> elem(x, 1) end) |> Enum.max()
-    y = elem(pos, 1)
-    
-    if y == maxY do
-      Enum.filter(map, fn {key, val} ->
-        ["~", "|"]
-        |> Enum.member?(val)
-      end)
-      |> Enum.count
-    else
-      case action do
-        :flow ->
-          next_pos = {elem(pos, 0), elem(pos, 1) + 1}
-          case map[next_pos] do
-            nil ->
-              map = Map.put(map, next_pos, "|")
-              print_game(map)
-              tick(map, next_pos, :flow)
-            "#" ->
-              map = Map.put(map, pos, "~")
-              print_game(map)
-              tick(map, pos, :fill)
-          end
-        :fill ->
-          left =
-            1..500
-            |> Enum.reduce_while(0, fn i, acc -> 
-              next_pos = {elem(pos, 0) - i, elem(pos, 1)}
-              next_pos_floor = {elem(pos, 0) - i, elem(pos, 1) + 1}
-              if map[next_pos] == "#" do
-                if Enum.member?(["#", "~"], map[next_pos_floor]) do
-                  {:halt, -1 * (i - 1)}
-                else
-                  IO.puts("TODO - A")
-                end
-              else
-                if Enum.member?(["#", "~"], map[next_pos_floor]) do
-                  {:cont, i}
-                else
-                  {:halt, 1}
-                end
-              end
-            end)
-          
-          right = 
-            1..500
-            |> Enum.reduce_while(0, fn i, acc -> 
-              next_pos = {elem(pos, 0) + i, elem(pos, 1)}
-              next_pos_floor = {elem(pos, 0) + i, elem(pos, 1) + 1}
-              if map[next_pos] == "#" do
-                if Enum.member?(["#", "~"], map[next_pos_floor]) do
-                  {:halt, i - 1}
-                else
-                  IO.puts("TODO - C")
-                end
-              else
-                if Enum.member?(["#", "~"], map[next_pos_floor]) do
-                  {:cont, i}
-                else
-                  {:halt, -1}
-                end
-              end
-            end)
-          
-          
-          map =
-            cond do
-              left > 0 && right < 0 ->
-                IO.puts("TODO")
-              left <= 0 && right < 0 ->
-                {map, next_pos} = left..999
-                |> Enum.reduce_while({map, pos}, fn x, {map, _} ->
-                  next_pos_floor = {elem(pos, 0) + x, elem(pos, 1) + 1}
-                  if Enum.member?(["#", "~"], map[next_pos_floor]) do
-                    {:cont, {Map.put(map, {elem(pos, 0) + x, elem(pos, 1)}, "|"), pos}}
-                  else
-                    {:halt, {Map.put(map, {elem(pos, 0) + x, elem(pos, 1)}, "|"), {elem(pos, 0) + x, elem(pos, 1)}}}
-                  end 
-                end)
-                print_game(map)
-                tick(map, next_pos, :flow)
-                
-              left <= 0 && right >= 0 ->
-                map = left..right
-                |> Enum.reduce(map, fn x, map ->
-                  Map.put(map, {elem(pos, 0) + x, elem(pos, 1)}, "~")
-                end)
-                print_game(map)
-                tick(map, {elem(pos, 0), elem(pos, 1) - 1}, :fill)
-            end
-      end
+  def part_1(filename) do
+    filename
+    |> expand_water()
+    |> water_elements()
+    |> Enum.count()
+  end
+  
+  def part_2(filename) do
+    filename
+    |> expand_water()
+    |> water_elements()
+    |> Stream.filter(&(&1 == :still))
+    |> Enum.count()
+  end
+  
+  defp clay(filename) do
+    filename
+    |> File.stream!()
+    |> Stream.map(&String.trim/1)
+    |> Stream.flat_map(&positions/1)
+    |> MapSet.new()
+  end
+
+  defp positions(line) do
+    %{"value_dim" => value_dim, "value" => value, "range_dim" => range_dim, "from" => from, "to" => to} =
+      Regex.named_captures(~r/(?<value_dim>[xy])=(?<value>\d+),\s*(?<range_dim>[xy])=(?<from>\d+)\.\.(?<to>\d+)$/, line)
+
+    value = String.to_integer(value)
+
+    String.to_integer(from)..String.to_integer(to)
+    |> Stream.map(&%{value_dim => value, range_dim => &1})
+    |> Stream.map(&Position.new(Map.fetch!(&1, "x"), Map.fetch!(&1, "y")))
+  end
+  
+  defp water_elements(state), do: state.map |> Map.values() |> Stream.filter(&(&1 in [:still, :flow]))
+
+  defp expand_water(filename) do
+    clay = clay(filename)
+    {top, bottom} = clay |> Stream.map(& &1.y) |> Enum.min_max()
+
+    initial_state = %{
+      map: clay |> Stream.map(&{&1, :clay}) |> Map.new(),
+      top: top,
+      bottom: bottom,
+      spring: Position.new(500, top - 1)
+    }
+
+    {_water_state, final_state} = expand_water(initial_state, Position.down(initial_state.spring))
+    final_state
+  end
+
+  defp expand_water(state, pos) do
+    case element_at(state, pos) do
+      :flow -> {:flow, state}
+      block when block in [:clay, :still] -> {:still, state}
+      :sand -> place_water_on_sand(state, pos)
     end
   end
-  
-  # def next(map, pos) do
-  #   next_pos = {elem(pos, 0), elem(pos, 1) + 1}
-  #   case map[next_pos] do
-  #     nil -> {Map.put(map, next_pos, "|"), next_pos}
-  #     "#" -> fill(map, pos)
-  #   end
-  # end
-  # 
-  # def fill(map, pos) do
-  #   next_pos = {elem(pos, 0) - 1, elem(pos, 1)}
-  #   next_pos_floor = {elem(pos, 0) - 1, elem(pos, 1) + 1}
-  #   if map[next_pos_floor] == "#" do
-  #     if map[next_pos] == "#" do
-  #       map
-  #     else
-  #       map = Map.put(map, next_pos, "~")
-  #       fill(map, next_pos)
-  #     end
-  #   else
-  #     map
-  #   end
-  # end
 
-  @doc """
-      iex> map = Day17.generate_map("priv/example.txt")
-      ...> Day17.rains(map)
-      []
-  """
-  def rains(map) do
-    map
-    |> Enum.filter(fn {key, val} -> val == "|" end)
-  end
-    
-  @doc """
-      iex> map = Day17.generate_map("priv/example.txt")
-      ...> Day17.stills(map)
-      []
-  """
-  def stills(map) do
-    map
-    |> Enum.filter(fn {key, val} -> val == "~" end)
-  end
-  
-  @doc """
-      iex> map = Day17.generate_map("priv/example.txt")
-      ...> Day17.source(map)
-      {500, 0}
-  """
-  def source(map) do
-    map
-    |> Enum.find(fn {key, val} -> val == "+" end)
-    |> elem(0)
+  defp place_water_on_sand(%{bottom: bottom} = state, %{y: bottom} = pos),
+    do: {:flow, store_water_state(state, pos, :flow)}
+
+  defp place_water_on_sand(state, pos) do
+    # We'll first mark this element as still water. Later on we might figure out that it's flowing.
+    # The water at the given pos is flowing if the down branch or any of left/right branches are flowing.
+    state = store_water_state(state, pos, :still)
+
+    case expand_water(state, Position.down(pos)) do
+      {:flow, state} ->
+        # If down branch is flowing, then water here is is flowing too, and we can't branch neither left nor right.
+        {:flow, store_water_state(state, pos, :flow)}
+
+      {:still, state} ->
+        {left_water_state, state} = expand_water(state, Position.left(pos))
+        {right_water_state, state} = expand_water(state, Position.right(pos))
+
+        # If any branch is flowing, then this element and both branches are flowing too.
+        water_state = if left_water_state == :flow or right_water_state == :flow, do: :flow, else: :still
+
+        # Store this water state
+        state = store_water_state(state, pos, water_state)
+
+        # If this point is flowing, we need to update immediate left/right points too, because it's possible that
+        # e.g. left side is still, while the right side is flowing (this example is in the challenge text).
+        state =
+          if water_state == :flow,
+            do: state |> mark_flow(pos, &Position.left/1) |> mark_flow(pos, &Position.right/1),
+            else: state
+
+        {water_state, state}
+    end
   end
 
-  @doc """
-      iex> map = Day17.generate_map("priv/example.txt")
-      ...> map[{495, 1}]
-      nil
-      ...> map[{495, 2}]
-      "#"
-      ...> map[{0, 123}]
-      "#"
-      ...> map[{0, 124}]
-      nil
-      ...> map[{24, 123}]
-      nil
-      ...> map[{500, 0}]
-      "+"
-  """
-  def generate_map(filename) do
-    filename
-    |> File.read!()
-    |> String.split("\n")
-    |> Enum.reduce(%{}, fn line, acc ->
-        case slit_x(line) do
-          {:ok, list, _, _, _, _} ->
-            # X
-            x = Enum.at(list, 0)
-            # Y
-            Enum.at(list, 1)..Enum.at(list, 2)
-            |> Enum.reduce(acc, fn y, acc ->
-              Map.put(acc, {x, y}, "#")
-            end)
-            
-          {:error, _, _, _, _, _} ->
-            case slit_y(line) do
-              {:ok, list, _, _, _, _} ->
-                # Y
-                y = Enum.at(list, 0)
-                # X
-                Enum.at(list, 1)..Enum.at(list, 2)
-                |> Enum.reduce(acc, fn x, acc ->
-                  Map.put(acc, {x, y}, "#")
-                end)
-              {:error, _, _, _, _} ->
-                IO.puts("WAT")
-            end
-        end
-    end)
-    |> Map.put({500, 0}, "+")
+  defp element_at(state, pos), do: Map.get(state.map, pos, :sand)
+
+  def store_water_state(state, pos, water_state), do: put_in(state.map[pos], water_state)
+
+  defp mark_flow(state, pos, fun) do
+    fun.(pos)
+    |> Stream.iterate(fun)
+    |> Stream.take_while(&(element_at(state, &1) == :still))
+    |> Enum.reduce(state, &store_water_state(&2, &1, :flow))
   end
   
   defp print_game(map) do
@@ -230,24 +143,4 @@ defmodule Day17 do
       |> IO.puts()
     end)
   end
-  
-  defparsec(
-    :slit_x,
-    ignore(string("x="))
-    |> integer(min: 1)
-    |> ignore(string(", y="))
-    |> integer(min: 1)
-    |> ignore(string(".."))
-    |> integer(min: 1)
-  )
-  
-  defparsec(
-    :slit_y,
-    ignore(string("y="))
-    |> integer(min: 1)
-    |> ignore(string(", x="))
-    |> integer(min: 1)
-    |> ignore(string(".."))
-    |> integer(min: 1)
-  )
 end
