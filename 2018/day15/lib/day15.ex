@@ -259,6 +259,7 @@ defmodule Day15 do
   # BEAUTY PRINT GAME!
 
   defp print_game(%{map: map, units: units, round: round}) do
+    IEx.Helpers.clear
     IO.puts("\n\nROUND: #{round}")
     {mx, my} = Enum.max(Map.keys(map))
 
