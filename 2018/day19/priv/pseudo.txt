@@ -1,0 +1,39 @@
+[A,IP,C,D,E,F] = [1, 0, 0, 0, 0, 0]
+
+#ip 1
+L1    addi 1 16 1   # IP = IP + 16                                             1
+L2    seti 1 4 2    # C = 1                                                   20
+L3    seti 1 0 3    # D = 1                                                   21
+L4    mulr 2 3 4    # E = C * D                                               22
+L5    eqrr 4 5 4    # if E == F then E = 1 else E = 0                         23
+L6    addr 4 1 1    # IP = IP + E                                             24
+L7    addi 1 1 1    
+L8    addr 2 0 0
+L9    addi 3 1 3
+L10   gtrr 3 5 4
+L11   addr 1 4 1
+L12   seti 2 4 1
+L13   addi 2 1 2
+L14   gtrr 2 5 4
+L15   addr 4 1 1
+L16   seti 1 1 1
+L17   mulr 1 1 1
+L18   addi 5 2 5    # F = F + 2                                                2
+L19   mulr 5 5 5    # F = F * F                                                3
+L20   mulr 1 5 5    # F = IP * F                                               4
+L21   muli 5 11 5   # F = F * 11                                               5
+L22   addi 4 2 4    # E = E + 2                                                6
+L23   mulr 4 1 4    # E = E * IP                                               7
+L24   addi 4 16 4   # E = E + 16                                               8
+L25   addr 5 4 5    # F = F + E                                                9
+L26   addr 1 0 1    # IP = IP + A                                             10
+L27   seti 0 7 1
+L28   setr 1 5 4    # D = A                                                   11
+L29   mulr 4 1 4    # E = E * IP                                              12
+L30   addr 1 4 4    # E = IP + E                                              13
+L31   mulr 1 4 4    # E = E * IP                                              14
+L32   muli 4 14 4   # E = E * 14                                              15
+L33   mulr 4 1 4    # E = E * IP                                              16
+L34   addr 5 4 5    # F = F + E                                               17
+L35   seti 0 9 0    # A = 0                                                   18
+L36   seti 0 4 1    # IP = 0                                                  19
