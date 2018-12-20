@@ -22,7 +22,11 @@ defmodule Day20Test do
   #   assert Day20.part_1("^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$") == 31
   # end
   # 
-  # test "Part 1" do
-  #   assert Day20.part_1() == 0
-  # end
+  test "Part 1" do
+    assert Day20.part_1() == 3672
+  end
+  
+  test "Part 2" do
+    assert Day20.part_2() == 8586
+  end
 end

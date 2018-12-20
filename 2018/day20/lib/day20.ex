@@ -4,144 +4,122 @@ defmodule Day20 do
   """
 
   def part_1() do
-    "priv/input.txt"
-    |> input()
-    |> part_1()
+    final_map()
+    |> Map.values()
+    |> Enum.max()
   end
   
-  def part_1(regex) do
-    regex
-    |> generate()
-    |> distance()
-    |> Enum.max_by(fn {_string, distance} ->
-      distance
-    end)
-    |> elem(0)
-    |> String.length()
+  def part_2() do
+    final_map()
+    |> Map.values()
+    |> Stream.filter(&(&1 >= 1000))
+    |> Enum.count()
   end
+  
+  defp part2(), do: final_map() |> Map.values() |> Stream.filter(&(&1 >= 1000)) |> Enum.count()
+
+  defp final_map(), do: walk(instructions()).map
+  
+  defp instructions(), do: input("priv/input.txt") |> ast()
   
   def input(filename) do
     File.read!(filename)
   end
   
-  @doc """
-      iex> Day20.generate("^WNE$")
-      ["WNE"]
-  
-      iex> Day20.generate("^ENWWW(NEEE|SSE(EE|N))$")
-      ["ENWWWNEEE", "ENWWWSSEEE", "ENWWWSSEN"]
-  """
-  def generate(regex) do
-    # relen = relen(regex)
-    relen =
-      String.split(regex, "", trim: true)
-      |> Enum.filter(fn char ->
-        Enum.member?(["N", "W", "E", "S"], char)
-      end)
-      |> Enum.count
-      |> IO.inspect(label: "len")
-  
-    ["N", "W", "E", "S"]
-    |> Brute.generic(1..relen)
-    |> Stream.filter(fn x ->
-      Regex.match?(~r/#{regex}/, x)
-    end)
-    |> Enum.to_list()
-    |> Enum.sort()
+  defp walk(state \\ %{positions: %{{0, 0} => 0}, map: %{}}, instructions),
+  do: Enum.reduce(instructions, state, &apply_instruction/2)
+
+  defp apply_instruction({:move, directions}, state), do: Enum.reduce(directions, state, &move/2)
+  defp apply_instruction({:choice, type, choices}, state), do: explore_choices(type, choices, state)
+
+  defp move(direction, state),
+    do: merge_positions(%{state | positions: %{}}, state.positions |> Stream.map(&offset(&1, direction)))
+
+  defp offset({{x, y}, distance}, :east), do: {{x + 1, y}, distance + 1}
+  defp offset({{x, y}, distance}, :west), do: {{x - 1, y}, distance + 1}
+  defp offset({{x, y}, distance}, :north), do: {{x, y + 1}, distance + 1}
+  defp offset({{x, y}, distance}, :south), do: {{x, y - 1}, distance + 1}
+
+  defp explore_choices(choices_type, choices, state_before_choice) do
+    Enum.reduce(
+      choices,
+      if(choices_type == :optional, do: state_before_choice, else: %{state_before_choice | positions: %{}}),
+      fn choice, state ->
+        %{state | positions: state_before_choice.positions}
+        |> walk(choice)
+        |> merge_positions(state.positions)
+      end
+    )
+  end
+
+  defp merge_positions(state, new_positions) do
+    new_positions = new_positions |> Stream.map(&with_shortest_distance(&1, state)) |> Enum.into(state.positions)
+    %{state | positions: new_positions, map: Map.merge(state.map, new_positions)}
+  end
+
+  defp with_shortest_distance({pos, distance}, state) do
+    distance = Enum.min([distance, Map.get(state.map, pos, distance), Map.get(state.positions, pos, distance)])
+    {pos, distance}
   end
   
-  # @doc """
-  #     # iex> Day20.relen("^WNE$")
-  #     # 3
-  # 
-  #     iex> Day20.relen("^ENWWW(NEEE|SSE(EE|N))$")
-  #     10
-  # """
-  # def relen(regex) do
-  #   regex
-  #   |> String.split("", trim: true)
-  #   |> do_relen(0)
-  #   |> IO.inspect(label: "length")
-  # end
-  # 
-  # defp do_relen([], acc) do
-  #   IO.puts("A")
-  #   acc
-  # end
-  # defp do_relen([last], acc) when last == "$" do
-  #   IO.puts("B")
-  #   acc
-  # end
-  # defp do_relen([head | tail], acc) when head == "^" do
-  #   IO.puts("C")
-  #   do_relen(tail, acc)
-  # end
-  # defp do_relen([head | tail], acc) when head == "(" do
-  #   IO.puts("D")
-  #   max =
-  #     tail
-  #     |> Enum.reduce_while({[], 0}, fn char, {counts, running} ->
-  #       case char do
-  #         ")" -> {:halt, {counts, 0}}
-  #         "|" -> {:cont, {[running | counts], 0}}
-  #          _  -> {:cont, {counts, running + 1}}
-  #       end
-  #     end)
-  #     |> elem(0)
-  #     |> Enum.max()
-  #   do_relen(tail, acc + max)
-  # end
-  # defp do_relen([head | tail], acc) do
-  #   IO.puts("E")
-  #   do_relen(tail, acc + 1)
-  # end
-  
-  @doc """
-      iex> Day20.distance(["WNE", "ENWWWNEEE"])
-      [{"WNE", 1}, {"ENWWWNEEE", 3}]
-  """
-  def distance(strings) when is_list(strings) do
-    strings
-    |> Enum.map(fn string ->
-      {string, distance(string)}
-    end)
-  end
-  
-  @doc """
-      iex> Day20.distance("WNE")
-      1
-      
-      iex> Day20.distance("ENWWWNEEE")
-      3
-      
-      iex> Day20.distance("ENWWWSSEEE")
-      2
-      
-      iex> Day20.distance("ENWWWSSEN")
-      1
-      
-      iex> Day20.distance("ENNWSWWSSSEENEESWEN")
-      3
-      
-      iex> Day20.distance("ENNWSWWSSSEENEENNN")
-      4
-  """
-  def distance(string) do
-    destination = 
-      string
-      |> String.split("", trim: true)
-      |> Enum.reduce({0, 0}, fn direction, coords ->
-        case direction do
-          "N" -> put_elem(coords, 1, elem(coords, 1) - 1)
-          "E" -> put_elem(coords, 0, elem(coords, 0) + 1)
-          "S" -> put_elem(coords, 1, elem(coords, 1) + 1)
-          "W" -> put_elem(coords, 0, elem(coords, 0) - 1)
+  # https://en.wikipedia.org/wiki/Abstract_syntax_tree
+    def ast(string), do: string |> tokens() |> build_ast()
+
+    defp build_ast([:route_start | tokens]) do
+      {ast, [:route_end]} = route(tokens)
+      ast
+    end
+
+    defp route(tokens) do
+      with {element, tokens} <- route_element(tokens) do
+        case route(tokens) do
+          nil -> {[element], tokens}
+          {other_elements, tokens} -> {[element | other_elements], tokens}
         end
-      end)
-    man_dist({0, 0}, destination)
-  end
-  
-  defp man_dist(a, b) do
-    abs(elem(a, 0) - elem(b, 0)) + abs(elem(a, 1) - elem(b, 1))
-  end
+      end
+    end
+
+    defp route_element([{:move, _} | _] = tokens) do
+      {distance, tokens} = Enum.split_while(tokens, &match?({:move, _}, &1))
+      directions = Enum.map(distance, fn {:move, direction} -> direction end)
+      {{:move, directions}, tokens}
+    end
+
+    defp route_element([:choice_start | tokens]) do
+      {routes, tokens} = routes(tokens)
+
+      case tokens do
+        [:or, :choice_end | tokens] -> {{:choice, :optional, routes}, tokens}
+        [:choice_end | tokens] -> {{:choice, :mandatory, routes}, tokens}
+      end
+    end
+
+    defp route_element(_tokens), do: nil
+
+    defp routes(tokens) do
+      with {route, tokens} <- route(tokens) do
+        case tokens do
+          [:or | tokens] = outer_tokens ->
+            case routes(tokens) do
+              nil -> {[route], outer_tokens}
+              {other_routes, tokens} -> {[route | other_routes], tokens}
+            end
+
+          _ ->
+            {[route], tokens}
+        end
+      end
+    end
+
+    defp tokens(string), do: string |> String.trim() |> to_charlist() |> Enum.map(&token/1)
+
+    defp token(?^), do: :route_start
+    defp token(?$), do: :route_end
+    defp token(?(), do: :choice_start
+    defp token(?)), do: :choice_end
+    defp token(?|), do: :or
+    defp token(?N), do: {:move, :north}
+    defp token(?S), do: {:move, :south}
+    defp token(?E), do: {:move, :east}
+    defp token(?W), do: {:move, :west}
 end
