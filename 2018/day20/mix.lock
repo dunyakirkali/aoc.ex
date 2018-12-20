@@ -1,0 +1,3 @@
+%{
+  "brute": {:hex, :brute, "0.1.0", "3bd1ed9271ac888b5eed04685e838a19fd339e96ba73dddb9c90a88713f23edb", [:mix], [], "hexpm"},
+}
