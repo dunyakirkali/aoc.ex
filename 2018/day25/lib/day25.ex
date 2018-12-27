@@ -3,91 +3,48 @@ defmodule Day25 do
   @moduledoc """
   Documentation for Day25.
   """
-
-  def number_of_constellations(input) do
-    constellations = 
-      input
-      |> points()
-      |> Enum.reduce([], fn point, groups ->
-        group_index = 
-          Enum.find_index(groups, fn group ->
-            in_constellation?(group, point)
-          end)
-        
-        if group_index == nil do
-          [[point] | groups]
-        else
-          group = Enum.at(groups, group_index)
-          List.replace_at(groups, group_index, [point | group])
-        end
-      end)
-    
-    # IO.inspect(constellations)
-    Enum.reduce(constellations, [], fn cons_a, acc ->
-      Enum.reduce(constellations, acc, fn cons_b, acc ->
-        if cons_a != cons_b do
-          if mergable?(cons_a, cons_b) do
-            # IO.inspect(cons_a ++ cons_b, label: "Merge")
-            [[cons_a ++ cons_b] | acc]
-          else
-            # IO.inspect([cons_a | acc], label: "No Merge")
-            [cons_a | acc]
-          end
-        else
-          acc
-        end
-      end)
-    end)
-    # |> IO.inspect(label: "results")
-    |> Enum.count
-    |> Kernel./(2)
-  end
   
-  @doc """
-      iex> Day25.mergable?([{12, 0, 0, 0}, {9, 0, 0, 0}], [
-      ...>   {0, 0, 0, 6},
-      ...>   {0, 0, 0, 3},
-      ...>   {0, 0, 3, 0},
-      ...>   {0, 3, 0, 0},
-      ...>   {3, 0, 0, 0},
-      ...>   {0, 0, 0, 0}
-      ...>  ])
-      true
-  """
-  def mergable?(cons_a, cons_b) do
-    cons_a
-    |> Enum.map(fn star_a ->
-      in_constellation?(cons_b, star_a)
-    end)
-    |> Enum.any?
-  end
-  
-  defmemo points(input) do
+  def part_1(input) do
     input
-    |> String.split("\n", trim: true)
-    |> Enum.map(fn line ->
-      line
-      |> String.split(",")
-      |> Enum.map(&(String.to_integer(&1)))
-      |> List.to_tuple
-    end)
+    |> groups()
+    |> Enum.count()
   end
   
-  @doc """
-      iex> Day25.in_constellation?([{0,0,3,0}, {0,0,0,3}], {0,0,0,6})
-      true
-      
-      iex> Day25.in_constellation?([{0,0,3,0}, {0,0,0,3}], {9,0,0,0})
-      false
-  """
-  defmemo in_constellation?(constellation, point) do
-    constellation
-    |> Enum.map(fn star ->
-      man_dist(star, point) < 4
-    end)
-    |> Enum.any?
+  defp groups(input) do
+    points(input)
+    |> Stream.unfold(&pop_group/1)
+    |> Stream.take_while(&(not is_nil(&1)))
   end
   
+  defp pop_group([]), do: nil
+  defp pop_group([point | rest]), do: pop_group_of(point, rest)
+
+  defp pop_group_of(point, points), do: pop_group_of(point, [point], points)
+
+  defp pop_group_of(point, group_acc, points) do
+    {neighbours, rest} = Enum.split_with(points, &(man_dist(&1, point) <= 3))
+
+    Enum.reduce(
+      neighbours,
+      {group_acc, rest},
+      fn neighbour, {group_acc, rest} -> pop_group_of(neighbour, [neighbour | group_acc], rest) end
+    )
+  end
+  
+  defmemo points(filename) do
+    filename
+    |> File.stream!()
+    |> Stream.map(&String.trim/1)
+    |> Stream.map(&String.split(&1, ","))
+    |> Enum.map(&parse_point/1)
+  end
+  
+  def parse_point(coordinates) do
+    coordinates
+    |> Enum.map(&String.to_integer/1)
+    |> List.to_tuple()
+  end
+
   @doc """
       iex> Day25.man_dist({0,0,0,0}, {3,0,0,0})
       3
@@ -98,10 +55,10 @@ defmodule Day25 do
       iex> Day25.man_dist({1,-1,0,1}, {2,0,-1,0})
       4
   """
-  defmemo man_dist(a, b) do
-    abs(elem(a, 0) - elem(b, 0)) +
-    abs(elem(a, 1) - elem(b, 1)) +
-    abs(elem(a, 2) - elem(b, 2)) +
-    abs(elem(a, 3) - elem(b, 3))
+  defmemo man_dist({x1, y1, z1, t1}, {x2, y2, z2, t2}) do
+    abs(x1 - x2) +
+    abs(y1 - y2) +
+    abs(z1 - z2) +
+    abs(t1 - t2)
   end
 end
