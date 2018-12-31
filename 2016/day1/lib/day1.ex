@@ -6,7 +6,7 @@ defmodule Day1 do
   """
 
   defparsec(:parse, choice([string("R"), string("L")]) |> integer(max: 3))
-  
+
   @doc """
       iex> Day1.part_2(["R8", "R4", "R4", "R8"])
       4
@@ -19,15 +19,22 @@ defmodule Day1 do
 
       head_to = rotate(heading, rotation)
       move_to = advance(position, head_to, amount)
-      route = for x <- elem(position, 0)..elem(move_to, 0), y <- elem(position, 1)..elem(move_to, 1), do: {x, y}
+
+      route =
+        for x <- elem(position, 0)..elem(move_to, 0),
+            y <- elem(position, 1)..elem(move_to, 1),
+            do: {x, y}
+
       route = List.delete(route, position)
-      been_there_done_thats = Enum.map(route, fn pos ->
-        if Enum.member?(visited, pos) do
-          pos
-        end
-      end)
-      |> Enum.reject(&is_nil/1)
-      
+
+      been_there_done_thats =
+        Enum.map(route, fn pos ->
+          if Enum.member?(visited, pos) do
+            pos
+          end
+        end)
+        |> Enum.reject(&is_nil/1)
+
       if Enum.count(been_there_done_thats) > 0 do
         {:halt, List.first(been_there_done_thats)}
       else
