@@ -6,21 +6,54 @@ defmodule Day1 do
   """
 
   defparsec(:parse, choice([string("R"), string("L")]) |> integer(max: 3))
+  
+  @doc """
+      iex> Day1.part_2(["R8", "R4", "R4", "R8"])
+      4
+  """
+  def part_2(path) do
+    path
+    |> Stream.cycle()
+    |> Enum.reduce_while({{0, 0}, :n, []}, fn step, {position, heading, visited} ->
+      {:ok, [rotation, amount], _, _, _, _} = parse(step)
+
+      head_to = rotate(heading, rotation)
+      move_to = advance(position, head_to, amount)
+      route = for x <- elem(position, 0)..elem(move_to, 0), y <- elem(position, 1)..elem(move_to, 1), do: {x, y}
+      route = List.delete(route, position)
+      been_there_done_thats = Enum.map(route, fn pos ->
+        if Enum.member?(visited, pos) do
+          pos
+        end
+      end)
+      |> Enum.reject(&is_nil/1)
+      
+      if Enum.count(been_there_done_thats) > 0 do
+        {:halt, List.first(been_there_done_thats)}
+      else
+        visited = Enum.concat(visited, route)
+        {:cont, {move_to, head_to, visited}}
+      end
+    end)
+    |> Tuple.to_list()
+    |> Enum.map(fn x -> abs(x) end)
+    |> Enum.sum()
+  end
 
   @doc """
-      iex> Day1.follow(["R2", "L3"])
+      iex> Day1.part_1(["R2", "L3"])
       5
 
-      iex> Day1.follow(["R2", "R2", "R2"])
+      iex> Day1.part_1(["R2", "R2", "R2"])
       2
 
-      iex> Day1.follow(["R2", "R2", "R2"])
+      iex> Day1.part_1(["R2", "R2", "R2"])
       2
 
-      iex> Day1.follow(["R5", "L5", "R5", "R3"])
+      iex> Day1.part_1(["R5", "L5", "R5", "R3"])
       12
   """
-  def follow(path) do
+  def part_1(path) do
     path
     |> Enum.reduce({{0, 0}, :n}, fn step, acc ->
       position = elem(acc, 0)
