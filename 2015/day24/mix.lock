@@ -1,0 +1,4 @@
+%{
+  "combination": {:hex, :combination, "0.0.3", "746aedca63d833293ec6e835aa1f34974868829b1486b1e1cb0685f0b2ae1f41", [:mix], [], "hexpm"},
+  "garbage_man": {:hex, :garbage_man, "0.1.1", "98cce33033fc0c2dd3853abbdcd25b0a0b94578733d4f3266eadc0eacd1dce99", [:mix], [], "hexpm"},
+}
