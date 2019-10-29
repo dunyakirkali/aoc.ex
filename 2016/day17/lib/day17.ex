@@ -1,5 +1,25 @@
 defmodule Day17 do
   @doc """
+      iex> Day17.part_2("ihgpwlah", {1, 1})
+      370
+
+      iex> Day17.part_2("kglvqrro", {1, 1})
+      492
+
+      iex> Day17.part_2("ulqzkmiv", {1, 1})
+      830
+  """
+  def part_2(passcode, location) do
+    do_part_1(passcode, [], location)
+    |> List.flatten
+    |> Enum.sort_by(fn x ->
+      String.length(x)
+    end)
+    |> List.last
+    |> String.length
+  end
+
+  @doc """
       iex> Day17.part_1("ihgpwlah", {1, 1})
       "DDRRRD"
 
@@ -10,7 +30,6 @@ defmodule Day17 do
       "DRURDRUDDLLDLUURRDULRLDUUDDDRR"
   """
   def part_1(passcode, location) do
-    # passcode |> IO.inspect
     do_part_1(passcode, [], location)
     |> List.flatten
     |> Enum.sort_by(fn x ->
