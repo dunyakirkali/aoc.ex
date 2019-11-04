@@ -27,6 +27,13 @@ defmodule Day10 do
     do_part_1(bots, steps, {low, high})
   end
 
+  def part_2(instructions, {low, high}) do
+    bots = load_bots(%{}, instructions)
+    steps = load_steps([], instructions)
+
+    do_part_2(bots, steps, {low, high})
+  end
+
   defp load_steps(steps, []), do: steps
   defp load_steps(steps, instructions) do
     [head | tail] = instructions
@@ -40,12 +47,9 @@ defmodule Day10 do
   end
 
   def do_part_1(bots, steps, {low, high}) do
-    length(steps )|> IO.inspect(label: "Left")
-
     bot_to_move = Enum.find(Map.values(bots), fn bot ->
       length(bot.values) == 2
     end)
-    |> IO.inspect
 
     if Enum.member?(bot_to_move.values, low) and Enum.member?(bot_to_move.values, high) do
       bot_to_move.id
@@ -53,13 +57,28 @@ defmodule Day10 do
       move = Enum.find(steps, fn step ->
         step.bot == bot_to_move.id
       end)
-      |> IO.inspect
 
       bots = move(bots, bot_to_move.id, {move.l_type, move.l_id, move.h_type, move.h_id})
       steps = Enum.filter(steps, fn step -> step != move end)
 
       do_part_1(bots, steps, {low, high})
     end
+  end
+
+  def do_part_2(bots, [], {low, high}), do: bots
+  def do_part_2(bots, steps, {low, high}) do
+    bot_to_move = Enum.find(Map.values(bots), fn bot ->
+      length(bot.values) == 2
+    end)
+
+    move = Enum.find(steps, fn step ->
+      step.bot == bot_to_move.id
+    end)
+
+    bots = move(bots, bot_to_move.id, {move.l_type, move.l_id, move.h_type, move.h_id})
+    steps = Enum.filter(steps, fn step -> step != move end)
+
+    do_part_2(bots, steps, {low, high})
   end
 
   defp load_bots(bots, []), do: bots
@@ -90,28 +109,38 @@ defmodule Day10 do
   defp move(bots, bot_id, {"bot", l_id, "output", h_id}) do
     bot = Map.get(bots, bot_id, %Bot{id: bot_id})
     l_bot = Map.get(bots, l_id, %Bot{id: l_id})
+    h_out = Map.get(bots, h_id - 100, %Bot{id: h_id - 100})
 
-    [l_val, _] = bot.values
+    [l_val, h_val] = bot.values
 
     bots
     |> Map.put(l_id, %{l_bot | values: Enum.sort(l_bot.values ++ [l_val])})
+    |> Map.put(h_id - 100, %{h_out | values: Enum.sort(h_out.values ++ [h_val])})
     |> Map.put(bot_id, %{bot | values: []})
   end
 
   defp move(bots, bot_id, {"output", l_id, "output", h_id}) do
     bot = Map.get(bots, bot_id, %Bot{id: bot_id})
+    l_out = Map.get(bots, l_id - 100, %Bot{id: l_id - 100})
+    h_out = Map.get(bots, h_id - 100, %Bot{id: h_id - 100})
+
+    [l_val, h_val] = bot.values
 
     bots
+    |> Map.put(l_id - 100, %{l_out | values: Enum.sort(l_out.values ++ [l_val])})
+    |> Map.put(h_id - 100, %{h_out | values: Enum.sort(h_out.values ++ [h_val])})
     |> Map.put(bot_id, %{bot | values: []})
   end
 
   defp move(bots, bot_id, {"output", l_id, "bot", h_id}) do
     bot = Map.get(bots, bot_id, %Bot{id: bot_id})
+    l_out = Map.get(bots, l_id - 100, %Bot{id: l_id - 100})
     h_bot = Map.get(bots, h_id, %Bot{id: h_id})
 
-    [_, h_val] = bot.values
+    [l_val, h_val] = bot.values
 
     bots
+    |> Map.put(l_id - 100, %{l_out | values: Enum.sort(l_out.values ++ [l_val])})
     |> Map.put(h_id, %{h_bot | values: Enum.sort(h_bot.values ++ [h_val])})
     |> Map.put(bot_id, %{bot | values: []})
   end
