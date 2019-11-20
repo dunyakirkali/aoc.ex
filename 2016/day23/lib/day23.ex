@@ -1,15 +1,29 @@
 defmodule Day23 do
+  def part_2(filename, val) do
+    (96 * 91) + fac(val)
+  end
+
   @doc """
-      iex> Day23.part_1("priv/sample.txt")
+      iex> Day23.fac(1)
+      1
+
+      iex> Day23.fac(6)
+      720
+  """
+  def fac(n) when n == 1, do: 1
+  def fac(n), do: n * fac(n - 1)
+
+  @doc """
+      iex> Day23.part_1("priv/sample.txt", 7)
       3
   """
-  def part_1(filename) do
+  def part_1(filename, val) do
     lines =
       filename
       |> File.read!()
       |> String.split("\n", trim: true)
 
-    registers = %{"a" => 7}
+    registers = %{"a" => val}
 
     0..999_999_999
     |> Enum.reduce_while({registers, lines, 0}, fn _, {registers, lines, index} ->
@@ -27,7 +41,7 @@ defmodule Day23 do
     # registers |> IO.inspect(label: "registers")
 
     line = Enum.at(lines, index)
-    |> IO.inspect(label: "L")
+    # |> IO.inspect(label: "L")
     cond do
       String.contains?(line, "cpy") ->
 
