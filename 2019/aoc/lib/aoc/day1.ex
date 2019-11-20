@@ -1,14 +1,9 @@
 defmodule Aoc.Day1 do
-  def run() do
-    IO.inspect(part1())
-    IO.inspect(part2())
-  end
-
-  defp part1() do
+  def part1() do
     input()
   end
 
-  defp part2() do
+  def part2() do
     "B"
   end
 
