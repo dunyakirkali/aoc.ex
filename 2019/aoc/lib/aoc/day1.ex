@@ -2,24 +2,14 @@ defmodule Aoc.Day1 do
 
   def part1() do
     input()
-    |> String.split("\n", trim: true)
-    |> Enum.map(fn x ->
-      x
-      |> String.to_integer
-      |> fuel_for()
-    end)
-    |> Enum.sum
+    |> Enum.map(&(fuel_for(&1)))
+    |> Enum.sum()
   end
 
   def part2() do
     input()
-    |> String.split("\n", trim: true)
-    |> Enum.map(fn x ->
-      x
-      |> String.to_integer
-      |> corrected_fuel_for()
-    end)
-    |> Enum.sum
+    |> Enum.map(&(corrected_fuel_for(&1)))
+    |> Enum.sum()
   end
 
   @doc """
@@ -32,19 +22,10 @@ defmodule Aoc.Day1 do
       iex> Aoc.Day1.corrected_fuel_for(100756)
       50346
   """
-  # def corrected_fuel_for(mass) when mass <= 0, do: 0
+  def corrected_fuel_for(mass) when round(div(mass, 3)) - 2 <= 0, do: 0
   def corrected_fuel_for(mass) do
-    fuel =
-      mass
-      |> div(3)
-      |> round()
-      |> Kernel.-(2)
-
-    if fuel > 0 do
-      fuel + corrected_fuel_for(fuel)
-    else
-      0
-    end
+    fuel = round(div(mass, 3)) - 2
+    fuel + corrected_fuel_for(fuel)
   end
 
   @doc """
@@ -68,6 +49,11 @@ defmodule Aoc.Day1 do
   end
 
   defp input() do
-    Aoc.read("priv/day1/input.txt")
+    "priv/day1/input.txt"
+    |> File.read!()
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn x ->
+      String.to_integer(x)
+    end)
   end
 end
