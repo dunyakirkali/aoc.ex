@@ -43,10 +43,10 @@ defmodule AGC do
 
         104 ->
           [_, ini] = Enum.slice(machine.instructions, ip, 2)
-          output(machine, ini)
+          output(machine, ini, :immediate)
         4 ->
           [_, ini] = Enum.slice(machine.instructions, ip, 2)
-          output(machine, ini)
+          output(machine, ini, :position)
 
         0005->
           [_, ini1, ini2] = Enum.slice(machine.instructions, ip, 3)
@@ -138,11 +138,11 @@ defmodule AGC do
     %AGC{machine | instructions: instructions, ip: ip + 2}
   end
 
-  defp output(machine, ini) do
+  defp output(machine, ini, m1) do
     ip = machine.ip
-    out = Enum.at(machine.instructions, ini)
+    in1 = value(m1, machine, ini)
 
-    %AGC{machine | ip: ip + 2, output: out}
+    %AGC{machine | ip: ip + 2, output: in1}
   end
 
   defp jump_if_true(machine, ini1, ini2, m1, m2) do
