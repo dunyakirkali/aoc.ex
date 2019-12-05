@@ -73,7 +73,6 @@ defmodule Aoc.Day3 do
     |> Enum.filter(fn {a, b} ->
       a != 0 and b != 0
     end)
-    |> IO.inspect
     |> Enum.map(fn {a, b} ->
       a + b
     end)

@@ -13,6 +13,8 @@ defmodule Aoc.Day2 do
         machine
         |> AGC.set(noun, verb)
         |> AGC.run
+        |> Map.get(:instructions)
+        |> Enum.at(0)
         |> Kernel.==(goal)
       end)
     100 * noun + verb

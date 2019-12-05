@@ -7,6 +7,6 @@ defmodule AGCTest do
       AGC.new("priv/day2/input.txt")
       |> AGC.set(12, 2)
       |> AGC.run
-    assert res == 3562624
+    assert Enum.at(res.instructions, 0) == 3562624
   end
 end

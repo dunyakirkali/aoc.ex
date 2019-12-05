@@ -3,7 +3,7 @@ defmodule Day2Test do
   doctest Aoc.Day2
 
   test "Part 1" do
-    assert Aoc.Day2.part1() == 3562624
+    assert Enum.at(Aoc.Day2.part1().instructions, 0) == 3562624
   end
 
   test "Part 2" do
