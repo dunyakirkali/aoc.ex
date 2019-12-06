@@ -46,6 +46,32 @@ defmodule Aoc.Day6 do
     |> Kernel.-(2)
   end
 
+  def part2d(filename) do
+    tree = parse_tree(filename)
+
+    graph =
+      tree
+      |> all()
+      |> Enum.reduce(:digraph.new(), fn x, acc ->
+        :digraph.add_vertex(acc, x)
+        acc
+      end)
+
+    graph =
+      tree
+      |> Enum.reduce(graph, fn {parent, children}, acc ->
+        children
+        |> Enum.reduce(acc, fn child, accc ->
+          :digraph.add_edge(accc, child, parent)
+          :digraph.add_edge(accc, parent, child)
+          accc
+        end)
+        acc
+      end)
+
+    Enum.count(:digraph.get_short_path(graph, "YOU", "SAN")) - 3
+  end
+
   defmemo find(_, from, to, acc, _) when from == to, do: acc
   defmemo find(graph, from, to, acc, visited) do
     Graph.neighbors(graph, from)
@@ -94,5 +120,20 @@ defmodule Aoc.Day6 do
     |> Enum.map(fn x ->
       String.split(x, ")")
     end)
+  end
+
+  def bench do
+    Benchee.run(
+      %{
+        "BF" => fn -> part2("priv/day6/input.txt") end,
+        "Dijkstra" => fn -> part2d("priv/day6/input.txt") end
+      },
+      formatters: [
+        Benchee.Formatters.HTML,
+        Benchee.Formatters.Console
+      ]
+    )
+
+    :ok
   end
 end

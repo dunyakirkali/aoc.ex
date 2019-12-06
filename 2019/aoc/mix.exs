@@ -25,7 +25,9 @@ defmodule Aoc.MixProject do
       {:combination, "~> 0.0.3"},
       {:nimble_parsec, "~> 0.2"},
       {:memoize, "~> 1.2"},
-      {:eastar, github: "wkhere/eastar"}
+      # {:eastar, github: "wkhere/eastar"},
+      {:benchee, "~> 0.11", only: [:dev, :test]},
+      {:benchee_html, "~> 1.0", only: [:dev, :test]}
     ]
   end
 end
