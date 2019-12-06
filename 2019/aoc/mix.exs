@@ -23,7 +23,9 @@ defmodule Aoc.MixProject do
     [
       {:libgraph, "~> 0.7"},
       {:combination, "~> 0.0.3"},
-      {:nimble_parsec, "~> 0.2"}
+      {:nimble_parsec, "~> 0.2"},
+      {:memoize, "~> 1.2"},
+      {:eastar, github: "wkhere/eastar"}
     ]
   end
 end
