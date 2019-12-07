@@ -3,10 +3,16 @@ defmodule Day2Test do
   doctest Aoc.Day2
 
   test "Part 1" do
-    assert Enum.at(Aoc.Day2.part1().instructions, 0) == 3562624
+    Aoc.Day2.part1()
+    |> Map.get(:instructions)
+    |> Enum.at(0)
+    |> Kernel.==(3562624)
+    |> assert
   end
 
   test "Part 2" do
-    assert Aoc.Day2.part2(19690720) == 8298
+    Aoc.Day2.part2(19690720)
+    |> Kernel.==(8298)
+    |> assert
   end
 end

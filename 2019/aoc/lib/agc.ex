@@ -1,5 +1,5 @@
 defmodule AGC do
-  defstruct [:instructions, :output, :input, ip: 0]
+  defstruct [:instructions, :output, inputs: [], ip: 0, state: :cont]
 
   def new(filename) do
     instructions = input(filename)
@@ -101,13 +101,16 @@ defmodule AGC do
           equals(machine, ini1, ini2, outi, :immediate, :immediate)
 
         99 ->
-          machine
+          %AGC{machine | state: :halt}
       end
 
-    if opcode != 99 do
-      run(machine)
-    else
-      machine
+    case machine.state do
+      :cont ->
+        run(machine)
+      :halt ->
+        machine
+      :wait ->
+        machine
     end
   end
 
@@ -132,10 +135,13 @@ defmodule AGC do
 
   defp input(machine, ini) do
     ip = machine.ip
-
-    instructions = List.replace_at(machine.instructions, ini, machine.input)
-
-    %AGC{machine | instructions: instructions, ip: ip + 2}
+    if Enum.count(machine.inputs) == 0 do
+      %AGC{machine | state: :wait}
+    else
+      [input | remaining_input] = machine.inputs
+      instructions = List.replace_at(machine.instructions, ini, input)
+      %AGC{machine | instructions: instructions, ip: ip + 2, inputs: remaining_input, state: :cont}
+    end
   end
 
   defp output(machine, ini, m1) do
