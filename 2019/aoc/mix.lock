@@ -4,6 +4,7 @@
   "benchee_json": {:hex, :benchee_json, "1.0.0", "cc661f4454d5995c08fe10dd1f2f72f229c8f0fb1c96f6b327a8c8fc96a91fe5", [:mix], [{:benchee, ">= 0.99.0 and < 2.0.0", [hex: :benchee, repo: "hexpm", optional: false]}, {:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: false]}], "hexpm"},
   "combination": {:hex, :combination, "0.0.3", "746aedca63d833293ec6e835aa1f34974868829b1486b1e1cb0685f0b2ae1f41", [:mix], [], "hexpm"},
   "deep_merge": {:hex, :deep_merge, "1.0.0", "b4aa1a0d1acac393bdf38b2291af38cb1d4a52806cf7a4906f718e1feb5ee961", [:mix], [], "hexpm"},
+  "distance": {:hex, :distance, "0.2.2", "76f7cd6b6e21b3c1430a0776d594955baafd9ebf1133f98f62cdbb180074215a", [:mix], [], "hexpm"},
   "drawille": {:hex, :drawille, "0.0.1", "0fb271fc64d61c52ba23891f6cea3b324782a0ac995f6d7cd61c53af08bf7898", [:mix], [{:earmark, "~> 0.1.19", [hex: :earmark, repo: "hexpm", optional: false]}, {:ex_doc, "~> 0.10.0", [hex: :ex_doc, repo: "hexpm", optional: false]}], "hexpm"},
   "earmark": {:hex, :earmark, "0.1.19", "ffec54f520a11b711532c23d8a52b75a74c09697062d10613fa2dbdf8a9db36e", [:mix], [], "hexpm"},
   "eastar": {:git, "https://github.com/wkhere/eastar.git", "b309f4fce41218d821f4cf4af9df39f5f1a36cc0", []},
