@@ -19,6 +19,7 @@ defmodule Aoc.Day7 do
         |> Map.put(:inputs, [Enum.at(option, i), signal])
         |> AGC.run()
         |> Map.get(:output)
+        |> Enum.at(0)
       end)
     end)
     |> Enum.max
@@ -50,9 +51,9 @@ defmodule Aoc.Day7 do
           else
             pm = Enum.at(machines, pindex)
             if i < 5 do
-              [Enum.at(option, index), pm.output]
+              [Enum.at(option, index), List.last(pm.output)]
             else
-              [pm.output]
+              [List.last(pm.output)]
             end
           end
           |> Enum.filter(fn x ->
@@ -83,6 +84,7 @@ defmodule Aoc.Day7 do
     |> Enum.map(fn m ->
       m.output
     end)
+    |> List.flatten
     |> Enum.max
   end
 end

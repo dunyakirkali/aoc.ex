@@ -2,6 +2,7 @@ defmodule Day7Test do
   use ExUnit.Case
   doctest Aoc.Day7
 
+  @tag timeout: :infinity
   test "Part 1" do
     assert Aoc.Day7.part1("priv/day7/input.txt") == 51679
   end
