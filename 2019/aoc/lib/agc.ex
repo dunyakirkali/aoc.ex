@@ -1,5 +1,5 @@
 defmodule AGC do
-  defstruct [:instructions, output: [], inputs: [], ip: 0, state: :cont, relative_base_offset: 0]
+  defstruct [:instructions, output: [], inputs: [], ip: 0, state: :cont, relative_base_offset: 0, score: 0]
 
   def new(filename) do
     instructions = input(filename)
@@ -27,6 +27,9 @@ defmodule AGC do
         01201 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           add(machine, ini1, ini2, outi, :relative, :immediate, :position)
+        00201 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          add(machine, ini1, ini2, outi, :relative, :position, :position)
         02101 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           add(machine, ini1, ini2, outi, :immediate, :relative, :position)
@@ -36,9 +39,18 @@ defmodule AGC do
         21201 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           add(machine, ini1, ini2, outi, :relative, :immediate, :relative)
+        21001 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          add(machine, ini1, ini2, outi, :position, :immediate, :relative)
         22201 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           add(machine, ini1, ini2, outi, :relative, :relative, :relative)
+        20101 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          add(machine, ini1, ini2, outi, :immediate, :position, :relative)
+        20001 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          add(machine, ini1, ini2, outi, :position, :position, :relative)
 
         00002 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
@@ -46,7 +58,7 @@ defmodule AGC do
         00102 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           mul(machine, ini1, ini2, outi, :immediate, :position, :position)
-        1202 ->
+        01202 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           mul(machine, ini1, ini2, outi, :relative, :immediate, :position)
         01002 ->
@@ -61,9 +73,15 @@ defmodule AGC do
         21102 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           mul(machine, ini1, ini2, outi, :immediate, :immediate, :relative)
+        20102 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          mul(machine, ini1, ini2, outi, :immediate, :position, :relative)
         22102 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           mul(machine, ini1, ini2, outi, :immediate, :relative, :relative)
+        21002 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          mul(machine, ini1, ini2, outi, :position, :immediate, :relative)
         21202 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           mul(machine, ini1, ini2, outi, :relative, :immediate, :relative)
@@ -200,6 +218,14 @@ defmodule AGC do
     end
   end
 
+  def hack(machine) do
+    new_instructions =
+      machine.instructions
+      |> List.replace_at(0, 2)
+
+    %AGC{machine | instructions: new_instructions}
+  end
+
   def set(machine, noun, verb) do
     new_instructions =
       machine.instructions
@@ -225,7 +251,7 @@ defmodule AGC do
       %AGC{machine | state: :wait}
     else
       [input | remaining_input] = machine.inputs
-      ini = in_value(machine, ini, m1)
+      # ini = in_value(machine, ini, m1)
       instructions = List.replace_at(machine.instructions, ini, input)
 
       %AGC{machine | instructions: instructions, ip: ip + 2, inputs: remaining_input, state: :cont}
@@ -334,9 +360,9 @@ defmodule AGC do
     end
   end
 
-  def in_value(machine, val, :position), do: val
-  def in_value(machine, val, :relative), do: val + machine.relative_base_offset
-  def in_value(_, val, :immediate), do: val
+  # def in_value(machine, val, :position), do: val
+  # def in_value(machine, val, :relative), do: val + machine.relative_base_offset
+  # def in_value(_, val, :immediate), do: val
 
   defp out_value(mode, machine, val) do
     case mode do
