@@ -17,10 +17,8 @@ defmodule Aoc.Day16 do
     inp = input(filename)
 
     res =
-      1..10_000
-      |> Enum.flat_map(fn _ ->
-        inp
-      end)
+      inp
+      |> List.duplicate(10_000)
       |> next(0, phases)
 
     offset = Enum.take(res, 7) |> Enum.join |> String.to_integer
