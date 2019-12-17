@@ -30,7 +30,8 @@ defmodule Aoc.MixProject do
       {:benchee_html, "~> 1.0", only: [:dev, :test]},
       {:printex, "~> 1.0.0"},
       {:drawille, "~> 0.0.1"},
-      {:distance, "~> 0.2.1"}
+      {:distance, "~> 0.2.1"},
+      {:poison, "~> 3.1"}
     ]
   end
 end

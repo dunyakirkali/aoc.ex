@@ -51,6 +51,12 @@ defmodule AGC do
         20001 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           add(machine, ini1, ini2, outi, :position, :position, :relative)
+        22101 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          add(machine, ini1, ini2, outi, :immediate, :relative, :relative)
+        02201 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          add(machine, ini1, ini2, outi, :relative, :relative, :position)
 
         00002 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
@@ -88,6 +94,12 @@ defmodule AGC do
         22202 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           mul(machine, ini1, ini2, outi, :relative, :relative, :relative)
+        22002 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          mul(machine, ini1, ini2, outi, :position, :relative, :relative)
+        02202 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          mul(machine, ini1, ini2, outi, :relative, :relative, :position)
 
         003->
           [_, ini] = Enum.slice(machine.instructions, ip, 2)
@@ -171,6 +183,12 @@ defmodule AGC do
         21107->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           less_than(machine, ini1, ini2, outi, :immediate, :immediate, :relative)
+        21207->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          less_than(machine, ini1, ini2, outi, :relative, :immediate, :relative)
+        22107->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          less_than(machine, ini1, ini2, outi, :immediate, :relative, :relative)
 
         00008->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
@@ -193,6 +211,18 @@ defmodule AGC do
         02108->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           equals(machine, ini1, ini2, outi, :immediate, :relative, :position)
+        20208->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          equals(machine, ini1, ini2, outi, :relative, :position, :relative)
+        00208->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          equals(machine, ini1, ini2, outi, :relative, :position, :position)
+        02208->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          equals(machine, ini1, ini2, outi, :relative, :relative, :position)
+        21208->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          equals(machine, ini1, ini2, outi, :relative, :immediate, :relative)
 
         009->
           [_, ini] = Enum.slice(machine.instructions, ip, 2)
@@ -226,6 +256,14 @@ defmodule AGC do
     %AGC{machine | instructions: new_instructions}
   end
 
+  def reset(machine, address) do
+    new_instructions =
+      machine.instructions
+      |> List.replace_at(address, 2)
+
+    %AGC{machine | instructions: new_instructions}
+  end
+
   def set(machine, noun, verb) do
     new_instructions =
       machine.instructions
@@ -251,7 +289,7 @@ defmodule AGC do
       %AGC{machine | state: :wait}
     else
       [input | remaining_input] = machine.inputs
-      # ini = in_value(machine, ini, m1)
+      ini = in_value(machine, ini, m1)
       instructions = List.replace_at(machine.instructions, ini, input)
 
       %AGC{machine | instructions: instructions, ip: ip + 2, inputs: remaining_input, state: :cont}
@@ -360,9 +398,9 @@ defmodule AGC do
     end
   end
 
-  # def in_value(machine, val, :position), do: val
-  # def in_value(machine, val, :relative), do: val + machine.relative_base_offset
-  # def in_value(_, val, :immediate), do: val
+  def in_value(machine, val, :position), do: val
+  def in_value(machine, val, :relative), do: val + machine.relative_base_offset
+  def in_value(_, val, :immediate), do: val
 
   defp out_value(mode, machine, val) do
     case mode do
