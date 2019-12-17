@@ -23,31 +23,20 @@ defmodule Aoc.Day17 do
     program =
       "A,A,B,C,C,A,C,B,C,B\nL,4,L,4,L,6,R,10,L,6\nL,12,L,6,R,10,L,6\nR,8,R,10,L,6\nn\n"
       |> String.graphemes
-      |> IO.inspect
       |> Enum.map(fn x ->
         x
         |> String.to_charlist
         |> hd
       end)
 
-    m =
-      "priv/day17/input.txt"
-      |> AGC.new()
-      |> AGC.reset(0)
-      |> AGC.run
-      |> Map.put(:inputs, program)
-      |> AGC.run
-      |> Map.get(:output)
-      |> List.last
-
-    # print(m)
-  end
-
-  def print(machine) do
-    machine
+    "priv/day17/input.txt"
+    |> AGC.new()
+    |> AGC.reset(0)
+    |> AGC.run
+    |> Map.put(:inputs, program)
+    |> AGC.run
     |> Map.get(:output)
-    |> Enum.chunk_every(46)
-    |> IO.inspect
+    |> List.last
   end
 
   def part1() do
@@ -56,7 +45,6 @@ defmodule Aoc.Day17 do
     |> AGC.run()
     |> Map.get(:output)
     |> Enum.chunk_every(46)
-    |> IO.inspect
     |> Enum.with_index
     |> Enum.reduce(Map.new, fn {row, y}, map ->
       row
@@ -69,15 +57,13 @@ defmodule Aoc.Day17 do
       val == "#"
     end)
     |> Map.new
-    |> IO.inspect(label: "Map")
     |> find_intersections
-    |> IO.inspect(label: "Intersections")
     |> sum_of_alignment_params
   end
 
   def find_intersections(map) do
     map
-    |> Enum.filter(fn {pos, val} ->
+    |> Enum.filter(fn {pos, _} ->
       pos
       |> neighbours()
       |> Enum.all?(fn pos ->
