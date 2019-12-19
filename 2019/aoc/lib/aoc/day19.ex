@@ -1,79 +1,73 @@
 defmodule Aoc.Day19 do
-  use Memoize
-
-  @size 100
-
   def part1() do
-    map = for x <- 0..49, y <- 0..49, do: {x, y}
-    machine = AGC.new("priv/day19/input.txt")
-    map
-    |> Stream.map(fn {x, y} ->
-      machine
-      |> Map.put(:inputs, [x, y])
-      |> AGC.run
-      |> Map.get(:output)
-      |> List.last
-    end)
-    |> Stream.filter(fn res ->
-      res == 1
-    end)
-    |> Enum.count
+    rows(50)
+    |> Stream.map(& &1.count)
+    |> Enum.sum()
   end
 
   def part2() do
+    square =
+      rows(10_000)
+      |> largest_squares()
+      |> Enum.find(&(&1.dimension == 100)
+    )
+    square.x * 10_000 + square.y
+  end
 
+  def rows(upto) do
     machine = AGC.new("priv/day19/input.txt")
+    Stream.unfold({0, 0, 0}, fn {y, start_x, last_count} ->
+      max_x = upto
 
-    solve(machine, {0, 0}, Map.new, false)
+      offset = Enum.find_index(statuses(machine, y, start_x, max_x), &(&1 == :full))
+
+      if is_nil(offset) do
+        {%{y: y, from: nil, count: 0}, {y + 1, start_x, last_count}}
+      else
+        from = start_x + offset
+        start_scan = min(start_x + last_count, upto - 1)
+
+        count =
+          statuses(machine, y, start_scan, upto)
+          |> Stream.take_while(&(&1 == :full))
+          |> Enum.count()
+
+        final_count = count + start_scan - from
+        {%{y: y, from: from, count: final_count}, {y + 1, from, final_count}}
+      end
+    end)
+    |> Stream.take(upto)
   end
 
-  def solve(_, {x, y}, acc, _) when x == @size and y == @size, do: acc
-  def solve(machine, {x, y}, acc, _) when x == @size, do: solve(machine, {0, y + 1}, acc, false)
-  def solve(machine, {x, y}, acc, aso) do
-    IO.inspect(acc)
-    IO.inspect(((y + 1) * @size + (x + 1)) / (@size * @size))
-    {machine, acc} = calculate(machine, {x, y}, acc)
-    if is_integer(acc) do
-      acc
+  defp largest_squares(pulls) do
+    pulls
+    |> Stream.chunk_every(100, 1, :discard)
+    |> Stream.map(&largest_square/1)
+    |> Stream.reject(&is_nil/1)
+  end
+
+  defp largest_square(pulls) do
+    if Enum.any?(pulls, &(&1.count == 0)) do
+      nil
     else
-      if get_max(acc, {x, y}) == 0 and aso do
-        solve(machine, {0, y + 1}, acc, false)
-      else
-        value = get(machine, {x, y})
-        solve(machine, {x + 1, y}, acc, value == 1)
-      end
+      left = pulls |> Stream.map(& &1.from) |> Enum.max()
+      right = pulls |> Stream.map(&(&1.from + &1.count - 1)) |> Enum.min()
+      dimension = min(right - left + 1, length(pulls))
+      %{y: hd(pulls).y, x: left, dimension: dimension}
     end
   end
 
-  defmemo calculate(machine, {x, y}, acc) do
-    value = get(machine, {x, y})
-    acc =
-      if value == 0 do
-        acc
-      else
-        min_x = get_max(acc, {x - 1, y})
-        min_y = get_max(acc, {x, y - 1})
-        min_x_y = get_max(acc, {x - 1, y - 1})
-        min = min(min(min_x, min_y), min_x_y)
-        Map.put(acc, {x, y}, min + 1)
-      end
+  def statuses(machine, y, from, to) do
+    from
+    |> Stream.iterate(&(&1 + 1))
+    |> Stream.take_while(&(&1 < to))
+    |> Stream.map(&get(machine, {&1, y}))
+  end
 
-    if Map.get(acc, {x, y}) == 100 do
-      {machine, (x - 99) * 10_000 + (y - 99)}
-    else
-      {machine, acc}
+  def get(machine, {x, y}) do
+    case machine |> Map.put(:inputs, [x, y]) |> AGC.run() |> Map.get(:output) do
+      [0] -> :void
+      [1] -> :full
     end
-  end
-
-  defmemo get_max(map, pos) do
-    Map.get(map, pos, 0)
-  end
-
-  defmemo get(machine, {x, y}) do
-    machine
-    |> Map.put(:inputs, [x, y])
-    |> AGC.run
-    |> Map.get(:output)
-    |> List.last
   end
 end
