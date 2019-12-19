@@ -109,7 +109,7 @@ defmodule Aoc.Day16 do
     filename
     |> File.read!()
     |> String.trim
-    |> String.to_integer
-    |> Integer.digits
+    |> String.to_charlist()
+    |> Enum.map(&(&1 - ?0))
   end
 end
