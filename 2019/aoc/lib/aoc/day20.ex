@@ -12,16 +12,17 @@ defmodule Aoc.Day20 do
       input(filename)
       |> mapify()
 
+    s = size(map) |> IO.inspect(label: "--")
     graph =
       map
       |> graphify()
-      |> connect_portals(map)
-    solve(graph, start(map), out(map))
+      |> connect_portals(map, s)
+    solve(graph, start(map, s), out(map, s))
   end
 
-  defp connect_portals(graph, map) do
+  defp connect_portals(graph, map, size) do
     map
-    |> portals()
+    |> portals(size)
     |> Enum.filter(fn {k, _} ->
       k != "AA" and k != "ZZ"
     end)
@@ -42,22 +43,40 @@ defmodule Aoc.Day20 do
     |> Kernel.-(1)
   end
 
-  defp start(map) do
+  defp start(map, size) do
     map
-    |> portals()
+    |> portals(size)
     |> Map.get("AA")
     |> Enum.at(0)
   end
 
-  defp out(map) do
+  defp out(map, size) do
     map
-    |> portals()
+    |> portals(size)
     |> Map.get("ZZ")
     |> Enum.at(0)
   end
 
-  defmemo portals(map) do
-    points = for x <- 0..127, y <- 0..127, do: {x, y}
+  def size(map) do
+    y =
+      map
+      |> Enum.map(fn {{_, y}, _} ->
+        y
+      end)
+      |> Enum.max
+      |> Kernel.+(1)
+    x =
+      map
+      |> Enum.map(fn {{x, _}, _} ->
+        x
+      end)
+      |> Enum.max
+      |> Kernel.+(1)
+    {x, y}
+  end
+
+  defmemo portals(map, {max_x, max_y}) do
+    points = for x <- 0..(max_x - 1), y <- 0..(max_y - 1), do: {x, y}
     verticals =
       points
       |> Stream.chunk_every(3, 1, :discard)
@@ -83,7 +102,7 @@ defmodule Aoc.Day20 do
         Map.put(acc, name, [pos | curr])
       end)
 
-    points = for y <- 0..127, x <- 0..127, do: {x, y}
+    points = for y <- 0..(max_y - 1), x <- 0..(max_x - 1), do: {x, y}
     horizontals =
       points
       |> Stream.chunk_every(3, 1, :discard)
@@ -109,11 +128,10 @@ defmodule Aoc.Day20 do
         Map.put(acc, name, [pos | curr])
       end)
 
-
     Map.merge(horizontals, verticals, fn _k, v1, v2 ->
       v1 ++ v2
     end)
-    |> IO.inspect
+    |> IO.inspect(label: "Portal")
   end
 
   defp graphify(map) do
