@@ -1,23 +1,94 @@
 defmodule Aoc.Day20 do
   use Memoize
-  @doc """
-      iex> Aoc.Day20.part1("priv/day20/example_1.txt")
-      23
 
-      iex> Aoc.Day20.part1("priv/day20/example_2.txt")
-      58
+  @depth_offset 10_000
+  @max_depth 36
+
+  # @doc """
+  #     iex> Aoc.Day20.part2("priv/day20/example_3.txt")
+  #     396
+  # """
+  def part2(filename) do
+    map =
+      input(filename)
+      |> mapify(@max_depth)
+    bs = {s_x, s_y} = size(map)
+    s = {rem(s_x, @depth_offset), s_y}
+    grouped_portals =
+      portals(map, bs)
+      |> Enum.reduce(Map.new, fn {key, values}, acc ->
+        Enum.reduce(values, acc, fn {x, y}, acc ->
+          if rem(x, @depth_offset) == 2 or y == 2 or elem(s, 0) - 3 == rem(x, @depth_offset) or elem(s, 1) - 3 == y do
+            externals = Map.get(acc, :external, Map.new)
+            sf = Map.get(externals, key, [])
+            externals = Map.put(externals, key, [{x, y} | sf])
+            Map.put(acc, :external, externals)
+          else
+            internals = Map.get(acc, :internal, Map.new)
+            sf = Map.get(internals, key, [])
+            internals = Map.put(internals, key, [{x, y} | sf])
+            Map.put(acc, :internal, internals)
+          end
+        end)
+      end)
+
+    graph =
+      map
+      |> graphify()
+
+    start =
+      grouped_portals
+      |> Map.get(:external)
+      |> Map.get("AA")
+      |> Enum.at(0)
+    out =
+      grouped_portals
+      |> Map.get(:external)
+      |> Map.get("ZZ")
+      |> Enum.at(0)
+
+    1..(@max_depth - 1)
+    |> IO.inspect(label: "Depth")
+    |> Enum.reduce(graph, fn depth, acc ->
+      external_portals = Map.get(grouped_portals, :external)
+      internal_portals = Map.get(grouped_portals, :internal)
+      Map.keys(internal_portals)
+      |> Enum.reduce(acc, fn internal_portal_name, acc ->
+        {apx, apy} = Map.get(internal_portals, internal_portal_name) |> Enum.at(0)
+        {dpx, dpy} = Map.get(external_portals, internal_portal_name) |> Enum.at(0)
+
+        ext_port_x = rem(dpx, @depth_offset)
+        int_port_x = rem(apx, @depth_offset)
+
+        from = {int_port_x + depth * @depth_offset, apy}
+        to = {ext_port_x + (depth + 1) * @depth_offset, dpy}
+        :digraph.add_edge(acc, from, to)
+        :digraph.add_edge(acc, to, from)
+
+        acc
+      end)
+    end)
+    |> solve(start, out)
+  end
+
+  @doc """
+      # iex> Aoc.Day20.part1("priv/day20/example_1.txt")
+      # 23
+      #
+      # iex> Aoc.Day20.part1("priv/day20/example_2.txt")
+      # 58
   """
   def part1(filename) do
     map =
       input(filename)
-      |> mapify()
+      |> mapify(1)
 
-    s = size(map) |> IO.inspect(label: "--")
-    graph =
-      map
-      |> graphify()
-      |> connect_portals(map, s)
-    solve(graph, start(map, s), out(map, s))
+    s = size(map)
+
+    map
+    |> graphify()
+    |> connect_portals(map, s)
+    |> solve(start(map, s), out(map, s))
   end
 
   defp connect_portals(graph, map, size) do
@@ -26,8 +97,7 @@ defmodule Aoc.Day20 do
     |> Enum.filter(fn {k, _} ->
       k != "AA" and k != "ZZ"
     end)
-    |> IO.inspect
-    |> Enum.reduce(graph, fn {k, values}, acc ->
+    |> Enum.reduce(graph, fn {_, values}, acc ->
       from = Enum.at(values, 0)
       to = Enum.at(values, 1)
       :digraph.add_edge(acc, from, to)
@@ -60,14 +130,14 @@ defmodule Aoc.Day20 do
   def size(map) do
     y =
       map
-      |> Enum.map(fn {{_, y}, _} ->
+      |> Stream.map(fn {{_, y}, _} ->
         y
       end)
       |> Enum.max
       |> Kernel.+(1)
     x =
       map
-      |> Enum.map(fn {{x, _}, _} ->
+      |> Stream.map(fn {{x, _}, _} ->
         x
       end)
       |> Enum.max
@@ -131,7 +201,6 @@ defmodule Aoc.Day20 do
     Map.merge(horizontals, verticals, fn _k, v1, v2 ->
       v1 ++ v2
     end)
-    |> IO.inspect(label: "Portal")
   end
 
   defp graphify(map) do
@@ -143,43 +212,44 @@ defmodule Aoc.Day20 do
         end
         acc
       end)
+    map
+    |> Enum.reduce(graph, fn {{x, y}, _}, acc ->
 
-    graph =
-      map
-      |> Enum.reduce(graph, fn {{x, y}, _}, acc ->
+      if Map.get(map, {x-1, y}, :void) == :path do
+        :digraph.add_edge(acc, {x-1, y}, {x, y})
+        :digraph.add_edge(acc, {x, y}, {x-1, y})
+      end
 
-        if Map.get(map, {x-1, y}, :void) == :path do
-          :digraph.add_edge(acc, {x-1, y}, {x, y})
-          :digraph.add_edge(acc, {x, y}, {x-1, y})
-        end
+      if Map.get(map, {x+1, y}, :void) == :path do
+        :digraph.add_edge(acc, {x+1, y}, {x, y})
+        :digraph.add_edge(acc, {x, y}, {x+1, y})
+      end
 
-        if Map.get(map, {x+1, y}, :void) == :path do
-          :digraph.add_edge(acc, {x+1, y}, {x, y})
-          :digraph.add_edge(acc, {x, y}, {x+1, y})
-        end
+      if Map.get(map, {x, y-1}, :void) == :path do
+        :digraph.add_edge(acc, {x, y-1}, {x, y})
+        :digraph.add_edge(acc, {x, y}, {x, y-1})
+      end
 
-        if Map.get(map, {x, y-1}, :void) == :path do
-          :digraph.add_edge(acc, {x, y-1}, {x, y})
-          :digraph.add_edge(acc, {x, y}, {x, y-1})
-        end
+      if Map.get(map, {x, y+1}, :void) == :path do
+        :digraph.add_edge(acc, {x, y+1}, {x, y})
+        :digraph.add_edge(acc, {x, y}, {x, y+1})
+      end
 
-        if Map.get(map, {x, y+1}, :void) == :path do
-          :digraph.add_edge(acc, {x, y+1}, {x, y})
-          :digraph.add_edge(acc, {x, y}, {x, y+1})
-        end
-
-        acc
-      end)
+      acc
+    end)
   end
 
-  defp mapify(rows_cols) do
+  defp mapify(rows_cols, depth) do
     rows_cols
     |> Stream.with_index
     |> Enum.reduce(Map.new, fn {row, y}, acc ->
       row
       |> Stream.with_index
       |> Enum.reduce(acc, fn {item, x}, acc ->
-        Map.put(acc, {x, y}, type(item))
+        1..depth
+        |> Enum.reduce(acc, fn d, acc ->
+          Map.put(acc, {x + (d * @depth_offset), y}, type(item))
+        end)
       end)
     end)
   end

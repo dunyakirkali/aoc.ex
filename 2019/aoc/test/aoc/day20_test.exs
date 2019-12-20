@@ -6,7 +6,8 @@ defmodule Day20Test do
   #   assert Aoc.Day20.part1("priv/day20/input.txt") == 606
   # end
 
-  # test "Part 2" do
-  #   assert Aoc.Day20.part2("priv/day20/input.txt") == 606
-  # end
+  @tag timeout: :infinity
+  test "Part 2" do
+    assert Aoc.Day20.part2("priv/day20/input.txt") == 7186
+  end
 end
