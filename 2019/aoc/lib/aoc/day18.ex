@@ -5,38 +5,19 @@ defmodule Aoc.Day18 do
   @doc """
       iex> Aoc.Day18.part1("priv/day18/example_1.txt")
       8
-      #
-      # iex> Aoc.Day18.part1("priv/day18/example_2.txt")
-      # 86
-      #
-      # iex> Aoc.Day18.part1("priv/day18/example_3.txt")
-      # 132
-      #
-      # iex> Aoc.Day18.part1("priv/day18/example_4.txt")
-      # 136
-      #
-      # iex> Aoc.Day18.part1("priv/day18/example_5.txt")
-      # 81
   """
   def part1(filename) do
     {:ok, pid} = Agent.start_link(fn -> %{} end)
     Agent.update(pid, &Map.put(&1, :lowest_so_far, @large))
-    map =
-      filename
-      |> input()
-      |> Enum.filter(fn {pos, val} ->
-        val != "#"
-      end)
-      |> Enum.into(Map.new)
-
+    map = input(filename)
     key_count = Enum.count(keys(map))
 
-    path_to_a_reachable_key(map, [], 0, key_count, pid)
+    path_to_a_reachable_key(map, 0, 0, key_count, pid)
     |> List.flatten
     |> Enum.min
   end
 
-  defmemo path_to_a_reachable_key(map, collected, steps, key_count, pid) do
+  defmemo path_to_a_reachable_key(map, collected_count, steps, key_count, pid) do
     lowest_so_far = Agent.get(pid, &Map.get(&1, :lowest_so_far))
     visible = reachable(map)
     keys = keys(visible)
@@ -44,7 +25,7 @@ defmodule Aoc.Day18 do
     if lowest_so_far <= steps do
       @large
     else
-      if key_count == Enum.count(collected) do
+      if key_count == collected_count do
         if steps < lowest_so_far do
           Agent.update(pid, &Map.put(&1, :lowest_so_far, steps))
         end
@@ -99,21 +80,21 @@ defmodule Aoc.Day18 do
               {key, Enum.count(path) - 1}
             end
           end)
-          |> Enum.sort(fn l, r ->
-            elem(l, 1) > elem(r, 1)
-          end)
+          # |> Enum.sort(fn l, r ->
+          #   elem(l, 1) > elem(r, 1)
+          # end)
 
         it_takes
         |> Stream.map(fn {key, stp} ->
           map = update_map(map, key)
-          path_to_a_reachable_key(map, [key | collected], steps + stp, key_count, pid)
+          path_to_a_reachable_key(map, collected_count + 1, steps + stp, key_count, pid)
         end)
         |> Enum.to_list
       end
     end
   end
 
-  def update_map(map, key) do
+  defmemo update_map(map, key) do
     door = String.upcase(key)
 
     kk = Enum.find(map, fn {_, val} ->
@@ -158,15 +139,19 @@ defmodule Aoc.Day18 do
     filename
     |> File.read!()
     |> String.split("\n", trim: true)
-    |> Enum.map(fn line ->
+    |> Stream.map(fn line ->
       String.split(line, "",  trim: true)
     end)
-    |> Enum.with_index
+    |> Stream.with_index
     |> Enum.reduce(Map.new, fn {line, y}, acc ->
       line
-      |> Enum.with_index
+      |> Stream.with_index
       |> Enum.reduce(acc, fn {item, x}, acc ->
-        Map.put(acc, {x, y}, item)
+        if item != "#" do
+          Map.put(acc, {x, y}, item)
+        else
+          acc
+        end
       end)
     end)
   end
