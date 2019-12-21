@@ -103,6 +103,9 @@ defmodule AGC do
         02202 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           mul(machine, ini1, ini2, outi, :relative, :relative, :position)
+        20002 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          mul(machine, ini1, ini2, outi, :position, :position, :relative)
 
         003->
           [_, ini] = Enum.slice(machine.instructions, ip, 2)
@@ -232,6 +235,9 @@ defmodule AGC do
         21208->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           equals(machine, ini1, ini2, outi, :relative, :immediate, :relative)
+        22208->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          equals(machine, ini1, ini2, outi, :relative, :relative, :relative)
 
         009->
           [_, ini] = Enum.slice(machine.instructions, ip, 2)
