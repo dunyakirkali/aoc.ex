@@ -7,8 +7,7 @@ defmodule Aoc.Day18 do
       8
   """
   def part1(filename) do
-    {:ok, pid} = Agent.start_link(fn -> %{} end)
-    Agent.update(pid, &Map.put(&1, :lowest_so_far, @large))
+    {:ok, pid} = Agent.start_link(fn -> @large end)
     map = input(filename)
     key_count = Enum.count(keys(map))
 
@@ -18,7 +17,7 @@ defmodule Aoc.Day18 do
   end
 
   defmemo path_to_a_reachable_key(map, collected_count, steps, key_count, pid) do
-    lowest_so_far = Agent.get(pid, &Map.get(&1, :lowest_so_far))
+    lowest_so_far = Agent.get(pid, &(&1))
     visible = reachable(map)
     keys = keys(visible)
     # lowest_so_far |> IO.inspect(label: "low")
@@ -27,22 +26,22 @@ defmodule Aoc.Day18 do
     else
       if key_count == collected_count do
         if steps < lowest_so_far do
-          Agent.update(pid, &Map.put(&1, :lowest_so_far, steps))
+          Agent.update(pid, fn (state) -> lowest_so_far end)
         end
         steps |> IO.inspect(label: "Sol")
       else
         graph =
           visible
           # |> IO.inspect
-          |> Enum.reduce(:digraph.new(), fn {{x, y}, value}, acc ->
-            :digraph.add_vertex(acc, {x, y}, value)
+          |> Enum.reduce(:digraph.new(), fn {_, {x, y}}, acc ->
+            :digraph.add_vertex(acc, {x, y})
             acc
           end)
 
         graph =
           visible
-          |> Enum.reduce(graph, fn {{x, y}, _}, acc ->
-            locs = Enum.map(visible, fn x -> elem(x, 0) end)
+          |> Enum.reduce(graph, fn {_, {x, y}}, acc ->
+            locs = Stream.map(visible, fn x -> elem(x, 1) end)
             if Enum.member?(locs, {x-1, y}) do
               :digraph.add_edge(acc, {x-1, y}, {x, y})
               :digraph.add_edge(acc, {x, y}, {x-1, y})
@@ -66,93 +65,99 @@ defmodule Aoc.Day18 do
             acc
           end)
 
-        it_takes =
-          keys
-          # |> IO.inspect
-          |> Stream.map(fn {_, key} ->
-            start = elem(Enum.find(visible, fn {_, value} -> value == "@" end), 0)# |> IO.inspect(label: "From")
-            desti = elem(Enum.find(visible, fn {_, value} -> value == key end), 0)# |> IO.inspect(label: "To")
-            path = :digraph.get_short_path(graph, start, desti)# |> IO.inspect(label: "Path")
+        start = elem(Enum.find(visible, fn {value, _} -> value == :me end), 1)# |> IO.inspect(label: "From")
+        keys
+        # |> IO.inspect
+        |> Stream.map(fn {key, _} ->
+          desti = elem(Enum.find(visible, fn {value, _} -> value == key end), 1)# |> IO.inspect(label: "To")
+          path = :digraph.get_short_path(graph, start, desti)# |> IO.inspect(label: "Path")
 
-            if path == false do
-              {key, @large}
-            else
-              {key, Enum.count(path) - 1}
-            end
-          end)
-          # |> Enum.sort(fn l, r ->
-          #   elem(l, 1) > elem(r, 1)
-          # end)
-
-        it_takes
+          if path == false do
+            nil
+          else
+            {key, Enum.count(path) - 1}
+          end
+        end)
+        |> Stream.reject(&is_nil/1)
         |> Stream.map(fn {key, stp} ->
-          map = update_map(map, key)
+          # key |> IO.inspect(label: "kkkk")
+          map = update_map(map, key)# |> IO.inspect(label: "MAP")
           path_to_a_reachable_key(map, collected_count + 1, steps + stp, key_count, pid)
         end)
         |> Enum.to_list
+        # |> IO.inspect(label: "Wfwfw")
       end
     end
   end
 
   defmemo update_map(map, key) do
-    door = String.upcase(key)
+    {:key, key_code} = key
+    door = {:door, key_code}
 
-    kk = Enum.find(map, fn {_, val} ->
-      val == key
+    # map |> IO.inspect(label: "mmm")
+
+    map
+    |> Stream.map(fn {val, coords} ->
+      case val do
+        :me -> {:path, coords}
+        _ -> {val, coords}
+      end
     end)
-
-    dk = Enum.find(map, fn {_, val} ->
-      val == door
+    |> Stream.map(fn {val, coords} ->
+      if val == key do
+        {:me, coords}
+      else
+        {val, coords}
+      end
     end)
-
-    ak = Enum.find(map, fn {_, val} ->
-      val == "@"
+    |> Stream.map(fn {val, coords} ->
+      if val == door do
+        {:path, coords}
+      else
+        {val, coords}
+      end
     end)
-
-    map =
-      map
-      |> Map.replace!(elem(ak, 0), ".")
-      |> Map.replace!(elem(kk, 0), "@")
-
-    if dk == nil do
-      map
-    else
-      Map.replace!(map, elem(dk, 0), ".")
-    end
   end
 
   defmemo reachable(map) do
     map
-    |> Stream.filter(fn {_, value} ->
-      String.match?(value, ~r/[a-z@.]/)
+    |> Stream.filter(fn {k, _} ->
+      case k do
+        {:key, _} -> true
+        :me -> true
+        :path -> true
+        _ -> false
+      end
     end)
   end
 
   defmemo keys(map) do
     map
-    |> Stream.filter(fn {_, value} ->
-      String.match?(value, ~r/[a-z]/)
+    |> Stream.filter(fn {k, _} ->
+      case k do
+        {:key, _} -> true
+        _ -> false
+      end
     end)
   end
+
+  defp type(char) when char in ?a..?z, do: {:key, char + ?A - ?a}
+  defp type(char) when char in ?A..?Z, do: {:door, char}
+  defp type(?#), do: :wall
+  defp type(?.), do: :path
+  defp type(?@), do: :me
 
   defp input(filename) do
     filename
     |> File.read!()
     |> String.split("\n", trim: true)
-    |> Stream.map(fn line ->
-      String.split(line, "",  trim: true)
-    end)
-    |> Stream.with_index
-    |> Enum.reduce(Map.new, fn {line, y}, acc ->
+    |> Stream.with_index()
+    |> Enum.to_list
+    |> Enum.flat_map(fn {line, y} ->
       line
-      |> Stream.with_index
-      |> Enum.reduce(acc, fn {item, x}, acc ->
-        if item != "#" do
-          Map.put(acc, {x, y}, item)
-        else
-          acc
-        end
-      end)
+      |> to_charlist()
+      |> Stream.with_index()
+      |> Stream.map(fn {char, x} -> {type(char), {x, y}} end)
     end)
   end
 end
