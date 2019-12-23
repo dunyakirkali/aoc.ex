@@ -16,6 +16,7 @@ defmodule Aoc.Day18 do
     |> Enum.min
   end
 
+
   defmemo path_to_a_reachable_key(map, collected_count, steps, key_count, pid) do
     lowest_so_far = Agent.get(pid, &(&1))
     visible = reachable(map)
@@ -26,7 +27,7 @@ defmodule Aoc.Day18 do
     else
       if key_count == collected_count do
         if steps < lowest_so_far do
-          Agent.update(pid, fn (state) -> lowest_so_far end)
+          Agent.update(pid, fn (state) -> steps end)
         end
         steps |> IO.inspect(label: "Sol")
       else
@@ -141,11 +142,11 @@ defmodule Aoc.Day18 do
     end)
   end
 
-  defp type(char) when char in ?a..?z, do: {:key, char + ?A - ?a}
-  defp type(char) when char in ?A..?Z, do: {:door, char}
-  defp type(?#), do: :wall
-  defp type(?.), do: :path
-  defp type(?@), do: :me
+  defmemo type(char) when char in ?a..?z, do: {:key, char + ?A - ?a}
+  defmemo type(char) when char in ?A..?Z, do: {:door, char}
+  defmemo type(?#), do: :wall
+  defmemo type(?.), do: :path
+  defmemo type(?@), do: :me
 
   defp input(filename) do
     filename
