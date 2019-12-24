@@ -10,6 +10,6 @@ defmodule Day24Test do
 
   @tag timeout: :infinity
   test "Part 2" do
-    assert Aoc.Day24.part2("priv/day24/input.txt", 200) == 18350099
+    assert Aoc.Day24.part2("priv/day24/input.txt", 200) == 2037
   end
 end
