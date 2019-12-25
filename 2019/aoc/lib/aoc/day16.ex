@@ -4,25 +4,42 @@ defmodule Aoc.Day16 do
   @base [0, 1, 0, -1]
 
   @doc """
-      # iex> Aoc.Day16.part2("priv/day16/example_1.txt", 100)
+      # iex> Aoc.Day16.part2("priv/day16/example_1.txt")
       # 84462026
-      #
+
       # iex> Aoc.Day16.part2("priv/day16/example_2.txt", 100)
       # 78725270
-      #
+
       # iex> Aoc.Day16.part2("priv/day16/example_3.txt", 100)
       # 53553731
   """
-  def part2(filename, phases \\ 100) do
-    inp = input(filename)
+  def part2(filename) do
+    data = File.read!(filename)
+    signal = parse(data)
 
-    res =
-      inp
-      |> List.duplicate(10_000)
-      |> next(0, phases)
+    signal
+    |> Enum.reverse()
+    |> Stream.cycle()
+    |> Stream.take(length(signal) * 10000 - offset(data))
+    |> Stream.iterate(fn signal -> Stream.scan(signal, &rem(&1 + &2, 10)) end)
+    |> Enum.at(100)
+    |> Stream.take(-8)
+    |> Enum.reverse()
+    |> Enum.join()
+    |> String.to_integer()
+  end
 
-    offset = Enum.take(res, 7) |> Enum.join |> String.to_integer
-    offsetted(res, offset)
+  defp parse(data) do
+    data
+    |> String.trim()
+    |> String.split("", trim: true)
+    |> Enum.map(&String.to_integer/1)
+  end
+
+  defp offset(data) do
+    data
+    |> String.slice(0, 7)
+    |> String.to_integer()
   end
 
   @doc """
@@ -70,7 +87,7 @@ defmodule Aoc.Day16 do
 
   def next(inp, count, max) when count == max, do: inp
   def next(inp, count, max) do
-    IO.puts("phase: #{count}")
+    # IO.puts("phase: #{count}")
     indexed = Stream.with_index(inp)
     indexed
     |> Enum.map(fn {_, char_index} ->

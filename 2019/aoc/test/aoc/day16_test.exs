@@ -7,8 +7,8 @@ defmodule Day16Test do
     assert Aoc.Day16.part1("priv/day16/input.txt") == 40921727
   end
 
-  # @tag timeout: :infinity
-  # test "Part 2" do
-  #   assert Aoc.Day16.part2("priv/day16/input.txt") == 5322455
-  # end
+  @tag timeout: :infinity
+  test "Part 2" do
+    assert Aoc.Day16.part2("priv/day16/input.txt") == 89950138
+  end
 end

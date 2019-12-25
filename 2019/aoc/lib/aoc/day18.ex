@@ -1,164 +1,118 @@
 defmodule Aoc.Day18 do
   use Memoize
 
-  @large 1_000_000
-  @doc """
-      iex> Aoc.Day18.part1("priv/day18/example_1.txt")
-      8
-  """
   def part1(filename) do
-    {:ok, pid} = Agent.start_link(fn -> @large end)
-    map = input(filename)
-    key_count = Enum.count(keys(map))
+    data =
+      filename
+      |> input()
+      |> mapify()
 
-    path_to_a_reachable_key(map, 0, 0, key_count, pid)
-    |> List.flatten
-    |> Enum.min
+    pos = Map.get(data, :me)
+    map = Map.get(data, :map)
+    keys = Map.get(data, :keys)
+
+    search(pos, map, Enum.count(keys))
   end
 
+  def search(pos, map, key_count) do
+    keys = MapSet.new()
+    do_search(map, key_count, MapSet.new([{pos, MapSet.new()}]), :queue.from_list([{pos, keys, 0}]))
+  end
 
-  defmemo path_to_a_reachable_key(map, collected_count, steps, key_count, pid) do
-    lowest_so_far = Agent.get(pid, &(&1))
-    visible = reachable(map)
-    keys = keys(visible)
-    # lowest_so_far |> IO.inspect(label: "low")
-    if lowest_so_far <= steps do
-      @large
+  defmemo do_search(map, key_count, visited, queue) do
+    # IO.inspect(visited, label: "Visited")
+
+    {{:value, {head, keys, depth}}, queue} = :queue.out(queue)
+
+    if MapSet.size(keys) == key_count do
+      depth
     else
-      if key_count == collected_count do
-        if steps < lowest_so_far do
-          Agent.update(pid, fn (state) -> steps end)
-        end
-        steps |> IO.inspect(label: "Sol")
-      else
-        graph =
-          visible
-          # |> IO.inspect
-          |> Enum.reduce(:digraph.new(), fn {_, {x, y}}, acc ->
-            :digraph.add_vertex(acc, {x, y})
-            acc
-          end)
+      {visited, queue} =
+        find_neighbours(head)
+        |> Enum.reduce({visited, queue}, fn new_point, unmodified = {visited, queue} ->
+          modify = &modify(visited, queue, new_point, depth + 1, &1)
 
-        graph =
-          visible
-          |> Enum.reduce(graph, fn {_, {x, y}}, acc ->
-            locs = Stream.map(visible, fn x -> elem(x, 1) end)
-            if Enum.member?(locs, {x-1, y}) do
-              :digraph.add_edge(acc, {x-1, y}, {x, y})
-              :digraph.add_edge(acc, {x, y}, {x-1, y})
-            end
+          case map[new_point] do
+            :wall ->
+              unmodified
 
-            if Enum.member?(locs, {x+1, y}) do
-              :digraph.add_edge(acc, {x+1, y}, {x, y})
-              :digraph.add_edge(acc, {x, y}, {x+1, y})
-            end
+            :path ->
+              modify.(keys)
 
-            if Enum.member?(locs, {x, y-1}) do
-              :digraph.add_edge(acc, {x, y-1}, {x, y})
-              :digraph.add_edge(acc, {x, y}, {x, y-1})
-            end
+            {:key, key_id} ->
 
-            if Enum.member?(locs, {x, y+1}) do
-              :digraph.add_edge(acc, {x, y+1}, {x, y})
-              :digraph.add_edge(acc, {x, y}, {x, y+1})
-            end
+              MapSet.put(keys, key_id) |> modify.()
 
-            acc
-          end)
+            {:door, door_id} ->
+              if MapSet.member?(keys, door_id), do: modify.(keys), else: unmodified
 
-        start = elem(Enum.find(visible, fn {value, _} -> value == :me end), 1)# |> IO.inspect(label: "From")
-        keys
-        # |> IO.inspect
-        |> Stream.map(fn {key, _} ->
-          desti = elem(Enum.find(visible, fn {value, _} -> value == key end), 1)# |> IO.inspect(label: "To")
-          path = :digraph.get_short_path(graph, start, desti)# |> IO.inspect(label: "Path")
-
-          if path == false do
-            nil
-          else
-            {key, Enum.count(path) - 1}
           end
         end)
-        |> Stream.reject(&is_nil/1)
-        |> Stream.map(fn {key, stp} ->
-          # key |> IO.inspect(label: "kkkk")
-          map = update_map(map, key)# |> IO.inspect(label: "MAP")
-          path_to_a_reachable_key(map, collected_count + 1, steps + stp, key_count, pid)
-        end)
-        |> Enum.to_list
-        # |> IO.inspect(label: "Wfwfw")
-      end
+
+      do_search(map, key_count, visited, queue)
     end
   end
 
-  defmemo update_map(map, key) do
-    {:key, key_code} = key
-    door = {:door, key_code}
-
-    # map |> IO.inspect(label: "mmm")
-
-    map
-    |> Stream.map(fn {val, coords} ->
-      case val do
-        :me -> {:path, coords}
-        _ -> {val, coords}
-      end
-    end)
-    |> Stream.map(fn {val, coords} ->
-      if val == key do
-        {:me, coords}
-      else
-        {val, coords}
-      end
-    end)
-    |> Stream.map(fn {val, coords} ->
-      if val == door do
-        {:path, coords}
-      else
-        {val, coords}
-      end
-    end)
+  defp modify(visited, queue, new_point, new_depth, keys) do
+    if MapSet.member?(visited, {new_point, keys}) do
+      {visited, queue}
+    else
+      visited = MapSet.put(visited, {new_point, keys})
+      queue = :queue.in({new_point, keys, new_depth}, queue)
+      {visited, queue}
+    end
   end
 
-  defmemo reachable(map) do
-    map
-    |> Stream.filter(fn {k, _} ->
-      case k do
-        {:key, _} -> true
-        :me -> true
-        :path -> true
-        _ -> false
-      end
-    end)
+  defmemo find_neighbours({x, y}) do
+    [{x - 1, y}, {x + 1, y}, {x, y - 1}, {x, y + 1}]
   end
 
-  defmemo keys(map) do
-    map
-    |> Stream.filter(fn {k, _} ->
-      case k do
-        {:key, _} -> true
-        _ -> false
-      end
-    end)
+  def mapify(str) do
+    mapify(str, {0, 0}, %{})
+  end
+  def mapify([], _, acc), do: acc
+  def mapify([?\n|t], {x, y}, acc), do: mapify(t, {0, y + 1}, acc)
+  def mapify([?#|t], {x, y}, acc)  do
+    acc =
+      acc
+      |> Map.update(:walls, MapSet.new([{x, y}]), &(MapSet.put(&1, {x, y})))
+      |> Map.update(:map, Map.new([{{x, y}, :wall}]), &(Map.put(&1, {x, y}, :wall)))
+    mapify(t, {x + 1, y}, acc)
+  end
+  def mapify([?@|t], {x, y}, acc)  do
+    acc =
+      acc
+      |> Map.put(:me, {x, y})
+      |> Map.update(:map, Map.new(), &(Map.put(&1, {x, y}, :path)))
+    mapify(t, {x + 1, y}, acc)
+  end
+  def mapify([h|t], {x, y}, acc) when h in ?a..?z do
+    acc =
+      acc
+      |> Map.update(:keys, Map.new([{{x, y}, type(h)}]), &(Map.put(&1, {x, y}, type(h))))
+      |> Map.update(:map, Map.new([{{x, y}, type(h)}]), &(Map.put(&1, {x, y}, type(h))))
+    mapify(t, {x + 1, y}, acc)
+  end
+  def mapify([h|t], {x, y}, acc) when h in ?A..?Z do
+    acc =
+      acc
+      |> Map.update(:doors, Map.new([{{x, y}, type(h)}]), &(Map.put(&1, {x, y}, type(h))))
+      |> Map.update(:map, Map.new([{{x, y}, type(h)}]), &(Map.put(&1, {x, y}, type(h))))
+    mapify(t, {x + 1, y}, acc)
+  end
+  def mapify([?.|t], {x, y}, acc) do
+    acc =
+      acc
+      |> Map.update(:map, Map.new([{{x, y}, :path}]), &(Map.put(&1, {x, y}, :path)))
+    mapify(t, {x + 1, y}, acc)
   end
 
-  defmemo type(char) when char in ?a..?z, do: {:key, char + ?A - ?a}
-  defmemo type(char) when char in ?A..?Z, do: {:door, char}
-  defmemo type(?#), do: :wall
-  defmemo type(?.), do: :path
-  defmemo type(?@), do: :me
+  defp type(char) when char in ?a..?z, do: {:key, char + ?A - ?a}
+  defp type(char) when char in ?A..?Z, do: {:door, char}
 
   defp input(filename) do
     filename
     |> File.read!()
-    |> String.split("\n", trim: true)
-    |> Stream.with_index()
-    |> Enum.to_list
-    |> Enum.flat_map(fn {line, y} ->
-      line
-      |> to_charlist()
-      |> Stream.with_index()
-      |> Stream.map(fn {char, x} -> {type(char), {x, y}} end)
-    end)
+    |> to_charlist()
   end
 end
