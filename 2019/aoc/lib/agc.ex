@@ -3,7 +3,7 @@ defmodule AGC do
 
   def new(filename) do
     instructions = input(filename)
-    memory = for _ <- 0..5_000_000, do: 0
+    memory = for _ <- 0..10_000_000, do: 0
     %AGC{instructions: instructions ++ memory}
   end
 
@@ -60,6 +60,9 @@ defmodule AGC do
         22001 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           add(machine, ini1, ini2, outi, :position, :relative, :relative)
+        02001 ->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          add(machine, ini1, ini2, outi, :position, :relative, :position)
 
         00002 ->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
@@ -198,6 +201,15 @@ defmodule AGC do
         20207->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           less_than(machine, ini1, ini2, outi, :relative, :position, :relative)
+        22007->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          less_than(machine, ini1, ini2, outi, :position, :relative, :relative)
+        21007->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          less_than(machine, ini1, ini2, outi, :position, :immediate, :relative)
+        20107->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          less_than(machine, ini1, ini2, outi, :immediate, :position, :relative)
 
         00008->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
@@ -238,6 +250,9 @@ defmodule AGC do
         20008->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           equals(machine, ini1, ini2, outi, :position, :position, :relative)
+        21008->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          equals(machine, ini1, ini2, outi, :position, :immediate, :relative)
 
         009->
           [_, ini] = Enum.slice(machine.instructions, ip, 2)

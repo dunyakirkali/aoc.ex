@@ -31,7 +31,8 @@ defmodule Aoc.MixProject do
       {:printex, "~> 1.0.0"},
       {:drawille, "~> 0.0.1"},
       {:distance, "~> 0.2.1"},
-      {:poison, "~> 3.1"}
+      {:poison, "~> 3.1"},
+      {:comb, git: "https://github.com/tallakt/comb.git"}
     ]
   end
 end
