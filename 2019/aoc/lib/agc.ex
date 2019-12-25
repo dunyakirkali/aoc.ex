@@ -110,9 +110,6 @@ defmodule AGC do
         003->
           [_, ini] = Enum.slice(machine.instructions, ip, 2)
           input(machine, ini, :position)
-        103->
-          [_, ini] = Enum.slice(machine.instructions, ip, 2)
-          input(machine, ini, :immediate)
         203->
           [_, ini] = Enum.slice(machine.instructions, ip, 2)
           input(machine, ini, :relative)
@@ -238,6 +235,9 @@ defmodule AGC do
         22208->
           [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
           equals(machine, ini1, ini2, outi, :relative, :relative, :relative)
+        20008->
+          [_, ini1, ini2, outi] = Enum.slice(machine.instructions, ip, 4)
+          equals(machine, ini1, ini2, outi, :position, :position, :relative)
 
         009->
           [_, ini] = Enum.slice(machine.instructions, ip, 2)
@@ -304,7 +304,7 @@ defmodule AGC do
       %AGC{machine | state: :wait}
     else
       [input | remaining_input] = machine.inputs
-      ini = in_value(machine, ini, m1)
+      ini = out_value(m1, machine, ini)
       instructions = List.replace_at(machine.instructions, ini, input)
 
       %AGC{machine | instructions: instructions, ip: ip + 2, inputs: remaining_input, state: :cont}
@@ -412,10 +412,6 @@ defmodule AGC do
         Enum.at(machine.instructions, machine.relative_base_offset + val)
     end
   end
-
-  def in_value(machine, val, :position), do: val
-  def in_value(machine, val, :relative), do: val + machine.relative_base_offset
-  def in_value(_, val, :immediate), do: val
 
   defp out_value(mode, machine, val) do
     case mode do
