@@ -1,107 +1,81 @@
 defmodule Aoc.Day23 do
-  def part2() do
-    {:ok, pid} = Agent.start_link(fn -> [] end)
-    ys = []
-    computers =
-      0..49
-      |> Enum.map(fn nic ->
-        IO.puts("Spawning #{nic}")
+  defmodule Computer do
+    use GenServer
+
+    def start(nic) do
+      GenServer.start(__MODULE__, nic, name: :"nic_#{nic}")
+    end
+
+    def run(pid) do
+      GenServer.cast(pid, :run)
+    end
+
+    def input(pid, list) do
+      GenServer.cast(pid, {:input, list})
+    end
+
+    def stop(pid) do
+      GenServer.stop(pid)
+    end
+
+    def init(nic) do
+      computer =
         "priv/day23/input.txt"
         |> AGC.new()
         |> Map.put(:inputs, [nic, -1])
-      end)
 
-    loop({computers, pid, ys})
-  end
-  #
-  # def part1() do
-  #   0..49
-  #   |> Enum.map(fn nic ->
-  #     IO.puts("Spawning #{nic}")
-  #     "priv/day23/input.txt"
-  #     |> AGC.new()
-  #     |> Map.put(:inputs, [nic, -1])
-  #   end)
-  #   |> loop(0)
-  # end
+      {:ok, computer}
+    end
 
-  def loop({computers, pid, ys}) do
-    outputs =
-      computers
-      |> Enum.map(fn computer ->
-        Map.get(computer, :output)
-      end)
+    def handle_cast(:run, computer) do
+      :timer.send_interval(1, :run)
 
-    computers =
-      computers
-      |> Enum.map(fn computer ->
-        computer |> Map.put(:output, [])
-      end)
+      {:noreply, computer}
+    end
 
-    computers =
-      outputs
-      |> List.flatten
-      |> Enum.chunk_every(3)
-      |> Enum.reduce(computers, fn packet, acc ->
-        send_to(acc, packet, pid)
-      end)
-      |> Enum.map(fn computer ->
-        AGC.run(computer)
-      end)
+    def handle_cast({:input, list}, computer) do
+      computer = Map.update!(computer, :inputs, &(&1 ++ list))
 
-    {computers, pid, ys}
-    |> nat()
-    |> loop()
-  end
+      {:noreply, computer}
+    end
 
-  def nat({computers, pid, ys}) do
-    idle =
-      computers
-      |> Enum.map(fn computer ->
-        Enum.count(Map.get(computer, :inputs))
-      end)
-      |> Enum.all?(fn in_count ->
-        in_count == 0
-      end)
+    def handle_info(:run, computer) do
+      if length(computer.inputs) > 0 do
+        computer = AGC.run(computer)
+        computer.output
+        |> Enum.chunk_every(3)
+        |> Enum.map(fn [nic, x, y] ->
+          IO.puts("nic: #{nic} -> X: #{x} Y: #{y}")
+          if nic == 255 do
+            0..49
+            |> Enum.map(fn nic ->
+              stop(:"nic_#{nic}")
+            end)
 
-    if idle do
-      IO.puts("Idle")
-      input = Agent.get(pid, &(&1))
-      Agent.update(pid, fn (state) -> [] end)
-      y = Enum.at(input, 1)
-      ys =
-        if y != nil do
-          ys |> IO.inspect(label: "ys")
-          y |> IO.inspect(label: "y")
-          if  Enum.member?(ys, y) do
-            exit("#{y}")
+            IO.puts("=========> X: #{x}, #{y}")
           end
-          [y | ys]
-        else
-          ys
-        end
-      fc = Enum.at(computers, 0)
-      fc = fc |> Map.put(:inputs, input) |> AGC.run
+          input(:"nic_#{nic}", [x, y])
+        end)
 
-      {List.replace_at(computers, 0, fc), pid, ys}
-    else
-      {computers, pid, ys}
+        {:noreply, Map.put(computer, :output, [])}
+      else
+        {:noreply, computer}
+      end
     end
   end
 
-  def send_to(computers, [nic, x, y], pid) do
-    IO.puts("Sending #{x}-#{y} to #{nic}")
-    if nic == 255 do
-      IO.inspect([x, y])
-      Agent.update(pid, fn (state) -> [x, y] end)
-      computers
-    else
-      computer = Enum.at(computers, nic)
-      computer =
-        computer
-        |> Map.put(:inputs, [x, y])
-        |> AGC.run()
-      List.replace_at(computers, nic, computer)
-    end
+  def part1() do
+    max = 49
+    0..max
+    |> Enum.map(fn nic ->
+      IO.puts("Spawning #{nic}")
+      Computer.start(nic)
+    end)
+
+    0..max
+    |> Enum.map(fn nic ->
+      Computer.run(:"nic_#{nic}")
+      :sys.get_state(:"nic_#{nic}")
+    end)
   end
 end
