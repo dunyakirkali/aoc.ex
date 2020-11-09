@@ -23,4 +23,4 @@ erl_crash.dump
 aoc-*.tar
 
 .idea/
-
+*.iml
