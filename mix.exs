@@ -21,13 +21,13 @@ defmodule Aoc.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:nimble_parsec, "~> 0.2"},
+      {:nimble_parsec, "~> 1.1.0"},
       {:memoize, "~> 1.3.2"},
-      {:benchee, "~> 0.11", only: [:dev, :test]},
+      {:benchee, "~> 1.0.1", only: [:dev, :test]},
       {:benchee_html, "~> 1.0", only: [:dev, :test]},
       {:drawille, "~> 0.0.1"},
       {:distance, "~> 0.2.1"},
-      {:poison, "~> 3.1"},
+      {:poison, "~> 4.0.1"},
       {:comb, git: "https://github.com/tallakt/comb.git"}
     ]
   end
