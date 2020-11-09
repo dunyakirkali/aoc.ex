@@ -22,7 +22,7 @@ defmodule Aoc.MixProject do
   defp deps do
     [
       {:nimble_parsec, "~> 0.2"},
-      {:memoize, "~> 1.2"},
+      {:memoize, "~> 1.3.2"},
       {:benchee, "~> 0.11", only: [:dev, :test]},
       {:benchee_html, "~> 1.0", only: [:dev, :test]},
       {:drawille, "~> 0.0.1"},
