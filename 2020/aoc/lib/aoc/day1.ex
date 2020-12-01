@@ -6,13 +6,14 @@ defmodule Aoc.Day1 do
       514579
   """
   def part1(list) do
-    [l, r] =
-      list
-      |> Combination.combine(2)
-      |> Enum.reduce_while(0, fn pair, acc ->
-        if Enum.sum(pair) == @goal, do: {:halt, pair}, else: {:cont, acc}
-      end)
-    l * r
+    list
+    |> Combination.combine(2)
+    |> Enum.reduce_while(0, fn pair, acc ->
+      if Enum.sum(pair) == @goal, do: {:halt, pair}, else: {:cont, acc}
+    end)
+    |> Enum.reduce(1, fn item, acc ->
+      item * acc
+    end)
   end
 
   @doc """
@@ -20,14 +21,14 @@ defmodule Aoc.Day1 do
       241861950
   """
   def part2(list) do
-    [l, m, r] =
-      list
-      |> Combination.combine(3)
-      |> Enum.reduce_while(0, fn tair, acc ->
-        if Enum.sum(tair) == @goal, do: {:halt, tair}, else: {:cont, acc}
-      end)
-
-    l * m * r
+    list
+    |> Combination.combine(3)
+    |> Enum.reduce_while(0, fn tair, acc ->
+      if Enum.sum(tair) == @goal, do: {:halt, tair}, else: {:cont, acc}
+    end)
+    |> Enum.reduce(1, fn item, acc ->
+      item * acc
+    end)
   end
 
   def input() do
