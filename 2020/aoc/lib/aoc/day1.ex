@@ -11,9 +11,7 @@ defmodule Aoc.Day1 do
     |> Enum.find(fn pair ->
       Enum.sum(pair) == @goal
     end)
-    |> Enum.reduce(1, fn item, acc ->
-      item * acc
-    end)
+    |> Enum.reduce(1, &*/2)
   end
 
   @doc """
@@ -26,9 +24,7 @@ defmodule Aoc.Day1 do
     |> Enum.find(fn tair ->
       Enum.sum(tair) == @goal
     end)
-    |> Enum.reduce(1, fn item, acc ->
-      item * acc
-    end)
+    |> Enum.reduce(1, &*/2)
   end
 
   def input() do
