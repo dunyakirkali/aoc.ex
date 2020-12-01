@@ -3,10 +3,12 @@ defmodule Day1Test do
   doctest Aoc.Day1
 
   test "Part 1" do
-    assert Aoc.Day1.part1() == 3550236
+    input = Aoc.Day1.input()
+    assert Aoc.Day1.part1(input) == 876_459
   end
 
   test "Part 2" do
-    assert Aoc.Day1.part2() == 5322455
+    input = Aoc.Day1.input()
+    assert Aoc.Day1.part2(input) == 116_168_640
   end
 end

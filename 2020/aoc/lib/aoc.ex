@@ -1,6 +1,6 @@
 defmodule Aoc do
   defmodule Point do
-    defstruct [x: 0, y: 0, z: 0]
+    defstruct x: 0, y: 0, z: 0
 
     @doc """
         iex> from = %Aoc.Point{x: -3, y: 5, z: -4}
