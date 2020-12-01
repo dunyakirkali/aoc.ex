@@ -8,8 +8,8 @@ defmodule Aoc.Day1 do
   def part1(list) do
     list
     |> Combination.combine(2)
-    |> Enum.reduce_while(0, fn pair, acc ->
-      if Enum.sum(pair) == @goal, do: {:halt, pair}, else: {:cont, acc}
+    |> Enum.find(fn pair ->
+      Enum.sum(pair) == @goal
     end)
     |> Enum.reduce(1, fn item, acc ->
       item * acc
@@ -23,8 +23,8 @@ defmodule Aoc.Day1 do
   def part2(list) do
     list
     |> Combination.combine(3)
-    |> Enum.reduce_while(0, fn tair, acc ->
-      if Enum.sum(tair) == @goal, do: {:halt, tair}, else: {:cont, acc}
+    |> Enum.find(fn tair ->
+      Enum.sum(tair) == @goal
     end)
     |> Enum.reduce(1, fn item, acc ->
       item * acc
