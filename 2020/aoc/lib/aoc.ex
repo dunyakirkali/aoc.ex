@@ -17,4 +17,61 @@ defmodule Aoc do
       abs(from.x - to.x) + abs(from.y - to.y) + abs(from.z - to.z)
     end
   end
+
+  defmodule Chart do
+    def new(filename) do
+      filename
+      |> File.read!()
+      |> String.split("\n", trim: true)
+      |> Enum.map(fn line ->
+        String.graphemes(line)
+      end)
+      |> Enum.with_index()
+      |> Enum.reduce(%{}, fn {row, ri}, acc ->
+        row
+        |> Enum.with_index()
+        |> Enum.reduce(acc, fn {col, ci}, acc ->
+          Map.put(acc, {ci, ri}, col)
+        end)
+      end)
+    end
+
+    @doc """
+        iex> map = Aoc.Chart.new("priv/day3/example.txt")
+        ...> Aoc.Chart.number_of_rows(map)
+        11
+
+        iex> map = Aoc.Chart.new("priv/day3/input.txt")
+        ...> Aoc.Chart.number_of_rows(map)
+        323
+    """
+    def number_of_rows(map) do
+      map
+      |> Map.keys()
+      |> Enum.map(fn x ->
+        elem(x, 1)
+      end)
+      |> Enum.max()
+      |> Kernel.+(1)
+    end
+
+    @doc """
+        iex> map = Aoc.Chart.new("priv/day3/example.txt")
+        ...> Aoc.Chart.number_of_cols(map)
+        11
+
+        iex> map = Aoc.Chart.new("priv/day3/input.txt")
+        ...> Aoc.Chart.number_of_cols(map)
+        31
+    """
+    def number_of_cols(map) do
+      map
+      |> Map.keys()
+      |> Enum.map(fn x ->
+        elem(x, 0)
+      end)
+      |> Enum.max()
+      |> Kernel.+(1)
+    end
+  end
 end
