@@ -1,5 +1,4 @@
 defmodule Aoc.Day2 do
-
   @doc """
       iex> inp = Aoc.Day2.input("priv/day2/example.txt")
       ...> Aoc.Day2.part1(inp)
@@ -45,14 +44,15 @@ defmodule Aoc.Day2 do
   def valid(data) do
     min = String.to_integer(data["min"])
     max = String.to_integer(data["max"])
+
     count =
       data["password"]
-      |> String.graphemes
+      |> String.graphemes()
       |> Enum.count(fn char ->
         char == data["letter"]
       end)
 
-    (count >= min) && (count <= max)
+    count >= min && count <= max
   end
 
   def input(filename) do
