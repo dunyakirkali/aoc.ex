@@ -70,24 +70,17 @@ defmodule Aoc.Day4 do
       |> Enum.map(fn field ->
         String.split(field, ":")
       end)
-      # |> IO.inspect
 
     if valid_fields(fields) do
-      byr = Enum.at(Enum.find(fields, fn field -> Enum.at(field, 0) == "byr" end), 1)
-      iyr = Enum.at(Enum.find(fields, fn field -> Enum.at(field, 0) == "iyr" end), 1)
-      eyr = Enum.at(Enum.find(fields, fn field -> Enum.at(field, 0) == "eyr" end), 1)
-      hgt = Enum.at(Enum.find(fields, fn field -> Enum.at(field, 0) == "hgt" end), 1)
-      hcl = Enum.at(Enum.find(fields, fn field -> Enum.at(field, 0) == "hcl" end), 1)
-      ecl = Enum.at(Enum.find(fields, fn field -> Enum.at(field, 0) == "ecl" end), 1)
-      pid = Enum.at(Enum.find(fields, fn field -> Enum.at(field, 0) == "pid" end), 1)
+      map = Map.new(fields, fn [k, v] -> {k, v} end)
 
-      valid_byr(byr) &&
-      valid_iyr(iyr) &&
-      valid_eyr(eyr) &&
-      valid_hgt(hgt) &&
-      valid_hcl(hcl) &&
-      valid_ecl(ecl) &&
-      valid_pid(pid)
+      valid_byr(Map.get(map, "byr")) &&
+      valid_iyr(Map.get(map, "iyr")) &&
+      valid_eyr(Map.get(map, "eyr")) &&
+      valid_hgt(Map.get(map, "hgt")) &&
+      valid_hcl(Map.get(map, "hcl")) &&
+      valid_ecl(Map.get(map, "ecl")) &&
+      valid_pid(Map.get(map, "pid"))
     end
   end
 
@@ -126,6 +119,19 @@ defmodule Aoc.Day4 do
     value >= 1920 && value <=2002 && valid_digits
   end
 
+  @doc """
+      iex> Aoc.Day4.valid_iyr("2021")
+      false
+
+      iex> Aoc.Day4.valid_iyr("1919")
+      false
+
+      iex> Aoc.Day4.valid_iyr("19201")
+      false
+
+      iex> Aoc.Day4.valid_iyr("2011")
+      true
+  """
   def valid_iyr(iyr) do
     valid_digits =
       iyr
@@ -193,28 +199,36 @@ defmodule Aoc.Day4 do
     String.match?(hcl, ~r/^#[a-fA-F0-9]{6}$/)
   end
 
+  @doc """
+      iex> Aoc.Day4.valid_ecl("asd")
+      false
+
+      iex> Aoc.Day4.valid_ecl("gry")
+      true
+  """
   def valid_ecl(ecl) do
     Enum.member?(["amb", "blu", "brn", "gry", "grn", "hzl", "oth"], ecl)
   end
 
+  @doc """
+      iex> Aoc.Day4.valid_pid("149cm")
+      false
+
+      iex> Aoc.Day4.valid_pid("#aaaaaa")
+      false
+
+      iex> Aoc.Day4.valid_pid("123")
+      false
+
+      iex> Aoc.Day4.valid_pid("1234567890")
+      false
+
+      iex> Aoc.Day4.valid_pid("123456789")
+      true
+  """
   def valid_pid(pid) do
     String.match?(pid, ~r/^[0-9]{9}$/)
   end
-
-  # @doc """
-  #     iex> chart = Aoc.Chart.new("priv/day3/example.txt")
-  #     ...> Aoc.Day3.part2(chart)
-  #     336
-  # """
-  # def part2(inp) do
-  #   [{1, 1}, {3, 1}, {5, 1}, {7, 1}, {1, 2}]
-  #   |> Enum.map(fn slope ->
-  #     Aoc.Day3.part1(inp, slope)
-  #   end)
-  #   |> Enum.reduce(1, fn value, acc ->
-  #     acc * value
-  #   end)
-  # end
 
   def input(filename) do
     filename
