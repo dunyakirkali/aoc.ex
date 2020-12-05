@@ -55,6 +55,16 @@ defmodule Aoc.Day5 do
     row * 8 + col
   end
 
+  @doc """
+      iex> Aoc.Day5.split([1, 2])
+      {[1], [2]}
+
+      iex> Aoc.Day5.split([1, 2, 3, 4])
+      {[1, 2], [3, 4]}
+
+      iex> Aoc.Day5.split([1, 2, 3, 4, 5])
+      {[1, 2, 3], [4, 5]}
+  """
   def split(list) do
     len = round(length(list)/2)
     Enum.split(list, len)
