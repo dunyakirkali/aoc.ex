@@ -30,6 +30,15 @@ defmodule Aoc.Day5 do
   @doc """
       iex> Aoc.Day5.run("FBFBBFFRLR")
       {44, 5}
+
+      iex> Aoc.Day5.run("BFFFBBFRRR")
+      {70, 7}
+
+      iex> Aoc.Day5.run("FFFBBBFRRR")
+      {14, 7}
+
+      iex> Aoc.Day5.run("BBFFBBFRLL")
+      {102, 4}
   """
   def run(row) do
     {[row], [col]} =
@@ -50,6 +59,15 @@ defmodule Aoc.Day5 do
   @doc """
       iex> Aoc.Day5.seat_id({44, 5})
       357
+
+      iex> Aoc.Day5.seat_id({70, 7})
+      567
+
+      iex> Aoc.Day5.seat_id({14, 7})
+      119
+
+      iex> Aoc.Day5.seat_id({102, 4})
+      820
   """
   def seat_id({row, col}) do
     row * 8 + col
