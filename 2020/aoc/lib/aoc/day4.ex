@@ -75,12 +75,12 @@ defmodule Aoc.Day4 do
       map = Map.new(fields, fn [k, v] -> {k, v} end)
 
       valid_byr(Map.get(map, "byr")) &&
-      valid_iyr(Map.get(map, "iyr")) &&
-      valid_eyr(Map.get(map, "eyr")) &&
-      valid_hgt(Map.get(map, "hgt")) &&
-      valid_hcl(Map.get(map, "hcl")) &&
-      valid_ecl(Map.get(map, "ecl")) &&
-      valid_pid(Map.get(map, "pid"))
+        valid_iyr(Map.get(map, "iyr")) &&
+        valid_eyr(Map.get(map, "eyr")) &&
+        valid_hgt(Map.get(map, "hgt")) &&
+        valid_hcl(Map.get(map, "hcl")) &&
+        valid_ecl(Map.get(map, "ecl")) &&
+        valid_pid(Map.get(map, "pid"))
     end
   end
 
@@ -110,13 +110,13 @@ defmodule Aoc.Day4 do
   def valid_byr(byr) do
     valid_digits =
       byr
-      |> String.graphemes
-      |> Enum.count
+      |> String.graphemes()
+      |> Enum.count()
       |> Kernel.==(4)
 
     value = String.to_integer(byr)
 
-    value >= 1920 && value <=2002 && valid_digits
+    value >= 1920 && value <= 2002 && valid_digits
   end
 
   @doc """
@@ -135,8 +135,8 @@ defmodule Aoc.Day4 do
   def valid_iyr(iyr) do
     valid_digits =
       iyr
-      |> String.graphemes
-      |> Enum.count
+      |> String.graphemes()
+      |> Enum.count()
       |> Kernel.==(4)
 
     value = String.to_integer(iyr)
@@ -147,8 +147,8 @@ defmodule Aoc.Day4 do
   def valid_eyr(eyr) do
     valid_digits =
       eyr
-      |> String.graphemes
-      |> Enum.count
+      |> String.graphemes()
+      |> Enum.count()
       |> Kernel.==(4)
 
     value = String.to_integer(eyr)
@@ -172,14 +172,14 @@ defmodule Aoc.Day4 do
         value =
           Regex.named_captures(~r/(?<value>\d+)cm/, hgt)
           |> Map.get("value")
-          |> String.to_integer
+          |> String.to_integer()
 
         value >= 150 && value <= 193
       else
         value =
           Regex.named_captures(~r/(?<value>\d+)in/, hgt)
           |> Map.get("value")
-          |> String.to_integer
+          |> String.to_integer()
 
         value >= 59 && value <= 76
       end

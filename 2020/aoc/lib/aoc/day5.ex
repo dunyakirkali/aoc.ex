@@ -6,7 +6,7 @@ defmodule Aoc.Day5 do
       |> run()
       |> seat_id
     end)
-    |> Enum.max
+    |> Enum.max()
   end
 
   def part2(inp) do
@@ -17,7 +17,7 @@ defmodule Aoc.Day5 do
         |> run()
         |> seat_id
       end)
-      |> Enum.sort
+      |> Enum.sort()
 
     0..Enum.max(seat_ids)
     |> Enum.chunk_every(3, 1, :discard)
@@ -43,7 +43,7 @@ defmodule Aoc.Day5 do
   def run(row) do
     {[row], [col]} =
       row
-      |> String.graphemes
+      |> String.graphemes()
       |> Enum.reduce({Enum.to_list(0..127), Enum.to_list(0..7)}, fn char, {row, col} ->
         case char do
           "F" -> {elem(split(row), 0), col}
@@ -84,7 +84,7 @@ defmodule Aoc.Day5 do
       {[1, 2, 3], [4, 5]}
   """
   def split(list) do
-    len = round(length(list)/2)
+    len = round(length(list) / 2)
     Enum.split(list, len)
   end
 
