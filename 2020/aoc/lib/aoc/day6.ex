@@ -39,12 +39,8 @@ defmodule Aoc.Day6 do
         |> String.graphemes()
         |> MapSet.new()
       end)
-      |> Enum.reduce(0, fn pair, acc ->
-        if acc == 0 do
-          pair
-        else
-          MapSet.intersection(pair, acc)
-        end
+      |> Enum.reduce(MapSet.new(for x <- ?a..?z, do: <<x :: utf8>>), fn pair, acc ->
+        MapSet.intersection(pair, acc)
       end)
       |> MapSet.size()
     end)
