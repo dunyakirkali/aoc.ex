@@ -1,3 +1,4 @@
+# TODO: (dunyakirkali) Solve using digraph
 defmodule Aoc.Day7 do
   @doc """
       iex> inp = Aoc.Day7.input("priv/day7/example.txt")
