@@ -27,13 +27,13 @@ defmodule Aoc.Day7 do
   def count(info, bag_name, acc) do
     found =
       info
-      |> Enum.filter(fn {key, value} ->
+      |> Enum.filter(fn {_key, value} ->
         value
         |> Enum.filter(fn tuple ->
           if tuple == {} do
             false
           else
-            {count, bag} = tuple
+            {_count, bag} = tuple
             bag == bag_name
           end
         end)
@@ -45,7 +45,7 @@ defmodule Aoc.Day7 do
       found
       |> Enum.reduce(acc, fn {par, children}, accc ->
         children
-        |> Enum.reduce(accc, fn {count, name}, acccc ->
+        |> Enum.reduce(accc, fn {_count, name}, acccc ->
           if name == bag_name do
             [par | acccc]
           else
