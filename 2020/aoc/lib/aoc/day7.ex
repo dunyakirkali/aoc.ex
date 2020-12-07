@@ -132,3 +132,67 @@ defmodule Aoc.Day7 do
     |> String.split("\n", trim: true)
   end
 end
+
+####################################################################
+# @pochen's solution
+
+# defmodule D7 do
+#   def parse(text) do
+#     text
+#     |> String.trim()
+#     |> String.split("\n")
+#     |> Enum.map(&String.split(&1, " contain "))
+#     |> Enum.map(fn [outter, inners] ->
+#       {String.trim_trailing(outter, " bags"),
+#        inners
+#        |> String.trim_trailing(".")
+#        |> String.split(", ")
+#        |> Enum.map(&String.replace(&1, [" bags", " bag"], ""))
+#        |> Enum.map(&String.split(&1, " ", parts: 2))
+#        |> Enum.map(fn
+#          ["no", _] -> []
+#          [count, inner] -> {String.to_integer(count), inner}
+#        end)
+#        |> List.flatten()}
+#     end)
+#   end
+#   def solve_p1(data) do
+#     data
+#     |> build_graph
+#     |> do_solve_p1("shiny gold")
+#     |> MapSet.size()
+#   end
+#   def solve_p2(data) do
+#     data
+#     |> build_graph
+#     |> do_solve_p2("shiny gold", 1)
+#   end
+#   defp do_solve_p1(g, v) do
+#     in_neighbours = :digraph.in_neighbours(g, v)
+#     in_neighbours
+#     |> MapSet.new()
+#     |> MapSet.union(
+#       in_neighbours
+#       |> Enum.map(&do_solve_p1(g, &1))
+#       |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+#     )
+#   end
+#   defp do_solve_p2(g, v, factor) do
+#     :digraph.out_edges(g, v)
+#     |> Enum.map(&:digraph.edge(g, &1))
+#     |> Enum.reduce(0, fn {_, _, v, [count: c]}, sum ->
+#       sum + c * factor + do_solve_p2(g, v, c * factor)
+#     end)
+#   end
+#   defp build_graph(data) do
+#     for {outter, inners} <- data, {count, inner} <- inners do
+#       {outter, {count, inner}}
+#     end
+#     |> Enum.reduce(:digraph.new(), fn {outer, {count, inner}}, g ->
+#       :digraph.add_vertex(g, outer)
+#       :digraph.add_vertex(g, inner)
+#       :digraph.add_edge(g, outer, inner, count: count)
+#       g
+#     end)
+#   end
+# end
