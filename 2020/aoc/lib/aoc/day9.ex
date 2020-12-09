@@ -33,9 +33,7 @@ defmodule Aoc.Day9 do
   """
   def part2(inp, preamble) do
     cs = part1(inp, preamble)
-
-    inp
-    |> find(2, cs)
+    find(inp, 2, cs)
   end
 
   def find(set, size, cs) do
@@ -48,14 +46,13 @@ defmodule Aoc.Day9 do
 
     if Enum.member?(Enum.map(pos, fn x -> elem(x, 1) end), cs) do
       sss =
-        Enum.find(pos, fn x ->
-          {_, tot} = x
+        pos
+        |> Enum.find(fn {_, tot} ->
           tot == cs
         end)
+        |> elem(0)
 
-      min = Enum.min(elem(sss, 0))
-      max = Enum.max(elem(sss, 0))
-      min + max
+      Enum.min(sss) + Enum.max(sss)
     else
       find(set, size + 1, cs)
     end
