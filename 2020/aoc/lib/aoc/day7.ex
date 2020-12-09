@@ -29,7 +29,7 @@ defmodule Aoc.Day7 do
       end)
 
     :digraph_utils.reachable(["shiny gold"], graph)
-    |> Enum.count
+    |> Enum.count()
     |> Kernel.-(1)
   end
 
