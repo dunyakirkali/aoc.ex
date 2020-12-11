@@ -7,7 +7,7 @@ defmodule Aoc.Day11 do
     inp
     |> Aoc.Chart.new()
     |> gol(1, 1)
-    |> Enum.reduce(0, fn {pos, val}, count ->
+    |> Enum.reduce(0, fn {_, val}, count ->
       if val == "#" do
         count + 1
       else
@@ -96,7 +96,7 @@ defmodule Aoc.Day11 do
     inp
     |> Aoc.Chart.new()
     |> gol2(1, 1)
-    |> Enum.reduce(0, fn {pos, val}, count ->
+    |> Enum.reduce(0, fn {_, val}, count ->
       if val == "#" do
         count + 1
       else
