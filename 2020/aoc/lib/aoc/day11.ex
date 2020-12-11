@@ -128,13 +128,4 @@ defmodule Aoc.Day11 do
       end
     end)
   end
-
-  def input(filename) do
-    filename
-    |> File.read!()
-    |> String.split("\n", trim: true)
-    |> Enum.map(fn row ->
-      String.split(row, "", trim: true)
-    end)
-  end
 end

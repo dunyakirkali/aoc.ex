@@ -38,6 +38,19 @@ defmodule Aoc do
 
     @doc """
         iex> map = Aoc.Chart.new("priv/day3/example.txt")
+        ...> Aoc.Chart.size(map)
+        {11, 11}
+
+        iex> map = Aoc.Chart.new("priv/day3/input.txt")
+        ...> Aoc.Chart.size(map)
+        {31, 323}
+    """
+    def size(map) do
+      {number_of_cols(map), number_of_rows(map)}
+    end
+
+    @doc """
+        iex> map = Aoc.Chart.new("priv/day3/example.txt")
         ...> Aoc.Chart.number_of_rows(map)
         11
 
@@ -72,6 +85,25 @@ defmodule Aoc do
       end)
       |> Enum.max()
       |> Kernel.+(1)
+    end
+
+    def print(map) do
+      maxY = number_of_rows(map)
+      IEx.Helpers.clear()
+
+      for(line <- 0..(maxY - 1), do: line)
+      |> Enum.each(fn line ->
+        map
+        |> Enum.filter(fn {{_, y}, _} ->
+          y == line
+        end)
+        |> Enum.map(fn {{_x, _y}, val} ->
+          val
+        end)
+        |> IO.puts()
+      end)
+
+      map
     end
   end
 end
