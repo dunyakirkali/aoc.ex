@@ -1,9 +1,46 @@
 defmodule Aoc do
+  # defmodule Ship do
+  #   defstruct [pos: {0, 0}]
+  # end
+  # defmodule AGC do
+  #   defstruct [:instructions, output: [], inputs: [], ip: 0, state: :cont, relative_base_offset: 0, score: 0]
+  #
+  #   def new(filename) do
+  #     instructions = input(filename)
+  #     memory = for _ <- 0..10_000_000, do: 0
+  #     %AGC{instructions: instructions ++ memory}
+  #   end
+  # end
+
   defmodule Parallel do
     def pmap(collection, func) do
       collection
       |> Enum.map(&Task.async(fn -> func.(&1) end))
-      |> Enum.map(&Task.await/1)
+      |> Enum.map(fn x ->
+        Task.await(x, 1_000_000)
+      end)
+    end
+  end
+
+  defmodule Chinese do
+    use Memoize
+
+    def remainder(mods, remainders) do
+      max = Enum.reduce(mods, fn x,acc -> x*acc end)
+      Enum.zip(mods, remainders)
+      |> Parallel.pmap(fn {m,r} -> Enum.take_every(r..max, m) |> MapSet.new end)
+      |> reduce
+      |> MapSet.to_list
+    end
+
+    defmemo reduce([h | t]) do
+      reduce(t, h)
+    end
+    defmemo reduce([], acc) do
+      acc
+    end
+    defmemo reduce([h | t], acc) do
+      reduce(t, MapSet.intersection(h, acc))
     end
   end
 
