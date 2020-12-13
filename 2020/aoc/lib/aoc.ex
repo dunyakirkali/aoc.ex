@@ -17,28 +17,8 @@ defmodule Aoc do
       collection
       |> Enum.map(&Task.async(fn -> func.(&1) end))
       |> Enum.map(fn x ->
-        Task.await(x, 1_000_000)
+        Task.await(x, 1_000_000_000)
       end)
-    end
-  end
-
-  defmodule Chinese do
-    def remainder(mods, remainders) do
-      max = Enum.reduce(mods, fn x,acc -> x*acc end)
-      Enum.zip(mods, remainders)
-      |> Parallel.pmap(fn {m,r} -> Enum.take_every(r..max, m) |> MapSet.new end)
-      |> Enum.reduce(fn set,acc -> MapSet.intersection(set, acc) end)
-      |> MapSet.to_list
-    end
-
-    def reduce([h | t]) do
-      reduce(t, h)
-    end
-    def reduce([], acc) do
-      acc
-    end
-    def reduce([h | t], acc) do
-      reduce(t, MapSet.intersection(h, acc))
     end
   end
 

@@ -50,32 +50,45 @@ defmodule Aoc.Day13 do
       1_202_161_486
   """
   def part2([_ear, minutes]) do
-    maps =
-      minutes
-      |> String.split(",", trim: true)
-      |> Stream.map(fn x ->
-        if x == "x" do
-          x
-        else
-          String.to_integer(x)
-        end
-      end)
-      |> Stream.with_index()
-      |> Stream.filter(fn {id, _md} ->
-        id != "x"
-      end)
-      |> Enum.to_list
-
-    mods = Enum.map(maps, fn {id, _rem} ->
-      id
+    minutes
+    |> String.split(",", trim: true)
+    |> Stream.map(fn x ->
+      if x == "x" do
+        x
+      else
+        String.to_integer(x)
+      end
     end)
-
-    rems = Enum.map(maps, fn {id, rem} ->
-      id - rem
+    |> Stream.with_index()
+    |> Stream.filter(fn {id, _md} ->
+      id != "x"
     end)
+    |> Enum.to_list
+    |> find_first_time
+  end
 
-    Aoc.Chinese.remainder(mods, rems)
-    |> Enum.at(0)
+  def find_first_time(buses) do
+    bigN = buses
+    |> Enum.map(&(elem(&1, 0)))
+    |> Enum.reduce(1, &Kernel.*/2)
+
+    x = buses
+    |> Enum.map(fn {n, a} ->
+      ni = Integer.floor_div(bigN, n)
+      xi = find_xi(ni, n, 1)
+      ni * xi * a
+    end)
+    |> Enum.sum()
+    |> Kernel.rem(bigN)
+
+    bigN - x
+  end
+
+  def find_xi(ni, n, x) do
+    case rem(x * ni, n) do
+      1 -> x
+      _ -> find_xi(ni, n, x + 1)
+    end
   end
 
   def input(filename) do
