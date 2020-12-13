@@ -34,20 +34,20 @@ defmodule Aoc.Day13 do
       ...> Aoc.Day13.part2(inp)
       1068781
 
-      # iex> Aoc.Day13.part2([0, "17,x,13,19"])
-      # 3417
-      #
-      # iex> Aoc.Day13.part2([0, "67,7,59,61"])
-      # 754018
-      #
-      # iex> Aoc.Day13.part2([0, "67,x,7,59,61"])
-      # 779210
-      #
-      # iex> Aoc.Day13.part2([0, "67,7,x,59,61"])
-      # 1261476
-      #
-      # iex> Aoc.Day13.part2([0, "1789,37,47,1889"])
-      # 1_202_161_486
+      iex> Aoc.Day13.part2([0, "17,x,13,19"])
+      3417
+
+      iex> Aoc.Day13.part2([0, "67,7,59,61"])
+      754018
+
+      iex> Aoc.Day13.part2([0, "67,x,7,59,61"])
+      779210
+
+      iex> Aoc.Day13.part2([0, "67,7,x,59,61"])
+      1261476
+
+      iex> Aoc.Day13.part2([0, "1789,37,47,1889"])
+      1_202_161_486
   """
   def part2([_ear, minutes]) do
     maps =

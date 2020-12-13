@@ -23,23 +23,21 @@ defmodule Aoc do
   end
 
   defmodule Chinese do
-    use Memoize
-
     def remainder(mods, remainders) do
       max = Enum.reduce(mods, fn x,acc -> x*acc end)
       Enum.zip(mods, remainders)
       |> Parallel.pmap(fn {m,r} -> Enum.take_every(r..max, m) |> MapSet.new end)
-      |> reduce
+      |> Enum.reduce(fn set,acc -> MapSet.intersection(set, acc) end)
       |> MapSet.to_list
     end
 
-    defmemo reduce([h | t]) do
+    def reduce([h | t]) do
       reduce(t, h)
     end
-    defmemo reduce([], acc) do
+    def reduce([], acc) do
       acc
     end
-    defmemo reduce([h | t], acc) do
+    def reduce([h | t], acc) do
       reduce(t, MapSet.intersection(h, acc))
     end
   end
