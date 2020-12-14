@@ -21,7 +21,7 @@ defmodule Aoc.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:libgraph, "~> 0.7"},
+      {:libgraph, "~> 0.13.3"},
       {:combination, "~> 0.0.3"},
       {:nimble_parsec, "~> 1.1.0"},
       {:memoize, "~> 1.2"},
