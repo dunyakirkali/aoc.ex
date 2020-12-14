@@ -63,23 +63,25 @@ defmodule Aoc.Day13 do
     |> Stream.filter(fn {id, _md} ->
       id != "x"
     end)
-    |> Enum.to_list
+    |> Enum.to_list()
     |> find_first_time
   end
 
   def find_first_time(buses) do
-    bigN = buses
-    |> Enum.map(&(elem(&1, 0)))
-    |> Enum.reduce(1, &Kernel.*/2)
+    bigN =
+      buses
+      |> Enum.map(&elem(&1, 0))
+      |> Enum.reduce(1, &Kernel.*/2)
 
-    x = buses
-    |> Enum.map(fn {n, a} ->
-      ni = Integer.floor_div(bigN, n)
-      xi = find_xi(ni, n, 1)
-      ni * xi * a
-    end)
-    |> Enum.sum()
-    |> Kernel.rem(bigN)
+    x =
+      buses
+      |> Enum.map(fn {n, a} ->
+        ni = Integer.floor_div(bigN, n)
+        xi = find_xi(ni, n, 1)
+        ni * xi * a
+      end)
+      |> Enum.sum()
+      |> Kernel.rem(bigN)
 
     bigN - x
   end
