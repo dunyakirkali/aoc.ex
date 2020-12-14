@@ -5,27 +5,23 @@ defmodule Aoc.Day14 do
       165
   """
   def part1(inp) do
-    {memory, _} =
-      inp
-      |> Enum.reduce({%{}, []}, fn line, {memory, mask} ->
-        cond do
-          String.match?(line, ~r/mask = .*/) ->
-            match = Regex.named_captures(~r/mask = (?<mask>.*)/, line)
+    inp
+    |> Enum.reduce({%{}, []}, fn line, {memory, mask} ->
+      cond do
+        String.match?(line, ~r/mask = .*/) ->
+          match = Regex.named_captures(~r/mask = (?<mask>.*)/, line)
 
-            {memory, match["mask"]}
+          {memory, match["mask"]}
+        true ->
+          match = Regex.named_captures(~r/mem\[(?<adr>.*)\] = (?<val>.*)/, line)
+          value = decimal_string_to_binary(match["val"])
+          adr = match["adr"]
+          res = mask(value, mask)
 
-          true ->
-            match = Regex.named_captures(~r/mem\[(?<adr>.*)\] = (?<val>.*)/, line)
-
-            value = decimal_string_to_binary(match["val"])
-            adr = match["adr"]
-            res = mask(value, mask)
-
-            {Map.put(memory, adr, res), mask}
-        end
-      end)
-
-    memory
+          {Map.put(memory, adr, res), mask}
+      end
+    end)
+    |> elem(0)
     |> Enum.reduce(0, fn {_, val}, acc ->
       acc + String.to_integer(val, 2)
     end)
@@ -70,42 +66,36 @@ defmodule Aoc.Day14 do
       208
   """
   def part2(inp) do
-    {memory, _} =
-      inp
-      |> Enum.reduce({%{}, []}, fn line, {memory, mask} ->
-        if String.match?(line, ~r/mask = .*/) do
-          match = Regex.named_captures(~r/mask = (?<mask>.*)/, line)
+    inp
+    |> Enum.reduce({%{}, []}, fn line, {memory, mask} ->
+      if String.match?(line, ~r/mask = .*/) do
+        match = Regex.named_captures(~r/mask = (?<mask>.*)/, line)
 
-          {memory, match["mask"]}
-        else
-          match = Regex.named_captures(~r/mem\[(?<adr>.*)\] = (?<val>.*)/, line)
-
-          val = decimal_string_to_binary(match["val"])
-          adr = decimal_string_to_binary(match["adr"])
-          res = mask2(adr, mask)
-
-          bit_count =
-            res
+        {memory, match["mask"]}
+      else
+        match = Regex.named_captures(~r/mem\[(?<adr>.*)\] = (?<val>.*)/, line)
+        val = decimal_string_to_binary(match["val"])
+        adr = decimal_string_to_binary(match["adr"])
+        res = mask2(adr, mask)
+        res
+        |> String.graphemes()
+        |> Enum.count(fn c ->
+          c == "X"
+        end)
+        |> binary_options()
+        |> Enum.reduce({memory, mask}, fn opt, {memory, mask} ->
+          nad =
+            opt
             |> String.graphemes()
-            |> Enum.count(fn c ->
-              c == "X"
+            |> Enum.reduce(res, fn c, acc ->
+              String.replace(acc, "X", c, global: false)
             end)
 
-          binary_options(bit_count)
-          |> Enum.reduce({memory, mask}, fn opt, {memory, mask} ->
-            nad =
-              opt
-              |> String.graphemes()
-              |> Enum.reduce(res, fn c, acc ->
-                String.replace(acc, "X", c, global: false)
-              end)
-
-            {Map.put(memory, nad |> String.to_integer(2), val), mask}
-          end)
-        end
-      end)
-
-    memory
+          {Map.put(memory, nad, val), mask}
+        end)
+      end
+    end)
+    |> elem(0)
     |> Enum.reduce(0, fn {_, val}, acc ->
       acc + String.to_integer(val, 2)
     end)
