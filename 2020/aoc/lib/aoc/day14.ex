@@ -74,9 +74,7 @@ defmodule Aoc.Day14 do
       inp
       |> Enum.reduce({%{}, []}, fn line, {memory, mask} ->
         if String.match?(line, ~r/mask = .*/) do
-          # |> IO.inspect(label: "A")
           match = Regex.named_captures(~r/mask = (?<mask>.*)/, line)
-          # |> IO.inspect(label: "MASK")
 
           {memory, match["mask"]}
         else
@@ -86,22 +84,14 @@ defmodule Aoc.Day14 do
           adr = decimal_string_to_binary(match["adr"])
           res = mask2(adr, mask)
 
-          xc =
+          bit_count =
             res
             |> String.graphemes()
             |> Enum.count(fn c ->
               c == "X"
             end)
 
-          opts =
-            0..(Bitwise.bsl(1, xc) - 1)
-            |> Enum.map(fn x ->
-              x
-              |> Integer.to_string(2)
-              |> String.pad_leading(xc, "0")
-            end)
-
-          opts
+          binary_options(bit_count)
           |> Enum.reduce({memory, mask}, fn opt, {memory, mask} ->
             nad =
               opt
@@ -118,6 +108,22 @@ defmodule Aoc.Day14 do
     memory
     |> Enum.reduce(0, fn {_, val}, acc ->
       acc + String.to_integer(val, 2)
+    end)
+  end
+
+  @doc """
+      iex> Aoc.Day14.binary_options(2)
+      ["00", "01", "10", "11"]
+
+      iex> Aoc.Day14.binary_options(3)
+      ["000", "001", "010", "011", "100", "101", "110", "111"]
+  """
+  def binary_options(bit_count) do
+    0..(Bitwise.bsl(1, bit_count) - 1)
+    |> Enum.map(fn x ->
+      x
+      |> Integer.to_string(2)
+      |> String.pad_leading(bit_count, "0")
     end)
   end
 
