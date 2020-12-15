@@ -12,6 +12,7 @@ defmodule Aoc.Day14 do
           match = Regex.named_captures(~r/mask = (?<mask>.*)/, line)
 
           {memory, match["mask"]}
+
         true ->
           match = Regex.named_captures(~r/mem\[(?<adr>.*)\] = (?<val>.*)/, line)
           value = decimal_string_to_binary(match["val"])
@@ -77,6 +78,7 @@ defmodule Aoc.Day14 do
         val = decimal_string_to_binary(match["val"])
         adr = decimal_string_to_binary(match["adr"])
         res = mask2(adr, mask)
+
         res
         |> String.graphemes()
         |> Enum.count(fn c ->
