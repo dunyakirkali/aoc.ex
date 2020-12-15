@@ -2,10 +2,10 @@ defmodule Aoc.Day15 do
   @max 2020
   @max2 30000000
 
-  # @doc """
-  #     iex> Aoc.Day15.part1("0,3,6")
-  #     436
-  # """
+  @doc """
+      iex> Aoc.Day15.part1("0,3,6")
+      436
+  """
   def part1(inp) do
     inp
     |> String.split(",", trim: true)
