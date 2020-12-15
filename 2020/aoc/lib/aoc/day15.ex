@@ -1,6 +1,6 @@
 defmodule Aoc.Day15 do
   @max 2020
-  @max2 30000000
+  @max2 30_000_000
 
   @doc """
       iex> Aoc.Day15.part1("0,3,6")
@@ -31,9 +31,9 @@ defmodule Aoc.Day15 do
       if Enum.count(seen, fn x -> x == no end) > 1 do
         [a, b] =
           seen
-          |> Enum.reverse
-          |> Enum.with_index
-          |> Enum.filter(fn {x, ind} ->
+          |> Enum.reverse()
+          |> Enum.with_index()
+          |> Enum.filter(fn {x, _ind} ->
             x == no
           end)
           |> Enum.take(-2)
@@ -63,16 +63,16 @@ defmodule Aoc.Day15 do
   end
 
   def solve(data, count) do
-   Stream.iterate(
-     {data
-      |> Enum.with_index(1)
-      |> Enum.into(%{}), 0, length(data) + 1},
-     fn {history, next, turn} ->
-       v = if prev = history[next], do: turn - prev, else: 0
-       {Map.put(history, next, turn), v, turn + 1}
-     end
-   )
-   |> Enum.at(count - length(data) - 1)
-   |> elem(1)
- end
+    Stream.iterate(
+      {data
+       |> Enum.with_index(1)
+       |> Enum.into(%{}), 0, length(data) + 1},
+      fn {history, next, turn} ->
+        v = if prev = history[next], do: turn - prev, else: 0
+        {Map.put(history, next, turn), v, turn + 1}
+      end
+    )
+    |> Enum.at(count - length(data) - 1)
+    |> elem(1)
+  end
 end
