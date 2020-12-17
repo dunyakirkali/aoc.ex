@@ -8,6 +8,7 @@ defmodule Aoc.Day16 do
   def part1(inp) do
     [raw_rules, mine, theirs] = inp
     rules = parse_rules(raw_rules)
+
     mine =
       mine
       |> String.split("\n", trim: true)
@@ -26,12 +27,12 @@ defmodule Aoc.Day16 do
     |> Enum.map(fn t ->
       elem(t, 0)
     end)
-    |> Enum.sum
+    |> Enum.sum()
   end
 
   def calc(rules, theirs, acc) do
     theirs
-    |> Enum.with_index
+    |> Enum.with_index()
     |> Enum.reduce(acc, fn {the, ind}, acc ->
       the
       |> Enum.reduce(acc, fn val, acc ->
@@ -40,10 +41,12 @@ defmodule Aoc.Day16 do
           |> Enum.map(fn r ->
             elem(r, 1)
           end)
-          |> Enum.reduce(false, fn pair, acc -> # while
+          # while
+          |> Enum.reduce(false, fn pair, acc ->
             inpair =
               pair
-              |> Enum.reduce(false, fn rr, acc -> # while
+              # while
+              |> Enum.reduce(false, fn rr, acc ->
                 acc || Enum.member?(rr, val)
               end)
 
@@ -61,7 +64,7 @@ defmodule Aoc.Day16 do
 
   def calc2(rules, theirs, acc) do
     theirs
-    |> Enum.with_index
+    |> Enum.with_index()
     |> Enum.reduce(acc, fn {the, ind}, acc ->
       the
       |> Enum.reduce(acc, fn val, acc ->
@@ -70,11 +73,14 @@ defmodule Aoc.Day16 do
           |> Stream.map(fn r ->
             elem(r, 1)
           end)
-          |> Stream.scan(false, fn pair, acc -> # while
+          # while
+          |> Stream.scan(false, fn pair, acc ->
             inpair =
               pair
-              |> Enum.reduce_while(false, fn rr, acc -> # while
+              # while
+              |> Enum.reduce_while(false, fn rr, acc ->
                 mem = Enum.member?(rr, val)
+
                 if mem do
                   {:cont, acc || mem}
                 else
@@ -88,8 +94,8 @@ defmodule Aoc.Day16 do
               {:halt, false}
             end
           end)
-          |> Enum.to_list
-        |>List.last
+          |> Enum.to_list()
+          |> List.last()
 
         if exists do
           acc
@@ -129,6 +135,7 @@ defmodule Aoc.Day16 do
 
           Range.new(s, e)
         end)
+
       Map.put(acc, rule_name, ranges)
     end)
   end
@@ -141,6 +148,7 @@ defmodule Aoc.Day16 do
   def part2(inp) do
     [raw_rules, mine, theirs] = inp
     rules = parse_rules(raw_rules)
+
     mine =
       mine
       |> String.split("\n", trim: true)
@@ -165,7 +173,7 @@ defmodule Aoc.Day16 do
 
     find_fields(rules, [mine | theirs])
     |> Enum.zip(mine)
-    |> IO.inspect
+    |> IO.inspect()
     |> Enum.filter(fn {name, _val} ->
       String.starts_with?(name, "departure")
     end)
@@ -194,6 +202,7 @@ defmodule Aoc.Day16 do
               MapSet.union(acc, MapSet.new(ran))
             end
           end)
+
         {k, ves}
       end)
       |> Enum.into([])
@@ -202,36 +211,37 @@ defmodule Aoc.Day16 do
       tickets
       |> Enum.reduce(%{}, fn ticket, acc ->
         ticket
-        |> Enum.with_index
-
+        |> Enum.with_index()
         |> Enum.reduce(acc, fn {item, ind}, acc ->
           Map.update(acc, ind, [item], fn old -> [item | old] end)
         end)
       end)
-      IO.puts("bef")
+
+    IO.puts("bef")
 
     cols
-    |> Map.keys
-    |> Aoc.LazyPermutations.permutations
-    |> Stream.with_index
+    |> Map.keys()
+    |> Aoc.LazyPermutations.permutations()
+    |> Stream.with_index()
     |> Stream.map(fn {com, p} ->
       reses =
         com
-        |> Enum.with_index
+        |> Enum.with_index()
         |> Enum.map(fn {col, ind} ->
           col_vals = Map.get(cols, col)
           MapSet.subset?(MapSet.new(col_vals), rule_sets |> Enum.at(ind) |> elem(1))
         end)
+
       {com, reses}
     end)
-    |> Enum.to_list
+    |> Enum.to_list()
     |> Enum.find(fn {_com, reses} ->
       Enum.all?(reses)
     end)
     |> elem(0)
     |> Aoc.Parallel.pmap(fn pos ->
       rules
-      |> Map.keys
+      |> Map.keys()
       |> Enum.at(pos)
     end)
   end
