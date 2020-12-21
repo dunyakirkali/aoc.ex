@@ -7,7 +7,7 @@ defmodule Aoc.Day1 do
   """
   def part1(list) do
     list
-    |> Combination.combine(2)
+    |> Comb.combinations(2)
     |> Enum.find(fn pair ->
       Enum.sum(pair) == @goal
     end)
@@ -20,7 +20,7 @@ defmodule Aoc.Day1 do
   """
   def part2(list) do
     list
-    |> Combination.combine(3)
+    |> Comb.combinations(3)
     |> Enum.find(fn tair ->
       Enum.sum(tair) == @goal
     end)
