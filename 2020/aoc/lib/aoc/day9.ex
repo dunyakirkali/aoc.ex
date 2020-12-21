@@ -13,7 +13,7 @@ defmodule Aoc.Day9 do
       sums =
         set
         |> Enum.take(preamble)
-        |> Combination.combine(2)
+        |> Comb.combinations(2)
         |> Enum.map(fn comb ->
           Enum.sum(comb)
         end)
