@@ -69,8 +69,89 @@ defmodule Aoc.Day21 do
     |> Enum.into(%{})
   end
 
-   def part2(inp) do
-   end
+  def grouped(inp) do
+    food = parse_food(inp)
+    ingredients =
+      food
+      |> Map.keys()
+      |> Enum.reduce(fn set, acc ->
+        MapSet.union(set, acc)
+      end)
+
+    allergens =
+      food
+      |> Map.values()
+      |> Enum.reduce(fn set, acc ->
+        MapSet.union(set, acc)
+      end)
+
+    safe = non_allergic(food, ingredients, allergens)
+
+    allergens
+    |> Enum.map(fn allergen ->
+      res = food
+      |> Enum.filter(fn {_k, v} ->
+        Enum.member?(v, allergen)
+      end)
+      |> Enum.map(fn {k, _v} ->
+        MapSet.difference(k, safe)
+      end)
+      |> Enum.reduce(fn x, acc ->
+        MapSet.intersection(x, acc)
+      end)
+
+      {allergen, res}
+    end)
+    |> Enum.into(%{})
+  end
+
+  @doc """
+      iex> inp = Aoc.Day21.input("priv/day21/example.txt")
+      ...> Aoc.Day21.part2(inp)
+      "mxmxvkd,sqjhc,fvjkl"
+  """
+  def part2(inp) do
+    ings_by = grouped(inp)
+
+    [1, 2, 3]
+    |> Stream.cycle()
+    |> Enum.reduce_while({%{}, ings_by}, fn _, {found, ings} ->
+      if Enum.count(ings) == 0 do
+        {:halt, found}
+      else
+        singles =
+          ings
+          |> Enum.filter(fn {_k, v} ->
+            Enum.count(v) == 1
+          end)
+          |> Enum.map(fn {k, v} ->
+            {k, Enum.at(v, 0)}
+          end)
+          |> Enum.into(%{})
+
+        ings =
+          singles
+          |> Map.keys
+          |> Enum.reduce(ings, fn x, acc ->
+            Map.delete(acc, x)
+          end)
+        ings =
+          ings
+          |> Enum.reduce(%{}, fn {k, v}, acc ->
+            Map.put(acc, k, MapSet.difference(v, MapSet.new(Map.values(singles))))
+          end)
+
+        {:cont, {Map.merge(found, singles), ings}}
+      end
+    end)
+    |> Enum.sort_by(fn {k, _v} ->
+      k
+    end)
+    |> Enum.map(fn {_k, v} ->
+      v
+    end)
+    |> Enum.join(",")
+  end
 
   def input(filename) do
     filename
