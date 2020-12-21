@@ -173,7 +173,6 @@ defmodule Aoc.Day16 do
 
     find_fields(rules, [mine | theirs])
     |> Enum.zip(mine)
-    |> IO.inspect()
     |> Enum.filter(fn {name, _val} ->
       String.starts_with?(name, "departure")
     end)
@@ -217,13 +216,11 @@ defmodule Aoc.Day16 do
         end)
       end)
 
-    IO.puts("bef")
-
     cols
     |> Map.keys()
     |> Aoc.LazyPermutations.permutations()
     |> Stream.with_index()
-    |> Stream.map(fn {com, p} ->
+    |> Stream.map(fn {com, _p} ->
       reses =
         com
         |> Enum.with_index()
