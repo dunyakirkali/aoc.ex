@@ -218,7 +218,7 @@ defmodule Aoc.Day16 do
 
     cols
     |> Map.keys()
-    |> Aoc.LazyPermutations.permutations()
+    |> Comb.permutations()
     |> Stream.with_index()
     |> Stream.map(fn {com, _p} ->
       reses =
