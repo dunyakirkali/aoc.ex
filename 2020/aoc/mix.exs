@@ -31,7 +31,8 @@ defmodule Aoc.MixProject do
       {:distance, "~> 0.2.1"},
       {:poison, "~> 4.0.1"},
       {:comb, git: "https://github.com/tallakt/comb.git"},
-      {:tensor, "~> 2.0"}
+      {:tensor, "~> 2.0"},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
     ]
   end
 end
