@@ -1,55 +1,4 @@
 defmodule Aoc do
-  # defmodule Ship do
-  #   defstruct [pos: {0, 0}]
-  # end
-  # defmodule AGC do
-  #   defstruct [:instructions, output: [], inputs: [], ip: 0, state: :cont, relative_base_offset: 0, score: 0]
-  #
-  #   def new(filename) do
-  #     instructions = input(filename)
-  #     memory = for _ <- 0..10_000_000, do: 0
-  #     %AGC{instructions: instructions ++ memory}
-  #   end
-  # end
-
-  defmodule LazyPermutations do
-    def permutations(list) do
-      list
-      |> Enum.sort()
-      |> Stream.unfold(fn
-        [] -> nil
-        p -> {p, next_permutation(p)}
-      end)
-    end
-
-    defp next_permutation(permutation) do
-      if permutation == permutation |> Enum.sort() |> Enum.reverse() do
-        []
-      else
-        permutation
-        |> split()
-        |> heal()
-      end
-    end
-
-    defp split(permutation) do
-      permutation
-      |> Enum.reverse()
-      |> Enum.reduce({0, false, [], []}, fn x, {prev, split, first, last} ->
-        case split do
-          false -> {x, x < prev, first, [x | last]}
-          true -> {x, true, [x | first], last}
-        end
-      end)
-      |> (fn {_, _, first, last} -> {first, last} end).()
-    end
-
-    defp heal({first, [h | _] = last}) do
-      next = last |> Enum.filter(&(&1 > h)) |> Enum.min()
-      rest = (last -- [next]) |> Enum.sort()
-      first ++ [next] ++ rest
-    end
-  end
 
   defmodule Parallel do
     def pmap(collection, func) do
@@ -81,6 +30,22 @@ defmodule Aoc do
   end
 
   defmodule Chart do
+    def new2(content) do
+      content
+      # |> String.split("\n", trim: true)
+      |> Enum.map(fn line ->
+        String.graphemes(line)
+      end)
+      |> Enum.with_index()
+      |> Enum.reduce(%{}, fn {row, ri}, acc ->
+        row
+        |> Enum.with_index()
+        |> Enum.reduce(acc, fn {col, ci}, acc ->
+          Map.put(acc, {ci, ri}, col)
+        end)
+      end)
+    end
+
     def new(filename) do
       filename
       |> File.read!()
@@ -96,6 +61,62 @@ defmodule Aoc do
           Map.put(acc, {ci, ri}, col)
         end)
       end)
+    end
+
+    def sides(chart) do
+      top = row(chart, 9)
+      right = col(chart, 9)
+      bottom = row(chart, 0)
+      left = col(chart, 0)
+
+      [top, right, bottom, left]
+      # |> Enum.map(fn x ->
+      #   as_int(x)
+      # end)
+    end
+
+    @doc """
+        iex> Aoc.Chart.as_int([".",  ".",  "#",  "#",  ".",  "#",  ".",  ".",  "#",  "."])
+        210
+    """
+    def as_int(r_or_c) do
+      r_or_c
+      |> Enum.map(fn val ->
+        if val == "#" do
+          "1"
+        else
+          "0"
+        end
+      end)
+      |> Enum.join()
+      |> String.to_integer(2)
+    end
+
+    def row(chart, rn) do
+      chart
+      |> Enum.filter(fn {{x, y}, val} ->
+        y == rn
+      end)
+      |> Enum.sort_by(fn {{x, y}, val} ->
+        x
+      end)
+      |> Enum.map(fn {{x, y}, val} ->
+        val
+      end)
+    end
+
+    def col(chart, cn) do
+      chart
+      |> Enum.filter(fn {{x, y}, val} ->
+        x == cn
+      end)
+      |> Enum.sort_by(fn {{x, y}, val} ->
+        y
+      end)
+      |> Enum.map(fn {{x, y}, val} ->
+        val
+      end)
+      |> Enum.reverse()
     end
 
     @doc """
