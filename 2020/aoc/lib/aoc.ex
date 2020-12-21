@@ -162,7 +162,6 @@ defmodule Aoc do
         |> Enum.map(fn {{_x, _y}, val} ->
           val
         end)
-        |> IO.puts()
       end)
 
       map
