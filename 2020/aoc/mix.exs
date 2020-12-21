@@ -22,7 +22,6 @@ defmodule Aoc.MixProject do
   defp deps do
     [
       {:libgraph, "~> 0.13.3"},
-      {:combination, "~> 0.0.3"},
       {:nimble_parsec, "~> 1.1.0"},
       {:memoize, "~> 1.2"},
       {:benchee, "~> 1.0.1", only: [:dev, :test]},
@@ -31,7 +30,8 @@ defmodule Aoc.MixProject do
       {:drawille, "~> 0.0.1"},
       {:distance, "~> 0.2.1"},
       {:poison, "~> 4.0.1"},
-      {:comb, git: "https://github.com/tallakt/comb.git"}
+      {:comb, git: "https://github.com/tallakt/comb.git"},
+      {:tensor, "~> 2.0"}
     ]
   end
 end
