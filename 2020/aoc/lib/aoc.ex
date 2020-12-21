@@ -30,21 +30,6 @@ defmodule Aoc do
   end
 
   defmodule Chart do
-    def new2(content) do
-      content
-      # |> String.split("\n", trim: true)
-      |> Enum.map(fn line ->
-        String.graphemes(line)
-      end)
-      |> Enum.with_index()
-      |> Enum.reduce(%{}, fn {row, ri}, acc ->
-        row
-        |> Enum.with_index()
-        |> Enum.reduce(acc, fn {col, ci}, acc ->
-          Map.put(acc, {ci, ri}, col)
-        end)
-      end)
-    end
 
     def new(filename) do
       filename
@@ -61,35 +46,6 @@ defmodule Aoc do
           Map.put(acc, {ci, ri}, col)
         end)
       end)
-    end
-
-    def sides(chart) do
-      top = row(chart, 9)
-      right = col(chart, 9)
-      bottom = row(chart, 0)
-      left = col(chart, 0)
-
-      [top, right, bottom, left]
-      # |> Enum.map(fn x ->
-      #   as_int(x)
-      # end)
-    end
-
-    @doc """
-        iex> Aoc.Chart.as_int([".",  ".",  "#",  "#",  ".",  "#",  ".",  ".",  "#",  "."])
-        210
-    """
-    def as_int(r_or_c) do
-      r_or_c
-      |> Enum.map(fn val ->
-        if val == "#" do
-          "1"
-        else
-          "0"
-        end
-      end)
-      |> Enum.join()
-      |> String.to_integer(2)
     end
 
     def row(chart, rn) do
@@ -168,24 +124,6 @@ defmodule Aoc do
       end)
       |> Enum.max()
       |> Kernel.+(1)
-    end
-
-    def print(map) do
-      maxY = number_of_rows(map)
-      IEx.Helpers.clear()
-
-      for(line <- 0..(maxY - 1), do: line)
-      |> Enum.each(fn line ->
-        map
-        |> Enum.filter(fn {{_, y}, _} ->
-          y == line
-        end)
-        |> Enum.map(fn {{_x, _y}, val} ->
-          val
-        end)
-      end)
-
-      map
     end
   end
 end
