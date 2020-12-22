@@ -1,5 +1,4 @@
 defmodule Aoc do
-
   defmodule Parallel do
     def pmap(collection, func) do
       collection
@@ -30,7 +29,6 @@ defmodule Aoc do
   end
 
   defmodule Chart do
-
     def new(filename) do
       filename
       |> File.read!()
