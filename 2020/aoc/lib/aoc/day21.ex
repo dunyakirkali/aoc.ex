@@ -6,6 +6,7 @@ defmodule Aoc.Day21 do
   """
   def part1(inp) do
     food = parse_food(inp)
+
     ingredients =
       food
       |> Map.keys()
@@ -25,26 +26,26 @@ defmodule Aoc.Day21 do
     food
     |> Map.keys()
     |> Enum.reduce(0, fn recipe, acc ->
-      acc + (MapSet.intersection(recipe, safe) |> Enum.count)
+      acc + (MapSet.intersection(recipe, safe) |> Enum.count())
     end)
   end
 
   def non_allergic(food, ingredients, allergens) do
-  safe =
-    allergens
-    |> Enum.flat_map(fn allergen ->
-      food
-      |> Enum.filter(fn {_ins, algs} ->
-        Enum.member?(algs, allergen)
+    safe =
+      allergens
+      |> Enum.flat_map(fn allergen ->
+        food
+        |> Enum.filter(fn {_ins, algs} ->
+          Enum.member?(algs, allergen)
+        end)
+        |> Enum.map(fn {ins, _algs} ->
+          ins
+        end)
+        |> Enum.reduce(fn ing, acc ->
+          MapSet.intersection(ing, acc)
+        end)
       end)
-      |> Enum.map(fn {ins, _algs} ->
-        ins
-      end)
-      |> Enum.reduce(fn ing, acc ->
-        MapSet.intersection(ing, acc)
-      end)
-    end)
-    |> MapSet.new
+      |> MapSet.new()
 
     MapSet.difference(ingredients, safe)
   end
@@ -71,6 +72,7 @@ defmodule Aoc.Day21 do
 
   def grouped(inp) do
     food = parse_food(inp)
+
     ingredients =
       food
       |> Map.keys()
@@ -89,16 +91,17 @@ defmodule Aoc.Day21 do
 
     allergens
     |> Enum.map(fn allergen ->
-      res = food
-      |> Enum.filter(fn {_k, v} ->
-        Enum.member?(v, allergen)
-      end)
-      |> Enum.map(fn {k, _v} ->
-        MapSet.difference(k, safe)
-      end)
-      |> Enum.reduce(fn x, acc ->
-        MapSet.intersection(x, acc)
-      end)
+      res =
+        food
+        |> Enum.filter(fn {_k, v} ->
+          Enum.member?(v, allergen)
+        end)
+        |> Enum.map(fn {k, _v} ->
+          MapSet.difference(k, safe)
+        end)
+        |> Enum.reduce(fn x, acc ->
+          MapSet.intersection(x, acc)
+        end)
 
       {allergen, res}
     end)
@@ -131,10 +134,11 @@ defmodule Aoc.Day21 do
 
         ings =
           singles
-          |> Map.keys
+          |> Map.keys()
           |> Enum.reduce(ings, fn x, acc ->
             Map.delete(acc, x)
           end)
+
         ings =
           ings
           |> Enum.reduce(%{}, fn {k, v}, acc ->
