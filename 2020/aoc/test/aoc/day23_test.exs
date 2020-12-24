@@ -7,6 +7,6 @@ defmodule Day23Test do
   end
 
   test "Part 2" do
-    assert Aoc.Day23.part2("538914762") == 157410423276
+    assert Aoc.Day23.part2("538914762") == 157_410_423_276
   end
 end
