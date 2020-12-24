@@ -97,42 +97,40 @@ defmodule Aoc.Day24 do
   end
 
   def make_map(points) do
-    points
-    |> Enum.reduce(%{}, fn point, acc ->
-      Map.update(acc, point, :black, fn wx ->
-        case wx do
-          :white -> :black
-          :black -> :white
-        end
-      end)
-    end)
-  end
-
-  def resize(map) do
     xs =
-      Enum.map(map, fn {%{x: x, y: _y, z: _z}, _val} ->
+      Enum.map(points, fn %{x: x, y: _y, z: _z} ->
         x
       end)
-
     minx = Enum.min(xs)
     maxx = Enum.max(xs)
 
     ys =
-      Enum.map(map, fn {%{x: _x, y: y, z: _z}, _val} ->
+      Enum.map(points, fn %{x: _x, y: y, z: _z} ->
         y
       end)
-
     miny = Enum.min(ys)
     maxy = Enum.max(ys)
 
     zs =
-      Enum.map(map, fn {%{x: _x, y: _y, z: z}, _val} ->
+      Enum.map(points, fn %{x: _x, y: _y, z: z} ->
         z
       end)
-
     minz = Enum.min(zs)
     maxz = Enum.max(zs)
 
+    map = points
+      |> Enum.reduce(%{}, fn point, acc ->
+        Map.update(acc, point, :black, fn wx ->
+          case wx do
+            :white -> :black
+            :black -> :white
+          end
+        end)
+      end)
+    {map, minx, maxx, miny, maxy, minz, maxz}
+  end
+
+  def resize({map, minx, maxx, miny, maxy, minz, maxz}) do
     sides =
       for x <- (minx - @stretch)..(maxx + @stretch),
           y <- (miny - @stretch)..(maxy + @stretch),
@@ -141,7 +139,6 @@ defmodule Aoc.Day24 do
 
     sides
     |> Enum.into(%{})
-    |> Map.merge(map)
   end
 
   @doc """
@@ -152,82 +149,83 @@ defmodule Aoc.Day24 do
       ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
       15
 
-#      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
-#      ...> pre = Aoc.Day24.prep(inp)
-#      ...> map = Aoc.Day24.make_map(pre)
-#      ...> res = Aoc.Day24.play(map, 1, 2)
-#      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
-#      12
-#
-#      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
-#      ...> pre = Aoc.Day24.prep(inp)
-#      ...> map = Aoc.Day24.make_map(pre)
-#      ...> res = Aoc.Day24.play(map, 1, 3)
-#      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
-#      25
-#
-#      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
-#      ...> pre = Aoc.Day24.prep(inp)
-#      ...> map = Aoc.Day24.make_map(pre)
-#      ...> res = Aoc.Day24.play(map, 1, 10)
-#      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
-#      37
-#
-#      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
-#      ...> pre = Aoc.Day24.prep(inp)
-#      ...> map = Aoc.Day24.make_map(pre)
-#      ...> res = Aoc.Day24.play(map, 1, 40)
-#      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
-#      406
-#
-#      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
-#      ...> pre = Aoc.Day24.prep(inp)
-#      ...> map = Aoc.Day24.make_map(pre)
-#      ...> res = Aoc.Day24.play(map, 1, 90)
-#      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
-#      1844
-#
-#      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
-#      ...> pre = Aoc.Day24.prep(inp)
-#      ...> map = Aoc.Day24.make_map(pre)
-#      ...> res = Aoc.Day24.play(map, 1, 100)
-#      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
-#      2208
+      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
+      ...> pre = Aoc.Day24.prep(inp)
+      ...> map = Aoc.Day24.make_map(pre)
+      ...> res = Aoc.Day24.play(map, 1, 2)
+      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
+      12
+
+      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
+      ...> pre = Aoc.Day24.prep(inp)
+      ...> map = Aoc.Day24.make_map(pre)
+      ...> res = Aoc.Day24.play(map, 1, 3)
+      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
+      25
+
+      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
+      ...> pre = Aoc.Day24.prep(inp)
+      ...> map = Aoc.Day24.make_map(pre)
+      ...> res = Aoc.Day24.play(map, 1, 10)
+      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
+      37
+
+      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
+      ...> pre = Aoc.Day24.prep(inp)
+      ...> map = Aoc.Day24.make_map(pre)
+      ...> res = Aoc.Day24.play(map, 1, 40)
+      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
+      406
+
+      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
+      ...> pre = Aoc.Day24.prep(inp)
+      ...> map = Aoc.Day24.make_map(pre)
+      ...> res = Aoc.Day24.play(map, 1, 90)
+      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
+      1844
+
+      iex> inp = Aoc.Day24.input("priv/day24/example3.txt")
+      ...> pre = Aoc.Day24.prep(inp)
+      ...> map = Aoc.Day24.make_map(pre)
+      ...> res = Aoc.Day24.play(map, 1, 100)
+      ...> res |> Map.values |> Enum.count(fn item -> item == :black end)
+      2208
   """
-  def play(map, day, max \\ 100) do
-    profile do
+  def play({map, minx, maxx, miny, maxy, minz, maxz}, day, max \\ 100) do
+#    profile do
       if day > max do
         map
       else
-        map = resize(map)
+        map = resize({map, minx, maxx, miny, maxy, minz, maxz})
 
-        map
-        |> Enum.reduce(%{}, fn {point, val}, acc ->
-          ns = neighbours(point)
+        nm =
+          map
+          |> Enum.reduce(map, fn {point, val}, acc ->
+            ns = neighbours(point)
 
-          black_ns =
-            ns
-            |> Enum.map(fn n ->
-              Map.get(map, n, :white)
-            end)
-            |> Enum.count(fn x ->
-              x == :black
-            end)
+            black_ns =
+              ns
+              |> Stream.map(fn n ->
+                Map.get(map, n, :white)
+              end)
+              |> Enum.count(fn x ->
+                x == :black
+              end)
 
-          cond do
-            val == :black && (black_ns == 0 || black_ns > 2) ->
-              Map.put(acc, point, :white)
+            cond do
+              val == :black && (black_ns == 0 || black_ns > 2) ->
+                Map.put(acc, point, :white)
 
-            val == :white && black_ns == 2 ->
-              Map.put(acc, point, :black)
+              val == :white && black_ns == 2 ->
+                Map.put(acc, point, :black)
 
-            true ->
-              Map.put(acc, point, val)
-          end
-        end)
-        |> play(day + 1, max)
+              true ->
+                acc
+            end
+          end)
+        play({nm, minx - 1, maxx + 1, miny - 1, maxy + 1, minz - 1, maxz + 1}, day + 1, max)
       end
-      end
+#    end
   end
 
   def neighbours(%Aoc.Point{x: x, y: y, z: z}) do
