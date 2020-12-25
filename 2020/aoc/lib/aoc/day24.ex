@@ -26,7 +26,7 @@ defmodule Aoc.Day24 do
     |> MapSet.size()
   end
 
-  def flip(c, s), do: if c in s, do: MapSet.delete(s, c), else: MapSet.put(s, c)
+  def flip(c, s), do: if(c in s, do: MapSet.delete(s, c), else: MapSet.put(s, c))
   def flipped(c, s), do: c |> adjacent() |> Enum.count(&(&1 in s))
 
   def days(flipped, 0), do: flipped
