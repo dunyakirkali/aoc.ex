@@ -1,40 +1,43 @@
 defmodule Aoc.Day25 do
   @doc """
-      iex> Aoc.Day25.part1(5764801, 17807724)
+      iex> inp = Aoc.Day25.input("priv/day25/example.txt")
+      ...> Aoc.Day25.part1(inp)
       14897079
   """
-  def part1(card, door, limit \\ 100) do
-    [{_, cls}] =
-      1..limit
-      |> Stream.map(fn i ->
-        {{7, i}, transform(1, 7, i)}
-      end)
-      |> Stream.drop_while(fn {_, acc} -> acc != card end)
-      |> Stream.map(fn {{i, j}, _} ->
-        {i, j}
-      end)
-      |> Stream.take(1)
-      |> Enum.to_list()
-
-    transform(1, door, cls) |> IO.inspect(label: "Solution")
+  def part1(input) do
+    [key1, key2] = Enum.map(input, &String.to_integer/1)
+    loop_size2 = loop_size(key2)
+    transform(key1, loop_size2)
   end
 
-  @doc """
-      iex> Aoc.Day25.transform(1, 7, 8)
-      5764801
-
-      iex> Aoc.Day25.transform(1, 7, 11)
-      17807724
-  """
-  def transform(value, _subject, 0) do
-    value
+  defp loop_size(public_key) do
+    loop_size(1, public_key, 1)
   end
 
-  def transform(value, subject, loop_size) do
-    value
-    |> Kernel.*(subject)
-    |> rem(20_201_227)
-    |> transform(subject, loop_size - 1)
+  defp loop_size(value, public_key, size) do
+    subject = 7
+
+    case transform_one(value, subject) do
+      ^public_key ->
+        size
+
+      value ->
+        loop_size(value, public_key, size + 1)
+    end
+  end
+
+  defp transform(subject, size) do
+    transform(1, subject, size)
+  end
+
+  defp transform(value, _subject, 0), do: value
+
+  defp transform(value, subject, size) do
+    transform(transform_one(value, subject), subject, size - 1)
+  end
+
+  defp transform_one(value, subject) do
+    rem(value * subject, 20_201_227)
   end
 
   def input(filename) do
