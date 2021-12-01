@@ -1,32 +1,34 @@
 defmodule Aoc.Day1 do
-  @goal 2020
-
   @doc """
-      iex> Aoc.Day1.part1([1721, 979, 366, 299, 675, 1456])
-      514579
+      iex> Aoc.Day1.part1([199, 200, 208,210,200,207,240,269,260,263])
+      7
   """
   def part1(list) do
     list
-    |> Comb.combinations(2)
-    |> Stream.drop_while(fn pair ->
-      Enum.sum(pair) != @goal
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.map(fn [p, n] ->
+      if n > p do
+        :inc
+      else
+        :dec
+      end
     end)
-    |> Enum.at(0)
-    |> Enum.reduce(1, &*/2)
+    |> Enum.count(fn x ->
+      x == :inc
+    end)
   end
 
   @doc """
-      iex> Aoc.Day1.part2([1721, 979, 366, 299, 675, 1456])
-      241861950
+      iex> Aoc.Day1.part2([199, 200, 208,210,200,207,240,269,260,263])
+      5
   """
   def part2(list) do
     list
-    |> Comb.combinations(3)
-    |> Stream.drop_while(fn tair ->
-      Enum.sum(tair) != @goal
+    |> Enum.chunk_every(3, 1, :discard)
+    |> Enum.map(fn l ->
+      Enum.sum(l)
     end)
-    |> Enum.at(0)
-    |> Enum.reduce(1, &*/2)
+    |> part1()
   end
 
   def input() do
