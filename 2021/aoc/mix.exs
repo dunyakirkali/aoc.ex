@@ -33,7 +33,8 @@ defmodule Aoc.MixProject do
       {:comb, git: "https://github.com/tallakt/comb.git"},
       {:tensor, "~> 2.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:exprof, "~> 0.2.0"}
+      {:exprof, "~> 0.2.0"},
+      {:flow, "~> 1.1.0"}
     ]
   end
 end
