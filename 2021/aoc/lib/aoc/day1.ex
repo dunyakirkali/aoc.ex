@@ -5,8 +5,8 @@ defmodule Aoc.Day1 do
   """
   def part1(list) do
     list
-    |> Enum.chunk_every(2, 1, :discard)
-    |> Enum.map(fn [p, n] ->
+    |> Stream.chunk_every(2, 1, :discard)
+    |> Stream.map(fn [p, n] ->
       if n > p do
         :inc
       else
@@ -24,8 +24,8 @@ defmodule Aoc.Day1 do
   """
   def part2(list) do
     list
-    |> Enum.chunk_every(3, 1, :discard)
-    |> Enum.map(fn l ->
+    |> Stream.chunk_every(3, 1, :discard)
+    |> Stream.map(fn l ->
       Enum.sum(l)
     end)
     |> part1()
