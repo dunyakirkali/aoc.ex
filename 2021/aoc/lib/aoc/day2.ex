@@ -8,11 +8,11 @@ defmodule Aoc.Day2 do
       input
       |> Enum.reduce({0, 0}, fn line, {x, y} ->
         case line do
-          ["forward", am] ->
+          {"forward", am} ->
             {x + am, y}
-          ["up", am] ->
+          {"up", am} ->
             {x, y - am}
-          ["down", am] ->
+          {"down", am} ->
             {x, y + am}
         end
     end)
@@ -28,11 +28,11 @@ defmodule Aoc.Day2 do
       input
       |> Enum.reduce({0, 0, 0}, fn line, {x, y, aim} ->
         case line do
-          ["forward", am] ->
+          {"forward", am} ->
             {x + am, y + (aim * am), aim}
-          ["up", am] ->
+          {"up", am} ->
             {x, y, aim - am}
-          ["down", am] ->
+          {"down", am} ->
             {x, y, aim + am}
         end
       end)
@@ -43,9 +43,9 @@ defmodule Aoc.Day2 do
     filename
     |> File.read!()
     |> String.split("\n", trim: true)
-    |> Enum.map(fn line ->
+    |> Stream.map(fn line ->
       [dir, am] = String.split(line, " ")
-      [dir, String.to_integer(am)]
+      {dir, String.to_integer(am)}
     end)
   end
 end
