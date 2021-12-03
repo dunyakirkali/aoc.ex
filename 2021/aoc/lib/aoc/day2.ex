@@ -10,12 +10,15 @@ defmodule Aoc.Day2 do
         case line do
           {"forward", am} ->
             {x + am, y}
+
           {"up", am} ->
             {x, y - am}
+
           {"down", am} ->
             {x, y + am}
         end
-    end)
+      end)
+
     x * y
   end
 
@@ -29,13 +32,16 @@ defmodule Aoc.Day2 do
       |> Enum.reduce({0, 0, 0}, fn line, {x, y, aim} ->
         case line do
           {"forward", am} ->
-            {x + am, y + (aim * am), aim}
+            {x + am, y + aim * am, aim}
+
           {"up", am} ->
             {x, y, aim - am}
+
           {"down", am} ->
             {x, y, aim + am}
         end
       end)
+
     x * y
   end
 
