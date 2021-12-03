@@ -23,7 +23,6 @@ defmodule Aoc.Day3 do
   defp co2_scrubber_rating(input, pos) do
     bits =
       input
-      |> IO.inspect()
       |> Enum.map(fn x ->
         String.split(x, "", trim: true)
       end)
@@ -40,7 +39,6 @@ defmodule Aoc.Day3 do
       else
         "1"
       end
-      |> IO.inspect()
 
     bits
     |> Enum.filter(fn line ->

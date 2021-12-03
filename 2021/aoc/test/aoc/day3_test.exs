@@ -9,6 +9,6 @@ defmodule Day3Test do
 
   test "Part 2" do
     input = Aoc.Day3.input("priv/day3/input.txt")
-    assert Aoc.Day3.part2(input) == 1_982_495_697
+    assert Aoc.Day3.part2(input) == 4_790_390
   end
 end
