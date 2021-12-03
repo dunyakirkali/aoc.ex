@@ -17,79 +17,39 @@ defmodule Aoc.Day3 do
     oxygen_generator_rating(input, 0) * co2_scrubber_rating(input, 0)
   end
 
-  defp co2_scrubber_rating(input, _) when length(input) == 1,
-    do: List.first(input) |> String.to_integer(2)
+  defp co2_scrubber_rating([bits], _), do: Enum.join(bits) |> String.to_integer(2)
 
-  defp co2_scrubber_rating(input, pos) do
-    bits =
-      input
-      |> Enum.map(fn x ->
-        String.split(x, "", trim: true)
-      end)
-
-    fbits =
+  defp co2_scrubber_rating(bits, pos) do
+    bits_at_pos =
       bits
       |> Enum.map(fn x ->
         Enum.at(x, pos)
       end)
 
-    mcbf =
-      if Enum.count(fbits, fn x -> x == "1" end) >= Enum.count(fbits, fn x -> x == "0" end) do
-        "0"
-      else
-        "1"
-      end
-
     bits
     |> Enum.filter(fn line ->
-      Enum.at(line, pos) == mcbf
-    end)
-    |> Enum.map(fn x ->
-      Enum.join(x)
+      Enum.at(line, pos) == if comp(bits_at_pos), do: "0", else: "1"
     end)
     |> co2_scrubber_rating(pos + 1)
   end
 
-  defp oxygen_generator_rating(input, _) when length(input) == 1,
-    do: List.first(input) |> String.to_integer(2)
+  defp oxygen_generator_rating([bits], _), do: Enum.join(bits) |> String.to_integer(2)
 
-  defp oxygen_generator_rating(input, pos) do
-    bits =
-      input
-      |> Enum.map(fn x ->
-        String.split(x, "", trim: true)
-      end)
-
-    fbits =
+  defp oxygen_generator_rating(bits, pos) do
+    bits_at_pos =
       bits
       |> Enum.map(fn x ->
         Enum.at(x, pos)
       end)
 
-    mcbf =
-      if Enum.count(fbits, fn x -> x == "1" end) >= Enum.count(fbits, fn x -> x == "0" end) do
-        "1"
-      else
-        "0"
-      end
-
     bits
     |> Enum.filter(fn line ->
-      Enum.at(line, pos) == mcbf
-    end)
-    |> Enum.map(fn x ->
-      Enum.join(x)
+      Enum.at(line, pos) == if comp(bits_at_pos), do: "1", else: "0"
     end)
     |> oxygen_generator_rating(pos + 1)
   end
 
-  defp lcb(input) do
-    bits =
-      input
-      |> Enum.map(fn x ->
-        String.split(x, "", trim: true)
-      end)
-
+  defp lcb(bits) do
     len = Enum.count(Enum.at(bits, 0))
 
     bits
@@ -102,23 +62,13 @@ defmodule Aoc.Day3 do
     end)
     |> Enum.sort_by(fn {k, _} -> k end)
     |> Enum.map(fn {_, line} ->
-      if Enum.count(line, fn x -> x == "1" end) > div(Enum.count(line), 2) do
-        "0"
-      else
-        "1"
-      end
+      if comp(line), do: "0", else: "1"
     end)
     |> Enum.join()
     |> String.to_integer(2)
   end
 
-  defp mcb(input) do
-    bits =
-      input
-      |> Enum.map(fn x ->
-        String.split(x, "", trim: true)
-      end)
-
+  defp mcb(bits) do
     len = Enum.count(Enum.at(bits, 0))
 
     bits
@@ -131,19 +81,22 @@ defmodule Aoc.Day3 do
     end)
     |> Enum.sort_by(fn {k, _} -> k end)
     |> Enum.map(fn {_, line} ->
-      if Enum.count(line, fn x -> x == "1" end) > div(Enum.count(line), 2) do
-        "1"
-      else
-        "0"
-      end
+      if comp(line), do: "1", else: "0"
     end)
     |> Enum.join()
     |> String.to_integer(2)
+  end
+
+  defp comp(bits) do
+    Enum.count(bits, fn x -> x == "1" end) >= Enum.count(bits, fn x -> x == "0" end)
   end
 
   def input(filename) do
     filename
     |> File.read!()
     |> String.split("\n", trim: true)
+    |> Enum.map(fn x ->
+      String.split(x, "", trim: true)
+    end)
   end
 end
