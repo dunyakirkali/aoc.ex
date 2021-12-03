@@ -100,10 +100,8 @@ defmodule Aoc.Day3 do
         end)
       end)
     end)
-    |> Enum.sort_by(fn {k, v} -> k end)
-    |> Enum.map(fn {k, line} ->
-      line
-
+    |> Enum.sort_by(fn {k, _} -> k end)
+    |> Enum.map(fn {_, line} ->
       if Enum.count(line, fn x -> x == "1" end) > div(Enum.count(line), 2) do
         "0"
       else
@@ -131,10 +129,8 @@ defmodule Aoc.Day3 do
         end)
       end)
     end)
-    |> Enum.sort_by(fn {k, v} -> k end)
-    |> Enum.map(fn {k, line} ->
-      line
-
+    |> Enum.sort_by(fn {k, _} -> k end)
+    |> Enum.map(fn {_, line} ->
       if Enum.count(line, fn x -> x == "1" end) > div(Enum.count(line), 2) do
         "1"
       else
