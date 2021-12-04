@@ -22,9 +22,8 @@ defmodule Aoc.Day3 do
   defp co2_scrubber_rating(bits, pos) do
     bits_at_pos =
       bits
-      |> Enum.map(fn x ->
-        Enum.at(x, pos)
-      end)
+      |> Enum.zip_with(&Enum.frequencies/1)
+      |> Enum.at(pos)
 
     bits
     |> Enum.filter(fn line ->
@@ -38,9 +37,8 @@ defmodule Aoc.Day3 do
   defp oxygen_generator_rating(bits, pos) do
     bits_at_pos =
       bits
-      |> Enum.map(fn x ->
-        Enum.at(x, pos)
-      end)
+      |> Enum.zip_with(&Enum.frequencies/1)
+      |> Enum.at(pos)
 
     bits
     |> Enum.filter(fn line ->
@@ -50,45 +48,27 @@ defmodule Aoc.Day3 do
   end
 
   defp lcb(bits) do
-    len = Enum.count(Enum.at(bits, 0))
-
     bits
-    |> Enum.reduce(%{}, fn line, acc ->
-      Enum.reduce(0..(len - 1), acc, fn bi, acc ->
-        Map.update(acc, bi, [Enum.at(line, bi)], fn existing_value ->
-          [Enum.at(line, bi) | existing_value]
-        end)
-      end)
-    end)
-    |> Enum.sort_by(fn {k, _} -> k end)
-    |> Enum.map(fn {_, line} ->
-      if comp(line), do: "0", else: "1"
+    |> Enum.zip_with(&Enum.frequencies/1)
+    |> Enum.map(fn freqs ->
+      if comp(freqs), do: "0", else: "1"
     end)
     |> Enum.join()
     |> String.to_integer(2)
   end
 
   defp mcb(bits) do
-    len = Enum.count(Enum.at(bits, 0))
-
     bits
-    |> Enum.reduce(%{}, fn line, acc ->
-      Enum.reduce(0..(len - 1), acc, fn bi, acc ->
-        Map.update(acc, bi, [Enum.at(line, bi)], fn existing_value ->
-          [Enum.at(line, bi) | existing_value]
-        end)
-      end)
-    end)
-    |> Enum.sort_by(fn {k, _} -> k end)
-    |> Enum.map(fn {_, line} ->
-      if comp(line), do: "1", else: "0"
+    |> Enum.zip_with(&Enum.frequencies/1)
+    |> Enum.map(fn freqs ->
+      if comp(freqs), do: "1", else: "0"
     end)
     |> Enum.join()
     |> String.to_integer(2)
   end
 
-  defp comp(bits) do
-    Enum.count(bits, fn x -> x == "1" end) >= Enum.count(bits, fn x -> x == "0" end)
+  defp comp(freqs) do
+    Map.get(freqs, "1") >= Map.get(freqs, "0")
   end
 
   def input(filename) do
