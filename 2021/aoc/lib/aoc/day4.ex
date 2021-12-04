@@ -12,122 +12,96 @@ defmodule Aoc.Day4 do
   defp play([h | t], boards) do
     boards =
       boards
-      |> Enum.map(fn {board, player} ->
-        board =
-          board
-          |> Enum.map(fn line ->
-            List.delete(line, h)
-          end)
-
-        {board, player}
+      |> Enum.map(fn board ->
+        Map.reject(board, fn {_key, val} -> val == h end)
       end)
 
     winners = winning_board(boards)
 
-    if winners == nil do
+    if Enum.empty?(winners) do
       play(t, boards)
     else
-      {board, _player} = winners |> List.first
-
-      board
-      |> List.flatten()
+      winners
+      |> List.first()
+      |> Map.values()
       |> Enum.sum()
       |> Kernel.*(h)
     end
   end
 
   def winning_board(boards) do
-    check_row =
-      boards
-      |> Enum.map(fn {board, player} ->
-        board
-        |> Enum.reduce_while(nil, fn line, _acc ->
-          if length(line) == 0 do
-            {:halt, {board, player}}
-          else
-            {:cont, nil}
-          end
+    boards
+    |> Enum.filter(fn board ->
+      won_row =
+        0..4
+        |> Enum.map(fn row ->
+          win_row?(board, row)
         end)
-      end)
+        |> Enum.any?
 
-    check_col =
-      boards
-      |> Enum.map(fn {board, player} ->
-        board
-        |> Enum.zip()
-        |> Enum.map(&Tuple.to_list/1)
-        |> Enum.reduce_while(nil, fn line, _acc ->
-          if length(line) == 0 do
-            {:halt, {board, player}}
-          else
-            {:cont, nil}
-          end
+      won_col =
+        0..4
+        |> Enum.map(fn col ->
+          win_col?(board, col)
         end)
-      end)
+        |> Enum.any?
 
-    winners_row =
-      check_row
-      |> Enum.filter(fn x -> x != nil end)
-      |> length()
-      |> Kernel.!=(0)
-
-    winners_col =
-      check_col
-      |> Enum.filter(fn x -> x != nil end)
-      |> length()
-      |> Kernel.!=(0)
-
-    if winners_row or winners_col do
-      Enum.filter(check_row, fn x -> x != nil end) ++ Enum.filter(check_col, fn x -> x != nil end)
-    else
-      nil
-    end
+      won_row or won_col
+    end)
   end
 
-  # @doc """
-  #     iex> input = Aoc.Day4.input("priv/day4/example.txt")
-  #     ...> Aoc.Day4.part2(input)
-  #     1924
-  # """
+  defp win_row?(board, row) do
+    coords = for x <- 0..4, y <- [row], do:  {x, y}
+    coords
+    |> Enum.map(fn coord ->
+      board
+      |> Map.has_key?(coord)
+      |> Kernel.not
+    end)
+    |> Enum.all?
+  end
+
+  defp win_col?(board, col) do
+    coords = for x <- [col], y <- 0..4, do:  {x, y}
+    coords
+    |> Enum.map(fn coord ->
+      board
+      |> Map.has_key?(coord)
+      |> Kernel.not
+    end)
+    |> Enum.all?
+  end
+
+  @doc """
+      iex> input = Aoc.Day4.input("priv/day4/example.txt")
+      ...> Aoc.Day4.part2(input)
+      1924
+  """
   def part2(input) do
     {numbers, boards} = input
     play2(numbers, boards)
   end
 
-  defp play2([], _), do: raise "WAT"
   defp play2([h | t], boards) do
-    IO.inspect(h)
     boards =
       boards
-      |> Enum.map(fn {board, player} ->
-        board =
-          board
-          |> Enum.map(fn line ->
-            List.delete(line, h)
-          end)
-
-        {board, player}
+      |> Enum.map(fn board ->
+        Map.reject(board, fn {_key, val} -> val == h end)
       end)
 
-
     winners = winning_board(boards)
-    |> IO.inspect(label: "winners")
 
-    if winners == nil do
+    if Enum.empty?(winners) do
       play2(t, boards)
     else
       boards = boards -- winners
-      |> IO.inspect(label: "boards")
 
-      if length(boards) == 1 do
-        {board, _player} = boards |> List.first()
-        [f | _] = t
-
-        board
-        |> List.flatten()
+      if length(boards) == 0 do
+        winners
+        |> List.first()
+        |> Map.values()
         |> Enum.sum()
-        |> Kernel.-(f)
-        |> Kernel.*(f)
+        |> Kernel.*(h)
       else
         play2(t, boards)
       end
@@ -148,13 +122,17 @@ defmodule Aoc.Day4 do
       |> Enum.chunk_every(5, 5)
       |> Enum.map(fn board ->
         board
-        |> Enum.map(fn line ->
+        |> Enum.with_index()
+        |> Enum.reduce(%{}, fn {line, y}, acc ->
           line
           |> String.split(" ", trim: true)
           |> Enum.map(&String.to_integer/1)
+          |> Enum.with_index()
+          |> Enum.reduce(acc, fn {cell, x}, acc ->
+            Map.put(acc, {x, y}, cell)
+          end)
         end)
       end)
-      |> Enum.with_index()
 
     {nums, boards}
   end
