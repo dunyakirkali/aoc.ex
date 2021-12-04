@@ -13,7 +13,13 @@ defmodule Aoc.Day4 do
     boards =
       boards
       |> Enum.map(fn board ->
-        Map.reject(board, fn {_key, val} -> val == h end)
+        board
+        |> Enum.filter(fn {_key, val} ->
+           val != h
+        end)
+        |> Enum.into(%{})
+        # Only available in 1.13.0
+        # Map.reject(board, fn {_key, val} -> val == h end)
       end)
 
     winners = winning_board(boards)
@@ -88,7 +94,13 @@ defmodule Aoc.Day4 do
     boards =
       boards
       |> Enum.map(fn board ->
-        Map.reject(board, fn {_key, val} -> val == h end)
+        board
+        |> Enum.filter(fn {_key, val} ->
+           val != h
+        end)
+        |> Enum.into(%{})
+        # Only available in 1.13.0
+        # Map.reject(board, fn {_key, val} -> val == h end)
       end)
 
     winners = winning_board(boards)
