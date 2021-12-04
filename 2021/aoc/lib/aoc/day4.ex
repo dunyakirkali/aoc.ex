@@ -10,18 +10,7 @@ defmodule Aoc.Day4 do
   end
 
   defp play([h | t], boards) do
-    boards =
-      boards
-      |> Enum.map(fn board ->
-        board
-        |> Enum.filter(fn {_key, val} ->
-           val != h
-        end)
-        |> Enum.into(%{})
-        # Only available in 1.13.0
-        # Map.reject(board, fn {_key, val} -> val == h end)
-      end)
-
+    boards = reject_winners(boards, h)
     winners = winning_board(boards)
 
     if Enum.empty?(winners) do
@@ -29,13 +18,25 @@ defmodule Aoc.Day4 do
     else
       winners
       |> List.first()
-      |> Map.values()
-      |> Enum.sum()
-      |> Kernel.*(h)
+      |> score(h)
     end
   end
 
-  def winning_board(boards) do
+  defp reject_winners(boards, h) do
+    boards
+    |> Enum.map(fn board ->
+      board
+      |> Enum.filter(fn {_key, val} ->
+        val != h
+      end)
+      |> Enum.into(%{})
+
+      # Only available in 1.13.0
+      # Map.reject(board, fn {_key, val} -> val == h end)
+    end)
+  end
+
+  defp winning_board(boards) do
     boards
     |> Enum.filter(fn board ->
       won_row =
@@ -91,18 +92,7 @@ defmodule Aoc.Day4 do
   end
 
   defp play2([h | t], boards) do
-    boards =
-      boards
-      |> Enum.map(fn board ->
-        board
-        |> Enum.filter(fn {_key, val} ->
-           val != h
-        end)
-        |> Enum.into(%{})
-        # Only available in 1.13.0
-        # Map.reject(board, fn {_key, val} -> val == h end)
-      end)
-
+    boards = reject_winners(boards, h)
     winners = winning_board(boards)
 
     if Enum.empty?(winners) do
@@ -113,13 +103,18 @@ defmodule Aoc.Day4 do
       if length(boards) == 0 do
         winners
         |> List.first()
-        |> Map.values()
-        |> Enum.sum()
-        |> Kernel.*(h)
+        |> score(h)
       else
         play2(t, boards)
       end
     end
+  end
+
+  defp score(board, h) do
+    board
+    |> Map.values()
+    |> Enum.sum()
+    |> Kernel.*(h)
   end
 
   def input(filename) do
