@@ -47,24 +47,28 @@ defmodule Aoc.Day3 do
     |> oxygen_generator_rating(pos + 1)
   end
 
-  defp lcb(bits) do
-    bits
-    |> Enum.zip_with(&Enum.frequencies/1)
-    |> Enum.map(fn freqs ->
-      if comp(freqs), do: "0", else: "1"
-    end)
-    |> Enum.join()
-    |> String.to_integer(2)
+  defp lcb(matrix) do
+    {rows, cols} = Nx.shape(matrix)
+
+    bases = Nx.reverse(Nx.power(2, Nx.iota({cols})))
+
+    matrix
+    |> Nx.sum(axes: [0])
+    |> Nx.less(div(rows, 2))
+    |> Nx.dot(bases)
+    |> Nx.to_scalar()
   end
 
-  defp mcb(bits) do
-    bits
-    |> Enum.zip_with(&Enum.frequencies/1)
-    |> Enum.map(fn freqs ->
-      if comp(freqs), do: "1", else: "0"
-    end)
-    |> Enum.join()
-    |> String.to_integer(2)
+  defp mcb(matrix) do
+    {rows, cols} = Nx.shape(matrix)
+
+    bases = Nx.reverse(Nx.power(2, Nx.iota({cols})))
+
+    matrix
+    |> Nx.sum(axes: [0])
+    |> Nx.greater(div(rows, 2))
+    |> Nx.dot(bases)
+    |> Nx.to_scalar()
   end
 
   defp comp(freqs) do
@@ -75,8 +79,9 @@ defmodule Aoc.Day3 do
     filename
     |> File.read!()
     |> String.split("\n", trim: true)
-    |> Enum.map(fn x ->
-      String.split(x, "", trim: true)
+    |> Enum.map(fn line ->
+      Enum.map(String.to_charlist(line), & &1 - ?0)
     end)
+    |> Nx.tensor()
   end
 end

@@ -34,7 +34,8 @@ defmodule Aoc.MixProject do
       {:tensor, "~> 2.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:exprof, "~> 0.2.0"},
-      {:flow, "~> 1.1.0"}
+      {:flow, "~> 1.1.0"},
+      {:nx, github: "elixir-nx/nx", sparse: "nx"}
     ]
   end
 end
