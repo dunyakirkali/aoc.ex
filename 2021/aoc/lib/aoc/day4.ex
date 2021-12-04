@@ -37,39 +37,41 @@ defmodule Aoc.Day4 do
         |> Enum.map(fn row ->
           win_row?(board, row)
         end)
-        |> Enum.any?
+        |> Enum.any?()
 
       won_col =
         0..4
         |> Enum.map(fn col ->
           win_col?(board, col)
         end)
-        |> Enum.any?
+        |> Enum.any?()
 
       won_row or won_col
     end)
   end
 
   defp win_row?(board, row) do
-    coords = for x <- 0..4, y <- [row], do:  {x, y}
+    coords = for x <- 0..4, y <- [row], do: {x, y}
+
     coords
     |> Enum.map(fn coord ->
       board
       |> Map.has_key?(coord)
-      |> Kernel.not
+      |> Kernel.not()
     end)
-    |> Enum.all?
+    |> Enum.all?()
   end
 
   defp win_col?(board, col) do
-    coords = for x <- [col], y <- 0..4, do:  {x, y}
+    coords = for x <- [col], y <- 0..4, do: {x, y}
+
     coords
     |> Enum.map(fn coord ->
       board
       |> Map.has_key?(coord)
-      |> Kernel.not
+      |> Kernel.not()
     end)
-    |> Enum.all?
+    |> Enum.all?()
   end
 
   @doc """
