@@ -32,7 +32,6 @@ defmodule Aoc.Day5 do
         end)
       end)
     end)
-    |> IO.inspect()
     |> Enum.count(fn {_, v} ->
       v > 1
     end)
