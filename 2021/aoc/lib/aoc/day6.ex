@@ -46,10 +46,6 @@ defmodule Aoc.Day6 do
     |> List.first()
     |> String.split(",")
     |> Enum.map(&String.to_integer/1)
-    |> Enum.reduce(%{}, fn jel, acc ->
-      Map.update(acc, jel, 1, fn old ->
-        old + 1
-      end)
-    end)
+    |> Enum.frequencies()
   end
 end
