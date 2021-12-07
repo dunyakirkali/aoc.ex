@@ -5,8 +5,7 @@ defmodule Aoc.Day7 do
       37
   """
   def part1(input) do
-    hi = Enum.max(input)
-    lo = Enum.min(input)
+    {lo, hi} = Enum.min_max(input)
 
     lo..hi
     |> Enum.map(fn dest ->
@@ -64,8 +63,7 @@ defmodule Aoc.Day7 do
       168
   """
   def part2(input) do
-    hi = Enum.max(input)
-    lo = Enum.min(input)
+    {lo, hi} = Enum.min_max(input)
 
     lo..hi
     |> Enum.map(fn dest ->
