@@ -1,5 +1,11 @@
 defmodule Aoc.Day1 do
   @doc """
+    In APL
+
+    ```apl
+      +/2</input
+    ```
+
       iex> Aoc.Day1.part1([199, 200, 208,210,200,207,240,269,260,263])
       7
   """
@@ -19,6 +25,12 @@ defmodule Aoc.Day1 do
   end
 
   @doc """
+    In APL
+
+    ```apl
+      +/2</3+/input
+    ```
+
       iex> Aoc.Day1.part2([199, 200, 208,210,200,207,240,269,260,263])
       5
   """
