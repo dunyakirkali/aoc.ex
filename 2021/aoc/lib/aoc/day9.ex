@@ -32,7 +32,7 @@ defmodule Aoc.Day9 do
   end
 
   @doc """
-      iex> input = Aoc.Day9.neighbors({1, 1}, 1)
+      iex> Aoc.Day9.neighbors({1, 1}, 1)
       [{0, 1}, {1, 2}, {1, 0}, {2, 1}]
   """
   def neighbors(point, size \\ 1) do
