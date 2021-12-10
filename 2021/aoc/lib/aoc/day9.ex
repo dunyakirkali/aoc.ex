@@ -16,7 +16,7 @@ defmodule Aoc.Day9 do
     |> Enum.map(fn post ->
       Map.get(input, post) + 1
     end)
-    |> Enum.sum
+    |> Enum.sum()
   end
 
   def find_lowest(input) do
@@ -57,8 +57,8 @@ defmodule Aoc.Day9 do
     |> Enum.map(fn point ->
       basins(input, point, point)
 
-      Agent.get(__MODULE__, &(Map.get(&1, point, [])))
-      |> Enum.count
+      Agent.get(__MODULE__, &Map.get(&1, point, []))
+      |> Enum.count()
     end)
     |> Enum.sort()
     |> Enum.reverse()
@@ -67,10 +67,12 @@ defmodule Aoc.Day9 do
   end
 
   def basins(input, root, point) do
-    points = Agent.get(__MODULE__, &(Map.get(&1, root, [])))
+    points = Agent.get(__MODULE__, &Map.get(&1, root, []))
+
     if Map.get(input, point, 9) != 9 do
       if !Enum.member?(points, point) do
-        Agent.update(__MODULE__, &(Map.put(&1, root, [point | points])))
+        Agent.update(__MODULE__, &Map.put(&1, root, [point | points]))
+
         Enum.map(neighbors(point), fn x ->
           basins(input, root, x)
         end)

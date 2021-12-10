@@ -20,7 +20,7 @@ defmodule Aoc.Day8 do
       end)
     end)
     |> List.flatten()
-    |> Enum.count
+    |> Enum.count()
   end
 
   def figure_out(input, num) do
@@ -48,15 +48,27 @@ defmodule Aoc.Day8 do
   end
 
   def find_mapping(patterns) do
-    one = figure_out(patterns, 2) |> List.first
-    four = figure_out(patterns, 4) |> List.first
-    seven = figure_out(patterns, 3) |> List.first
-    eight = figure_out(patterns, 7) |> List.first
-    three = Enum.find(figure_out(patterns, 5), &(MapSet.size(MapSet.difference(&1,one)) == 3))
-    five = Enum.find(figure_out(patterns, 5) -- [three], &(MapSet.size(MapSet.difference(&1,four)) == 2))
+    one = figure_out(patterns, 2) |> List.first()
+    four = figure_out(patterns, 4) |> List.first()
+    seven = figure_out(patterns, 3) |> List.first()
+    eight = figure_out(patterns, 7) |> List.first()
+    three = Enum.find(figure_out(patterns, 5), &(MapSet.size(MapSet.difference(&1, one)) == 3))
+
+    five =
+      Enum.find(
+        figure_out(patterns, 5) -- [three],
+        &(MapSet.size(MapSet.difference(&1, four)) == 2)
+      )
+
     two = List.first(figure_out(patterns, 5) -- [three, five])
-    nine = Enum.find(figure_out(patterns, 6), &(MapSet.size(MapSet.difference(&1,three)) == 1))
-    six = Enum.find(figure_out(patterns, 6) -- [nine], &(MapSet.size(MapSet.difference(&1,one)) == 5))
+    nine = Enum.find(figure_out(patterns, 6), &(MapSet.size(MapSet.difference(&1, three)) == 1))
+
+    six =
+      Enum.find(
+        figure_out(patterns, 6) -- [nine],
+        &(MapSet.size(MapSet.difference(&1, one)) == 5)
+      )
+
     zero = List.first(figure_out(patterns, 6) -- [nine, six])
 
     [zero, one, two, three, four, five, six, seven, eight, nine]
@@ -77,7 +89,6 @@ defmodule Aoc.Day8 do
     Map.get(mapping, Enum.sort(chars))
   end
 
-
   def input(filename) do
     filename
     |> File.read!()
@@ -93,7 +104,7 @@ defmodule Aoc.Day8 do
         |> String.split(" ", trim: true)
         |> Enum.map(fn y ->
           String.split(y, "", trim: true)
-          |> MapSet.new
+          |> MapSet.new()
         end)
 
       output =
@@ -101,7 +112,7 @@ defmodule Aoc.Day8 do
         |> String.split(" ", trim: true)
         |> Enum.map(fn y ->
           String.split(y, "", trim: true)
-          |> MapSet.new
+          |> MapSet.new()
         end)
 
       {patterns, output}
