@@ -6,9 +6,9 @@ defmodule Aoc.Day9 do
   end
 
   @doc """
-      # iex> input = Aoc.Day9.input("priv/day9/example.txt")
-      # ...> Aoc.Day9.part1(input)
-      # 15
+      iex> input = Aoc.Day9.input("priv/day9/example.txt")
+      ...> Aoc.Day9.part1(input)
+      15
   """
   def part1(input) do
     input
