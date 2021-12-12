@@ -53,7 +53,7 @@ defmodule Aoc.Day12 do
       ...> Aoc.Day12.part2(input)
       103
 
-      iex> input = Aoc.Day12.input("priv/day12/example3.txt")
+      # iex> input = Aoc.Day12.input("priv/day12/example3.txt")
       ...> Aoc.Day12.part2(input)
       3509
   """
@@ -67,25 +67,10 @@ defmodule Aoc.Day12 do
 
   defp do_solve2(graph, node, acc) do
     if node == "end" do
-      # HACK
-      hack =
-        acc
-        |> Enum.filter(fn chr ->
-          String.downcase(chr) == chr
-        end)
-        |> Enum.frequencies()
-        |> Map.values()
-        |> Enum.count(fn x -> x == 2 end)
-        |> Kernel.>(1)
-
-      if hack do
-        :ok
-      else
-        Agent.update(__MODULE__, &(&1 + 1))
-      end
+      Agent.update(__MODULE__, &(&1 + 1))
     else
       cont =
-        acc
+        [node | acc]
         |> Enum.filter(fn chr ->
           String.downcase(chr) == chr
         end)
@@ -102,7 +87,8 @@ defmodule Aoc.Day12 do
           []
         end
 
-      :digraph.out_neighbours(graph, node)
+      graph
+      |> :digraph.out_neighbours(node)
       |> Enum.filter(fn chr ->
         not Enum.member?(visited, chr)
       end)
