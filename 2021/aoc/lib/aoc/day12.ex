@@ -2,7 +2,7 @@ defmodule Aoc.Day12 do
   use Agent
 
   def start do
-    Agent.start_link(fn -> [] end, name: __MODULE__)
+    Agent.start_link(fn -> 0 end, name: __MODULE__)
   end
 
   @doc """
@@ -24,12 +24,11 @@ defmodule Aoc.Day12 do
     do_solve(input, "start", [])
 
     Agent.get(__MODULE__, & &1)
-    |> Enum.count()
   end
 
   defp do_solve(graph, node, acc) do
     if node == "end" do
-      Agent.update(__MODULE__, &[[node | acc] |> Enum.reverse() | &1])
+      Agent.update(__MODULE__, &(&1 + 1))
     else
       small =
         acc
@@ -64,12 +63,11 @@ defmodule Aoc.Day12 do
     do_solve2(input, "start", [])
 
     Agent.get(__MODULE__, & &1)
-    |> Enum.count()
   end
 
   defp do_solve2(graph, node, acc) do
     if node == "end" do
-      Agent.update(__MODULE__, &[[node | acc] |> Enum.reverse() | &1])
+      Agent.update(__MODULE__, &(&1 + 1))
     else
       cont =
         acc
@@ -86,13 +84,13 @@ defmodule Aoc.Day12 do
           |> Enum.filter(fn chr ->
             String.downcase(chr) == chr
           end)
-          |> Kernel.++(["start"])
         else
-          ["start"]
+          []
         end
 
       :digraph.out_neighbours(graph, node)
       |> Kernel.--(visited)
+      |> Kernel.--(["start"])
       |> Enum.map(fn n ->
         do_solve2(graph, n, [node | acc])
       end)
