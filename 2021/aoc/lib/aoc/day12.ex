@@ -67,7 +67,22 @@ defmodule Aoc.Day12 do
 
   defp do_solve2(graph, node, acc) do
     if node == "end" do
-      Agent.update(__MODULE__, &(&1 + 1))
+      # HACK
+      hack =
+        acc
+        |> Enum.filter(fn chr ->
+          String.downcase(chr) == chr
+        end)
+        |> Enum.frequencies()
+        |> Map.values()
+        |> Enum.count(fn x -> x == 2 end)
+        |> Kernel.>(1)
+
+      if hack do
+        :ok
+      else
+        Agent.update(__MODULE__, &(&1 + 1))
+      end
     else
       cont =
         acc
@@ -80,8 +95,7 @@ defmodule Aoc.Day12 do
 
       visited =
         if cont do
-          acc
-          |> Enum.filter(fn chr ->
+          Enum.filter(acc, fn chr ->
             String.downcase(chr) == chr
           end)
         else
@@ -89,7 +103,9 @@ defmodule Aoc.Day12 do
         end
 
       :digraph.out_neighbours(graph, node)
-      |> Kernel.--(visited)
+      |> Enum.filter(fn chr ->
+        not Enum.member?(visited, chr)
+      end)
       |> Kernel.--(["start"])
       |> Enum.map(fn n ->
         do_solve2(graph, n, [node | acc])
