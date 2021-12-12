@@ -78,7 +78,16 @@ defmodule Aoc do
     end
 
     def neighbors({x, y}) do
-      [{x-1, y-1}, {x,y-1}, {x+1,y-1}, {x-1,y}, {x+1,y}, {x-1,y+1}, {x,y+1}, {x+1,y+1}]
+      [
+        {x - 1, y - 1},
+        {x, y - 1},
+        {x + 1, y - 1},
+        {x - 1, y},
+        {x + 1, y},
+        {x - 1, y + 1},
+        {x, y + 1},
+        {x + 1, y + 1}
+      ]
     end
 
     def number_of_rows(map) do
@@ -103,6 +112,7 @@ defmodule Aoc do
 
     def print(map) do
       IO.puts("")
+
       Enum.map(0..9, fn row ->
         Enum.map(0..9, fn col ->
           pos = {col, row}

@@ -86,6 +86,6 @@ defmodule Aoc.Day11 do
 
   def input(filename) do
     filename
-    |> Aoc.Chart.new
+    |> Aoc.Chart.new()
   end
 end
