@@ -25,7 +25,7 @@ defmodule Aoc.Day13 do
       Enum.map(0..height, fn col ->
         pos = {col, row}
         value = Map.get(map, pos, ".")
-        IO.ANSI.format([:green, to_string(value), :reset])
+        to_string(value)
       end)
       |> Enum.intersperse("")
     end)
@@ -54,19 +54,12 @@ defmodule Aoc.Day13 do
     end)
   end
 
-  @doc """
-      iex> input = Aoc.Day13.input("priv/day13/example.txt")
-      ...> Aoc.Day13.part2(input)
-      :ok
-  """
   def part2({graph, instructions}) do
     instructions
     |> Enum.reduce(graph, fn [dir, amount], acc ->
       fold(acc, dir, amount)
     end)
     |> print()
-
-    :ok
   end
 
   def input(filename) do
