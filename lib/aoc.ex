@@ -1,3 +1,0 @@
-defmodule Aoc do
-
-end
