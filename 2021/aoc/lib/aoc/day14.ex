@@ -75,7 +75,6 @@ defmodule Aoc.Day14 do
       |> Enum.reduce(%{}, fn [k, v], acc ->
         Map.put(acc, k, v)
       end)
-      # |> IO.inspect()
 
   [String.split(template, "", trim: true), list]
   end
