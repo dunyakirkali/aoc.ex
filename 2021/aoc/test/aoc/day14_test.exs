@@ -9,6 +9,6 @@ defmodule Day14Test do
 
   test "Part 2" do
     input = Aoc.Day14.input("priv/day14/input.txt")
-    assert Aoc.Day14.part2(input) == 2914365137499
+    assert Aoc.Day14.part2(input) == 2_914_365_137_499
   end
 end

@@ -76,6 +76,6 @@ defmodule Aoc.Day14 do
         Map.put(acc, k, v)
       end)
 
-  [String.split(template, "", trim: true), list]
+    [String.split(template, "", trim: true), list]
   end
 end

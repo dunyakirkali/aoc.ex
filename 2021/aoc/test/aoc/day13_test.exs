@@ -19,9 +19,11 @@ defmodule Day13Test do
     #....#..#.#....#..#.#....#..#.#....#...
     ####..##..#....#..#.####.#..#.####.#...
     """
+
     input = Aoc.Day13.input("priv/day13/input.txt")
+
     assert capture_io(fn ->
-      Aoc.Day13.part2(input)
-    end) == expected_output
+             Aoc.Day13.part2(input)
+           end) == expected_output
   end
 end

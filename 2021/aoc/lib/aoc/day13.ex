@@ -19,8 +19,9 @@ defmodule Aoc.Day13 do
   def print(map) do
     IO.puts("")
 
-    height = Map.keys(map) |> Enum.map(fn {x, _} -> x end) |> Enum.max
-    width = Map.keys(map) |> Enum.map(fn {_, y} -> y end) |> Enum.max
+    height = Map.keys(map) |> Enum.map(fn {x, _} -> x end) |> Enum.max()
+    width = Map.keys(map) |> Enum.map(fn {_, y} -> y end) |> Enum.max()
+
     Enum.map(0..width, fn row ->
       Enum.map(0..height, fn col ->
         pos = {col, row}
@@ -40,13 +41,14 @@ defmodule Aoc.Day13 do
       case dir do
         "x" ->
           if x > amount do
-            Map.put(acc, {2*amount - x, y}, val)
+            Map.put(acc, {2 * amount - x, y}, val)
           else
             Map.put(acc, {x, y}, val)
           end
+
         "y" ->
           if y > amount do
-            Map.put(acc, {x, 2*amount-y}, val)
+            Map.put(acc, {x, 2 * amount - y}, val)
           else
             Map.put(acc, {x, y}, val)
           end
@@ -80,8 +82,8 @@ defmodule Aoc.Day13 do
         Map.put(acc, List.to_tuple(point), "#")
       end)
 
-    instructions
-      = instructions
+    instructions =
+      instructions
       |> String.split("\n", trim: true)
       |> Enum.map(fn line ->
         ["fold", "along", instruction] = String.split(line, " ", trim: true)
