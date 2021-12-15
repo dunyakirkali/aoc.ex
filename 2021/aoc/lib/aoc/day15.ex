@@ -4,22 +4,23 @@ defmodule Aoc.Day15 do
       ...> Aoc.Day15.part1(input, {10, 10})
       40
   """
-  def part1(input, {dx, dy})  do
+  def part1(input, {dx, dy}) do
     graph = graphify(input)
 
     graph
-    |> Graph.dijkstra({0,0}, {dx - 1, dy - 1})
+    |> Graph.dijkstra({0, 0}, {dx - 1, dy - 1})
     |> Enum.drop(1)
     |> Enum.map(fn pos ->
       Map.get(input, pos)
     end)
-    |> Enum.sum
+    |> Enum.sum()
   end
 
   def graphify(map) do
-    graph = Enum.reduce(map, Graph.new(), fn {{x, y}, _}, acc ->
-      Graph.add_vertex(acc, {x, y})
-    end)
+    graph =
+      Enum.reduce(map, Graph.new(), fn {{x, y}, _}, acc ->
+        Graph.add_vertex(acc, {x, y})
+      end)
 
     map
     |> Enum.reduce(graph, fn {pos, val}, acc ->
@@ -37,7 +38,7 @@ defmodule Aoc.Day15 do
       {x, y - 1},
       {x - 1, y},
       {x + 1, y},
-      {x, y + 1},
+      {x, y + 1}
     ]
   end
 
@@ -47,37 +48,49 @@ defmodule Aoc.Day15 do
       315
   """
   def part2(input, {dx, dy}) do
-    expanded =
-      input
-      |> expand({dx, dy})
-
-    graph =
-      expanded
-      |> graphify()
+    expanded = expand(input, {dx, dy})
+    graph = graphify(expanded)
 
     graph
-    |> Graph.dijkstra({0,0}, {5 * dx - 1, 5 * dy - 1})
+    |> Graph.dijkstra({0, 0}, {5 * dx - 1, 5 * dy - 1})
     |> Enum.drop(1)
     |> Enum.map(fn pos ->
       Map.get(expanded, pos)
     end)
-    |> Enum.sum
+    |> Enum.sum()
   end
 
-  def expand(map, {dx, dy}) do
-    0..4
-    |> Enum.reduce(map, fn xe, acc ->
-      0..4
-      |> Enum.reduce(acc, fn ye, acc ->
-        Enum.reduce(map, acc, fn {{x, y}, val}, acc ->
-          md = xe + ye
-          nv =
-            if val + md >= 10 do
-              rem(val + md - 1, 9) + 1
-            else
-              val + md
-            end
+  def print(map) do
+    IO.puts("")
 
+    height = Map.keys(map) |> Enum.map(fn {x, _} -> x end) |> Enum.max()
+    width = Map.keys(map) |> Enum.map(fn {_, y} -> y end) |> Enum.max()
+
+    Enum.map(0..width, fn row ->
+      Enum.map(0..height, fn col ->
+        pos = {col, row}
+        value = Map.get(map, pos, ".")
+        to_string(value)
+      end)
+      |> Enum.intersperse("")
+    end)
+    |> Enum.join("\n")
+    |> IO.puts()
+
+    map
+  end
+
+  @doc """
+      iex> input = Aoc.Day15.input("priv/day15/example.txt")
+      ...> result = Aoc.Day15.input("priv/day15/example_expanded.txt")
+      ...> Aoc.Day15.expand(input, {10, 10}) == result
+      true
+  """
+  def expand(map, {dx, dy}) do
+    Enum.reduce(0..4, %{}, fn xe, acc ->
+      Enum.reduce(0..4, acc, fn ye, acc ->
+        Enum.reduce(map, acc, fn {{x, y}, val}, acc ->
+          nv = rem(val + xe + ye - 1, 9) + 1
           Map.put(acc, {xe * dx + x, ye * dy + y}, nv)
         end)
       end)
