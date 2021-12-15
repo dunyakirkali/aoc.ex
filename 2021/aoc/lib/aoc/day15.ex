@@ -22,15 +22,28 @@ defmodule Aoc.Day15 do
         Graph.add_vertex(acc, {x, y})
       end)
 
-    map
-    |> Enum.reduce(graph, fn {pos, val}, acc ->
-      pos
-      |> neighbors()
-      |> Enum.reduce(acc, fn des, acc ->
-        tw = Map.get(map, des, 10)
-        Graph.add_edge(acc, pos, des, weight: val + tw)
+    graph =
+      map
+      |> Enum.reduce(graph, fn {pos, val}, acc ->
+        pos
+        |> neighbors()
+        |> Enum.reduce(acc, fn des, acc ->
+          tw = Map.get(map, des, 10)
+          Graph.add_edge(acc, pos, des, weight: val + tw)
+        end)
       end)
-    end)
+
+    # Ugly workaround to deal with the libgraph hashing issue
+    # https://github.com/bitwalker/libgraph/issues/44
+    fail =
+      graph
+      |> Graph.edges()
+      |> Enum.filter(fn %Graph.Edge{v1: {x1, y1}, v2: {x2, y2}} ->
+        abs(x1 - x2) > 1 and abs(y1 - y2) > 1
+      end)
+
+    graph
+    |> Graph.delete_edges(fail)
   end
 
   def neighbors({x, y}) do
