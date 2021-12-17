@@ -37,9 +37,9 @@ defmodule Aoc.Day17 do
   defp drag(_), do: 0
 
   @doc """
-      # iex> input = Aoc.Day17.input("priv/day17/example.txt")
-      # ...> Aoc.Day17.part1(input)
-      # 112
+      iex> input = Aoc.Day17.input("priv/day17/example.txt")
+      ...> Aoc.Day17.part2(input)
+      112
   """
   def part2(input) do
     input
