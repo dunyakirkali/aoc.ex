@@ -1,139 +1,80 @@
 defmodule Aoc.Day18 do
   @doc """
-      # iex> input = Aoc.Day18.input("priv/day18/example1.txt")
-      # ...> Aoc.Day18.part1(input)
-      # [[[[1,1],[2,2]],[3,3]],[4,4]]
-
-      # iex> input = Aoc.Day18.input("priv/day18/example2.txt")
-      # ...> Aoc.Day18.part1(input)
-      # [[[[3,0],[5,3]],[4,4]],[5,5]]
-
-      # iex> input = Aoc.Day18.input("priv/day18/example3.txt")
-      # ...> Aoc.Day18.part1(input)
-      # [[[[0,7],4],[[7,8],[6,0]]],[8,1]]
-
-      # iex> input = Aoc.Day18.input("priv/day18/example4.txt")
-      # ...> Aoc.Day18.part1(input)
-      # 4140
+      iex> input = Aoc.Day18.input("priv/day18/example4.txt")
+      ...> Aoc.Day18.part1(input)
+      4140
   """
-  def part1(list) do
-    list
-    |> sum()
+  def part1(input) do
+    input
+    |> Enum.reduce(&add(&2, &1))
     |> magnitude()
   end
 
   @doc """
-      # iex> input = Aoc.Day18.input("priv/day18/example1.txt")
-      # ...> Aoc.Day18.sum(input)
-      # [[[[1,1],[2,2]],[3,3]],[4,4]]
-
-      # iex> input = Aoc.Day18.input("priv/day18/example2.txt")
-      # ...> Aoc.Day18.sum(input)
-      # [[[[3,0],[5,3]],[4,4]],[5,5]]
-
-      # iex> input = Aoc.Day18.input("priv/day18/example5.txt")
-      # ...> Aoc.Day18.sum(input)
-      # [[[[5,0],[7,4]],[5,5]],[6,6]]
-
-      iex> input = Aoc.Day18.input("priv/day18/example6.txt")
-      ...> Aoc.Day18.sum(input)
-      [[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]
+      iex> input = Aoc.Day18.input("priv/day18/example4.txt")
+      ...> Aoc.Day18.part2(input)
+      3993
   """
-  def sum([h | t]) do
-    t
-    |> Enum.reduce(h, fn list, acc->
-      add(acc, list)
-      |> reduce()
-    end)
+  def part2(input) do
+    for a <- input, b <- input, a != b do
+    [
+      magnitude(add(a, b)),
+      magnitude(add(b, a))
+    ]
+    end
+    |> List.flatten()
+    |> Enum.max()
   end
 
-  def reduce(list) do
-    Stream.iterate(0, &(&1 + 1))
-    |> Enum.reduce_while(list, fn _, acc ->
-      red =
-        acc
-        |> IO.inspect()
-        |> explode()
-        |> IO.inspect(label: "after explode")
-        |> split()
-        |> IO.inspect(label: "after split")
-      if red == acc do
-        {:halt, acc}
-      else
-        {:cont, red}
-      end
-    end)
-  end
+  def add(a, b), do: reduce([a, b])
 
-  @doc """
-      # iex> input = Aoc.Day18.input("priv/day18/example.txt")
-      # ...> Aoc.Day18.part1(input)
-      # nil
-  """
-  def part2(_input) do
-  end
-
-  @doc """
-      # iex> Aoc.Day18.explode([[[[[9,8],1],2],3],4])
-      # [[[[0,9],2],3],4]
-
-      # iex> Aoc.Day18.explode([7,[6,[5,[4,[3,2]]]]])
-      # [7,[6,[5,[7,0]]]]
-
-      # iex> Aoc.Day18.explode([[6,[5,[4,[3,2]]]],1])
-      # [[6,[5,[7,0]]],3]
-
-      # iex> Aoc.Day18.explode([[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]])
-      # [[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]
-
-      # iex> Aoc.Day18.explode([[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]])
-      # [[3,[2,[8,0]]],[9,[5,[7,0]]]]
-
-      # iex> Aoc.Day18.explode([[[[[1, 1], [2, 2]], [3, 3]], [4, 4]], [5, 5]])
-      # [[[[0, [3, 2]], [3, 3]], [4, 4]], [5, 5]]
-  """
-  def explode(list) do
-    list
-    |> do_explode(0)
-    |> elem(0)
-  end
-
-  def do_explode([l, r], 4) do
-    {0, [l, r]} |> IO.inspect()
-  end
-  def do_explode([l, r], _depth) when is_integer(l) and is_integer(r) do
-    {[l, r], [0, 0]}
-  end
-  def do_explode([l, r], depth) when is_list(l) and is_integer(r) do
-    {val, [sl, sr]} = do_explode(l, depth + 1)
-    {[val, r + sr], [sl, 0]}
-  end
-  def do_explode([l, r], depth) when is_integer(l) and is_list(r) do
-    {val, [sl, sr]} = do_explode(r, depth + 1)
-    {[l + sl, val], [0, sr]}
-  end
-  def do_explode([l, r], depth) when is_list(l) and is_list(r) do
-    case do_explode(l, depth + 1) do
-      {vl, [0, 0]} ->
-        {vr, [sl, sr]} = do_explode(r, depth + 1)
-        {[vl, vr], [sl, sr]}
-      {vl, [sl, sr]} ->
-        {[vl, carry(r, [sl, sr])], [0, 0]}
+  def reduce(l) do
+    cond do
+      l = explode(l, _level = 1) ->
+        {_, l, _} = l
+        reduce(l)
+      l = split(l) ->
+        reduce(l)
+      true ->
+        l
     end
   end
 
-  def carry([l, r], [_cl, cr]) when is_integer(l) and is_integer(r) do
-    [l + cr, r]
+  def merge([a, b], n), do: [a, merge(b, n)]
+  def merge(n, [a, b]), do: [merge(n, a), b]
+  def merge(a, b), do: a + b
+
+  @doc """
+      iex> Aoc.Day18.explode([[[[[9,8],1],2],3],4], 1)
+      {9, [[[[0, 9], 2], 3], 4], 0}
+
+      iex> Aoc.Day18.explode([7,[6,[5,[4,[3,2]]]]], 1)
+      {0, [7, [6, [5, [7, 0]]]], 2}
+
+      iex> Aoc.Day18.explode([[6,[5,[4,[3,2]]]],1], 1)
+      {0, [[6, [5, [7, 0]]], 3], 0}
+
+      iex> Aoc.Day18.explode([[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]], 1)
+      {0, [[3, [2, [8, 0]]], [9, [5, [4, [3, 2]]]]], 0}
+
+      iex> Aoc.Day18.explode([[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]], 1)
+      {0, [[3, [2, [8, 0]]], [9, [5, [7, 0]]]], 2}
+
+      iex> Aoc.Day18.explode([[[[[1, 1], [2, 2]], [3, 3]], [4, 4]], [5, 5]], 1)
+      {1, [[[[0, [3, 2]], [3, 3]], [4, 4]], [5, 5]], 0}
+  """
+  def explode([l, r], 5) do
+    {l, 0, r}
   end
-  def carry([l, r], [cl, cr]) when is_list(l) and is_integer(r) do
-    [carry(l, [cl, cr]), r]
+  def explode([l, r], level) do
+    with {ll, n, lr} <- explode(l, level + 1) do
+      {ll, [n, merge(lr, r)], 0}
+    end ||
+      with {rl, n, rr} <- explode(r, level + 1) do
+        {0, [merge(l, rl), n], rr}
+      end
   end
-  def carry([l, r], [_cl, cr]) when is_integer(l) and is_list(r) do
-    [l + cr, r]
-  end
-  def carry([l, r], [cl, cr]) when is_list(l) and is_list(r) do
-    [cl, cr]
-  end
+  def explode(_n, _level), do: false
 
   @doc """
       iex> Aoc.Day18.split([10, 0])
@@ -151,54 +92,22 @@ defmodule Aoc.Day18 do
       iex> Aoc.Day18.split([[[[0,7],4],[[7,8],[0,13]]],[1,1]])
       [[[[0,7],4],[[7,8],[0,[6,7]]]],[1,1]]
   """
-  def split([l, r]) when is_integer(l) and is_integer(r) do
-    cond do
-      l > 9 ->
-        [split(l), r]
-      r > 9 ->
-        [l, split(r)]
-      true ->
-        [l, r]
+  def split([l, r]) do
+    if sl = split(l) do
+      [sl, r]
+    else
+      if sr = split(r) do
+        [l, sr]
+      else
+        false
+      end
     end
   end
-  def split([l, r]) when is_integer(l) and is_list(r) do
-    cond do
-      l == split(l) ->
-        [l, split(r)]
-      true ->
-        [split(l), r]
-    end
-  end
-  def split([l, r]) when is_list(l) and is_integer(r) do
-    [split(l), r]
-  end
-  def split([l, r]) when is_list(l) and is_list(r) do
-    cond do
-      l == split(l) ->
-        [l, split(r)]
-      true ->
-        [split(l), r]
-    end
-  end
-  def split(number) when is_integer(number) and number < 10 do
-    number
-  end
-  def split(number) when is_integer(number) do
+  def split(number) when number >= 10 do
     division = number / 2
-
     [floor(division), ceil(division)]
   end
-
-  @doc """
-      iex> Aoc.Day18.add([1,2], [[3,4],5])
-      [[1,2],[[3,4],5]]
-
-      iex> Aoc.Day18.add([[[[4,3],4],4],[7,[[8,4],9]]], [1,1])
-      [[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]
-  """
-  def add(snl, snr) do
-    [snl, snr]
-  end
+  def split(number) when is_integer(number) and number < 10, do: false
 
   @doc """
       iex> Aoc.Day18.magnitude([9,1])
