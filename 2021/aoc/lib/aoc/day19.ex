@@ -1,49 +1,68 @@
 defmodule Aoc.Day19 do
-  # @doc """
-  #     iex> input = Aoc.Day19.input("priv/day19/example.txt")
-  #     ...> Aoc.Day19.part1(input)
-  #     79
-  # """
-  # def part1(input) do
-  #   scanner_positions = %{
-  #     0 => {[0,0,0], 0}
-  #   }
-  #   beacons = Map.get(input, 0)
+  @doc """
+      iex> input = Aoc.Day19.input("priv/day19/example.txt")
+      ...> Aoc.Day19.part1(input)
+      79
+  """
+  def part1(input) do
+    scanner_positions = %{
+      0 => {[0,0,0], 0}
+    }
+    beacons = Map.get(input, 0)
 
-  #   Stream.iterate(0, &(&1 + 1))
-  #   |> Enum.reduce_while({beacons, scanner_positions}, fn _i, {bs, sp} ->
-  #     if Enum.count(sp) == Enum.count(input) do
-  #       {:halt, {bs, Map.values(sp)}}
-  #     else
+    Stream.iterate(0, &(&1 + 1))
+    |> Enum.reduce_while({beacons, scanner_positions}, fn _i, {bs, sp} ->
+      if Enum.count(sp) == Enum.count(input) do
+        {:halt, {bs, Map.values(sp)}}
+      else
 
-  #       input
-  #       |> Map.keys()
-  #       |> Enum.filter(fn ind ->
-  #         not Enum.member?(sp, ind)
-  #       end)
-  #       |> Enum.reduce({bs, sp}, fn index, {bs, sp} ->
-  #         scans = Map.get(input, index)
-  #         Enum.reduce(sp, {bs, sp}, fn {i, position}, {bs, sp} ->
-  #           known_scans = convert(Map.get(input, i), position)
+        {bs, sp} =
+        input
+        |> Map.keys()
+        |> Enum.filter(fn ind ->
+          not Enum.member?(Map.keys(sp), ind)
+        end)
+        |> Enum.reduce({bs, sp}, fn index, {bs, sp} ->
+          index |> IO.inspect(label: "index")
+          scans = Map.get(input, index)
+          Enum.reduce(sp, {bs, sp}, fn {i, position}, {bs, sp} ->
+            {i, position} |> IO.inspect(label: "acc")
+            known_scans = convert(Map.get(input, i), position)
+            scanner_position = find_orientation(scans, known_scans)
+            if scanner_position != {} do
+              {[convert(scans, scanner_position) | bs] , Map.put(sp, index, scanner_position)}
+            else
+              {bs, sp}
+            end
+          end)
+        end)
 
-  #           if scanner_position = find_orientation(known_scans) do
-  #             {[convert(scans, scanner_position) | bs] , Map.put(sp, index, scanner_position)}
-  #           else
-  #             {bs, sp}
-  #           end
-  #         end)
-  #       end)
-
-  #       {:cont, {bs, sp}}
-  #     end
-  #   end)
-  # end
+        {:cont, {bs, sp}}
+      end
+    end)
+  end
 
   def find_orientation(scans, known_scans) do
-    orientations
-    |> Enum.reduce_while({}, fn rotation, acc ->
+    0..23
+    |> Enum.reduce({}, fn i, acc ->
       scans = Enum.map(scans, fn scan ->
+        Enum.at(orientations(scan), i)
+      end)
 
+      Enum.reduce_while(scans, acc, fn scan, acc ->
+        res = Enum.reduce_while(known_scans, acc, fn known_scan, acc ->
+          offset = sub(known_scan, scan)
+
+          count = Enum.count(scans, fn scan ->
+            Enum.member?(known_scans, add(scan, offset))
+          end)
+
+          if count >= 12 do
+            {:halt, {:halt, {offset, i}}}
+          else
+            {:cont, {:cont, {}}}
+          end
+        end)
       end)
     end)
   end
