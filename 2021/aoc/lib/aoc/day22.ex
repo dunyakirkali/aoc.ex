@@ -10,6 +10,7 @@ defmodule Aoc.Day22 do
   """
   def part1(input) do
     input
+    |> filter()
     |> slice_n_dice([])
     |> count()
   end
@@ -19,6 +20,13 @@ defmodule Aoc.Day22 do
     |> Enum.reduce(0, fn cube, acc ->
       {ux, vx, uy, vy, uz, vz} = cube
       acc + (vx - ux + 1) * (vy - uy + 1) * (vz - uz + 1)
+    end)
+  end
+
+  def filter(cubes) do
+    cubes
+    |> Enum.filter(fn {_, {ux, vx, uy, vy, uz, vz}} ->
+      ux < 50 and vx > -50 and uy < 50 and vy > -50 and uz < 50 and vz > -50
     end)
   end
 
