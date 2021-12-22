@@ -31,12 +31,14 @@ defmodule Aoc.Day22 do
   end
 
   def slice_n_dice([], cubes), do: cubes
+
   def slice_n_dice([h | t], cubes) do
     {op, {ux, vx, uy, vy, uz, vz}} = h
 
     cubes =
       Enum.reduce(cubes, cubes, fn cube, acc ->
         {ux2, vx2, uy2, vy2, uz2, vz2} = cube
+
         if ux > vx2 or vx < ux2 or uy > vy2 or vy < uy2 or uz > vz2 or vz < uz2 do
           acc
         else
@@ -46,7 +48,7 @@ defmodule Aoc.Day22 do
             {uy > uy2, {max(ux2, ux), min(vx2, vx), uy2, uy - 1, uz2, vz2}},
             {vy < vy2, {max(ux2, ux), min(vx2, vx), vy + 1, vy2, uz2, vz2}},
             {uz > uz2, {max(ux2, ux), min(vx2, vx), max(uy2, uy), min(vy2, vy), uz2, uz - 1}},
-            {vz < vz2, {max(ux2, ux), min(vx2, vx), max(uy2, uy), min(vy2, vy), vz + 1, vz2}},
+            {vz < vz2, {max(ux2, ux), min(vx2, vx), max(uy2, uy), min(vy2, vy), vz + 1, vz2}}
           ]
           |> Enum.reduce(List.delete(acc, cube), fn {k, v}, acc ->
             if k do
@@ -64,6 +66,7 @@ defmodule Aoc.Day22 do
       else
         cubes
       end
+
     slice_n_dice(t, cubes)
   end
 
@@ -85,17 +88,22 @@ defmodule Aoc.Day22 do
     |> Enum.map(fn line ->
       case line do
         <<"on ", rest::binary>> ->
-          [<<"x=", x::binary>>, <<"y=", y::binary>>, <<"z=", z::binary>>] = String.split(rest, ",", trim: true)
+          [<<"x=", x::binary>>, <<"y=", y::binary>>, <<"z=", z::binary>>] =
+            String.split(rest, ",", trim: true)
+
           [minx, maxx] = String.split(x, "..") |> Enum.map(&String.to_integer/1)
           [miny, maxy] = String.split(y, "..") |> Enum.map(&String.to_integer/1)
           [minz, maxz] = String.split(z, "..") |> Enum.map(&String.to_integer/1)
-          {:on, {minx,maxx,miny,maxy,minz,maxz}}
+          {:on, {minx, maxx, miny, maxy, minz, maxz}}
+
         <<"off ", rest::binary>> ->
-          [<<"x=", x::binary>>, <<"y=", y::binary>>, <<"z=", z::binary>>] = String.split(rest, ",", trim: true)
+          [<<"x=", x::binary>>, <<"y=", y::binary>>, <<"z=", z::binary>>] =
+            String.split(rest, ",", trim: true)
+
           [minx, maxx] = String.split(x, "..") |> Enum.map(&String.to_integer/1)
           [miny, maxy] = String.split(y, "..") |> Enum.map(&String.to_integer/1)
           [minz, maxz] = String.split(z, "..") |> Enum.map(&String.to_integer/1)
-          {:off, {minx,maxx,miny,maxy,minz,maxz}}
+          {:off, {minx, maxx, miny, maxy, minz, maxz}}
       end
     end)
   end

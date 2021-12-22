@@ -17,10 +17,10 @@ defmodule Aoc.Day18 do
   """
   def part2(input) do
     for a <- input, b <- input, a != b do
-    [
-      magnitude(add(a, b)),
-      magnitude(add(b, a))
-    ]
+      [
+        magnitude(add(a, b)),
+        magnitude(add(b, a))
+      ]
     end
     |> List.flatten()
     |> Enum.max()
@@ -33,8 +33,10 @@ defmodule Aoc.Day18 do
       l = explode(l, _level = 1) ->
         {_, l, _} = l
         reduce(l)
+
       l = split(l) ->
         reduce(l)
+
       true ->
         l
     end
@@ -66,6 +68,7 @@ defmodule Aoc.Day18 do
   def explode([l, r], 5) do
     {l, 0, r}
   end
+
   def explode([l, r], level) do
     with {ll, n, lr} <- explode(l, level + 1) do
       {ll, [n, merge(lr, r)], 0}
@@ -74,6 +77,7 @@ defmodule Aoc.Day18 do
         {0, [merge(l, rl), n], rr}
       end
   end
+
   def explode(_n, _level), do: false
 
   @doc """
@@ -103,10 +107,12 @@ defmodule Aoc.Day18 do
       end
     end
   end
+
   def split(number) when number >= 10 do
     division = number / 2
     [floor(division), ceil(division)]
   end
+
   def split(number) when is_integer(number) and number < 10, do: false
 
   @doc """
@@ -135,16 +141,19 @@ defmodule Aoc.Day18 do
       4140
   """
   def magnitude([l, r]) when is_integer(l) and is_integer(r) do
-    (3 * l) + (2 * r)
+    3 * l + 2 * r
   end
+
   def magnitude([l, r]) when is_list(l) and is_list(r) do
-    (3 * magnitude(l)) + (2 * magnitude(r))
+    3 * magnitude(l) + 2 * magnitude(r)
   end
+
   def magnitude([l, r]) when is_list(l) and is_integer(r) do
-    (3 * magnitude(l)) + (2 * r)
+    3 * magnitude(l) + 2 * r
   end
+
   def magnitude([l, r]) when is_integer(l) and is_list(r) do
-    (3 * l) + (2 * magnitude(r))
+    3 * l + 2 * magnitude(r)
   end
 
   def input(filename) do

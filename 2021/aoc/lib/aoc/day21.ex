@@ -14,6 +14,7 @@ defmodule Aoc.Day21 do
       if rem(turn, 2) == 0 do
         pos_1 = move(pos_1, steps)
         score_1 = score_1 + pos_1
+
         if score_1 >= 1000 do
           {:halt, [score_2, (roll + 1) * 3]}
         else
@@ -22,6 +23,7 @@ defmodule Aoc.Day21 do
       else
         pos_2 = move(pos_2, steps)
         score_2 = score_2 + pos_2
+
         if score_2 >= 1000 do
           {:halt, [score_1, (roll + 1) * 3]}
         else
@@ -40,7 +42,7 @@ defmodule Aoc.Day21 do
     rem(pos - 1 + amount, 10) + 1
   end
 
-@doc """
+  @doc """
       iex> Aoc.Day21.part2({{4, 0}, {8, 0}})
       444356092776315
   """
@@ -65,7 +67,7 @@ defmodule Aoc.Day21 do
         {w1, w2} ->
           p = rem(p1 + d - 1, 10) + 1
           {v2, v1} = play({{p2, s2}, {p, s1 + p}}, dice)
-          {w1 + v1*n, w2 + v2*n}
+          {w1 + v1 * n, w2 + v2 * n}
       end
     end
   end

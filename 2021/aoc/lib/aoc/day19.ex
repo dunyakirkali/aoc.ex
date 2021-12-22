@@ -6,8 +6,9 @@ defmodule Aoc.Day19 do
   """
   def part1(input) do
     scanner_positions = %{
-      0 => {[0,0,0], 0}
+      0 => {[0, 0, 0], 0}
     }
+
     beacons = Map.get(input, 0)
 
     Stream.iterate(0, &(&1 + 1))
@@ -15,27 +16,28 @@ defmodule Aoc.Day19 do
       if Enum.count(sp) == Enum.count(input) do
         {:halt, {bs, Map.values(sp)}}
       else
-
         {bs, sp} =
-        input
-        |> Map.keys()
-        |> Enum.filter(fn ind ->
-          not Enum.member?(Map.keys(sp), ind)
-        end)
-        |> Enum.reduce({bs, sp}, fn index, {bs, sp} ->
-          index |> IO.inspect(label: "index")
-          scans = Map.get(input, index)
-          Enum.reduce(sp, {bs, sp}, fn {i, position}, {bs, sp} ->
-            {i, position} |> IO.inspect(label: "acc")
-            known_scans = convert(Map.get(input, i), position)
-            scanner_position = find_orientation(scans, known_scans)
-            if scanner_position != {} do
-              {[convert(scans, scanner_position) | bs] , Map.put(sp, index, scanner_position)}
-            else
-              {bs, sp}
-            end
+          input
+          |> Map.keys()
+          |> Enum.filter(fn ind ->
+            not Enum.member?(Map.keys(sp), ind)
           end)
-        end)
+          |> Enum.reduce({bs, sp}, fn index, {bs, sp} ->
+            index |> IO.inspect(label: "index")
+            scans = Map.get(input, index)
+
+            Enum.reduce(sp, {bs, sp}, fn {i, position}, {bs, sp} ->
+              {i, position} |> IO.inspect(label: "acc")
+              known_scans = convert(Map.get(input, i), position)
+              scanner_position = find_orientation(scans, known_scans)
+
+              if scanner_position != {} do
+                {[convert(scans, scanner_position) | bs], Map.put(sp, index, scanner_position)}
+              else
+                {bs, sp}
+              end
+            end)
+          end)
 
         {:cont, {bs, sp}}
       end
@@ -45,24 +47,27 @@ defmodule Aoc.Day19 do
   def find_orientation(scans, known_scans) do
     0..23
     |> Enum.reduce({}, fn i, acc ->
-      scans = Enum.map(scans, fn scan ->
-        Enum.at(orientations(scan), i)
-      end)
+      scans =
+        Enum.map(scans, fn scan ->
+          Enum.at(orientations(scan), i)
+        end)
 
       Enum.reduce_while(scans, acc, fn scan, acc ->
-        res = Enum.reduce_while(known_scans, acc, fn known_scan, acc ->
-          offset = sub(known_scan, scan)
+        res =
+          Enum.reduce_while(known_scans, acc, fn known_scan, acc ->
+            offset = sub(known_scan, scan)
 
-          count = Enum.count(scans, fn scan ->
-            Enum.member?(known_scans, add(scan, offset))
+            count =
+              Enum.count(scans, fn scan ->
+                Enum.member?(known_scans, add(scan, offset))
+              end)
+
+            if count >= 12 do
+              {:halt, {:halt, {offset, i}}}
+            else
+              {:cont, {:cont, {}}}
+            end
           end)
-
-          if count >= 12 do
-            {:halt, {:halt, {offset, i}}}
-          else
-            {:cont, {:cont, {}}}
-          end
-        end)
       end)
     end)
   end
@@ -73,7 +78,6 @@ defmodule Aoc.Day19 do
       # nil
   """
   def part2(input) do
-
   end
 
   @doc """
@@ -124,31 +128,26 @@ defmodule Aoc.Day19 do
       pos |> rotate(:z),
       pos |> rotate(:z) |> rotate(:z),
       pos |> rotate(:z) |> rotate(:z) |> rotate(:z),
-
       pos |> rotate(:y),
       pos |> rotate(:y) |> rotate(:z),
       pos |> rotate(:y) |> rotate(:z) |> rotate(:z),
       pos |> rotate(:y) |> rotate(:z) |> rotate(:z) |> rotate(:z),
-
       pos |> rotate(:y) |> rotate(:y),
       pos |> rotate(:y) |> rotate(:y) |> rotate(:z),
       pos |> rotate(:y) |> rotate(:y) |> rotate(:z) |> rotate(:z),
       pos |> rotate(:y) |> rotate(:y) |> rotate(:z) |> rotate(:z) |> rotate(:z),
-
       pos |> rotate(:y) |> rotate(:y) |> rotate(:y),
       pos |> rotate(:y) |> rotate(:y) |> rotate(:y) |> rotate(:z),
       pos |> rotate(:y) |> rotate(:y) |> rotate(:y) |> rotate(:z) |> rotate(:z),
       pos |> rotate(:y) |> rotate(:y) |> rotate(:y) |> rotate(:z) |> rotate(:z) |> rotate(:z),
-
       pos |> rotate(:x),
       pos |> rotate(:x) |> rotate(:z),
       pos |> rotate(:x) |> rotate(:z) |> rotate(:z),
       pos |> rotate(:x) |> rotate(:z) |> rotate(:z) |> rotate(:z),
-
       pos |> rotate(:x) |> rotate(:x) |> rotate(:x),
       pos |> rotate(:x) |> rotate(:x) |> rotate(:x) |> rotate(:z),
       pos |> rotate(:x) |> rotate(:x) |> rotate(:x) |> rotate(:z) |> rotate(:z),
-      pos |> rotate(:x) |> rotate(:x) |> rotate(:x) |> rotate(:z) |> rotate(:z) |> rotate(:z),
+      pos |> rotate(:x) |> rotate(:x) |> rotate(:x) |> rotate(:z) |> rotate(:z) |> rotate(:z)
     ]
   end
 
@@ -175,7 +174,8 @@ defmodule Aoc.Day19 do
         scanner
         |> String.split("\n", trim: true)
 
-      <<"--- scanner ", sno ," ---">> = h
+      <<"--- scanner ", sno, " ---">> = h
+
       coords =
         t
         |> Enum.map(fn line ->

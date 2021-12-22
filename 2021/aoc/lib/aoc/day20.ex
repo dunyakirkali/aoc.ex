@@ -29,22 +29,23 @@ defmodule Aoc.Day20 do
   end
 
   def step({_, input}, 0), do: input
+
   def step({algorithm, input}, count) do
     {minx, maxx} =
       input
-      |> Map.keys
-      |> Enum.map(&(elem(&1, 0)))
+      |> Map.keys()
+      |> Enum.map(&elem(&1, 0))
       |> Enum.min_max()
 
     {miny, maxy} =
       input
-      |> Map.keys
-      |> Enum.map(&(elem(&1, 1)))
+      |> Map.keys()
+      |> Enum.map(&elem(&1, 1))
       |> Enum.min_max()
 
     gro = 3
 
-    (for y <- (miny-gro)..(maxy+gro), x <- (minx-gro)..(maxx+gro), do: {x, y})
+    for(y <- (miny - gro)..(maxy + gro), x <- (minx - gro)..(maxx + gro), do: {x, y})
     |> Enum.map(fn coords ->
       sub_to_bin(coords, {algorithm, input})
     end)
@@ -124,15 +125,15 @@ defmodule Aoc.Day20 do
   """
   def neighbors({x, y}) do
     [
-      {x-1, y-1},
-      {x, y-1},
-      {x+1, y-1},
-      {x-1, y},
+      {x - 1, y - 1},
+      {x, y - 1},
+      {x + 1, y - 1},
+      {x - 1, y},
       {x, y},
-      {x+1, y},
-      {x-1, y+1},
-      {x, y+1},
-      {x+1, y+1},
+      {x + 1, y},
+      {x - 1, y + 1},
+      {x, y + 1},
+      {x + 1, y + 1}
     ]
   end
 
