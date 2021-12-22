@@ -1,25 +1,29 @@
 defmodule Aoc.Day22 do
   @doc """
-      # iex> input = Aoc.Day22.input("priv/day22/example.txt")
-      # ...> Aoc.Day22.part1(input)
-      # 39
+      iex> input = Aoc.Day22.input("priv/day22/example.txt")
+      ...> Aoc.Day22.part1(input)
+      39
 
-      # iex> input = Aoc.Day22.input("priv/day22/example2.txt")
-      # ...> Aoc.Day22.part1(input)
-      # 590784
+      iex> input = Aoc.Day22.input("priv/day22/example2.txt")
+      ...> Aoc.Day22.part1(input)
+      590784
   """
   def part1(input) do
     input
-    |> do_count([])
-    |> IO.inspect(label: "Final")
+    |> slice_n_dice([])
+    |> count()
+  end
+
+  def count(cubes) do
+    cubes
     |> Enum.reduce(0, fn cube, acc ->
       {ux, vx, uy, vy, uz, vz} = cube
       acc + (vx - ux + 1) * (vy - uy + 1) * (vz - uz + 1)
     end)
   end
 
-  def do_count([], cubes), do: cubes
-  def do_count([h | t], cubes) do
+  def slice_n_dice([], cubes), do: cubes
+  def slice_n_dice([h | t], cubes) do
     {op, {ux, vx, uy, vy, uz, vz}} = h
 
     cubes =
@@ -36,7 +40,7 @@ defmodule Aoc.Day22 do
             {uz > uz2, {max(ux2, ux), min(vx2, vx), max(uy2, uy), min(vy2, vy), uz2, uz - 1}},
             {vz < vz2, {max(ux2, ux), min(vx2, vx), max(uy2, uy), min(vy2, vy), vz + 1, vz2}},
           ]
-          |> Enum.reduce(List.delete(cubes, cube), fn {k, v}, acc ->
+          |> Enum.reduce(List.delete(acc, cube), fn {k, v}, acc ->
             if k do
               [v | acc]
             else
@@ -45,26 +49,14 @@ defmodule Aoc.Day22 do
           end)
         end
       end)
-      |> IO.inspect(label: "P1")
+
     cubes =
       if op == :on do
         [{min(ux, vx), max(ux, vx), min(uy, vy), max(uy, vy), min(uz, vz), max(uz, vz)} | cubes]
       else
         cubes
       end
-    do_count(t, cubes)
-  end
-
-  def cubes(x, y, z) do
-    if Range.disjoint?(-50..50, x) or Range.disjoint?(-50..50, y) or Range.disjoint?(-50..50, x) do
-      []
-    else
-      (for a <- x, b <- y, c <- z, do: {a, b, c})
-    end
-  end
-
-  def cubes2(x, y, z) do
-    (for a <- x, b <- y, c <- z, do: {a, b, c})
+    slice_n_dice(t, cubes)
   end
 
   @doc """
@@ -74,12 +66,8 @@ defmodule Aoc.Day22 do
   """
   def part2(input) do
     input
-    |> do_count([])
-    |> IO.inspect(label: "Final")
-    |> Enum.reduce(0, fn cube, acc ->
-      {ux, vx, uy, vy, uz, vz} = cube
-      acc + (vx - ux + 1) * (vy - uy + 1) * (vz - uz + 1)
-    end)
+    |> slice_n_dice([])
+    |> count()
   end
 
   def input(filename) do
