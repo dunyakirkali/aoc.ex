@@ -1,4 +1,26 @@
 defmodule Aoc do
+  defmodule Zobrist do
+    def table(cells, pieces) do
+      for piece <- pieces,
+          cell <- cells,
+          into: %{} do
+        {{piece, cell}, System.unique_integer()}
+      end
+    end
+
+    def hash(table, [move]), do: Map.get(table, move)
+
+    def hash(table, moves) do
+      moves
+      |> Enum.map(fn move ->
+        Map.get(table, move)
+      end)
+      |> Enum.reduce(fn move, acc ->
+        Bitwise.bxor(acc, move)
+      end)
+    end
+  end
+
   defmodule Parallel do
     def pmap(collection, func) do
       collection
