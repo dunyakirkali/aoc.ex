@@ -4,8 +4,8 @@ defmodule Aoc.Day23 do
   use Agent
 
   def start do
-    Agent.start_link(fn -> %{} end, name: :memo)
-    Agent.start_link(fn -> [10000000000000] end, name: :scores)
+    Agent.start_link(fn -> [10_000_000_000_000] end, name: :scores)
+    Agent.start_link(fn -> %{} end, name: :visited)
   end
 
   @costs %{
@@ -15,9 +15,9 @@ defmodule Aoc.Day23 do
     "D" => 1000
   }
   @doc """
-      # iex> input = Aoc.Day23.input("priv/day23/example.txt")
-      # ...> Aoc.Day23.part1(input)
-      # 12521
+      iex> input = Aoc.Day23.input("priv/day23/example.txt")
+      ...> Aoc.Day23.part1(input)
+      12521
   """
   def part1(input) do
     start()
@@ -25,40 +25,42 @@ defmodule Aoc.Day23 do
   end
 
   def solve(map, score, solver) do
-    state = state(map)# |> IO.inspect()
-    points = Agent.get(:memo, &Map.get(&1, state, -1), 1000000000)
+    state = state(map)
+    visited = Agent.get(:visited, &Map.get(&1, state), 1_000_000_000)
 
     cond do
-      points > -1 ->
-        points
       score > best_score() ->
+        # IO.puts("bbbbbbbbbb")
         score
+
+      visited ->
+        # IO.puts("cccccccccc")
+        10_000_000_000_000
+
       true ->
-        if solver.(map)  do
-          map |> print
-          Agent.update(:scores, &([score | &1]), 1000000000)
+        # map |> print
+        Agent.update(:visited, &Map.put(&1, state, true), 1_000_000_000)
+        # state|> IO.inspect()
+        if solver.(map) do
+          Agent.update(:scores, &[score | &1], 1_000_000_000)
           IO.inspect(score, label: "score")
         else
-
-          # moveable = can_move(map)
-          possible_froms = moves(map)# |> IO.inspect()
-
-          Agent.update(:memo, &Map.put(&1, state, score), 1000000000)
+          possible_froms = moves(map)
 
           Enum.map(possible_froms, fn {from, tos} ->
             tos
             |> Enum.map(fn to ->
-              nm = move(map, {from, to})# |> print
-
+              nm = move(map, {from, to})
               solve(nm, score + Map.get(@costs, Map.get(map, from)), solver)
             end)
           end)
-      end
+        end
     end
   end
 
   def move(map, {from, to}) do
     fc = Map.get(map, from)
+
     map
     |> Map.put(from, ".")
     |> Map.put(to, fc)
@@ -66,32 +68,37 @@ defmodule Aoc.Day23 do
 
   def solved?(map) do
     Map.get(map, {3, 2}) == "A" and
+      Map.get(map, {3, 3}) == "A" and
+      Map.get(map, {5, 2}) == "B" and
+      Map.get(map, {5, 3}) == "B" and
+      Map.get(map, {7, 2}) == "C" and
+      Map.get(map, {7, 3}) == "C" and
+      Map.get(map, {9, 2}) == "D" and
+      Map.get(map, {9, 3}) == "D"
+  end
+
+  def solved3?(map) do
     Map.get(map, {3, 3}) == "A" and
-    Map.get(map, {5, 2}) == "B" and
-    Map.get(map, {5, 3}) == "B" and
-    Map.get(map, {7, 2}) == "C" and
-    Map.get(map, {7, 3}) == "C" and
-    Map.get(map, {9, 2}) == "D" and
-    Map.get(map, {9, 3}) == "D"
+      Map.get(map, {9, 3}) == "B"
   end
 
   def solved2?(map) do
     Map.get(map, {3, 2}) == "A" and
-    Map.get(map, {3, 3}) == "A" and
-    Map.get(map, {3, 4}) == "A" and
-    Map.get(map, {3, 5}) == "A" and
-    Map.get(map, {5, 2}) == "B" and
-    Map.get(map, {5, 3}) == "B" and
-    Map.get(map, {5, 4}) == "B" and
-    Map.get(map, {5, 5}) == "B" and
-    Map.get(map, {7, 2}) == "C" and
-    Map.get(map, {7, 3}) == "C" and
-    Map.get(map, {7, 4}) == "C" and
-    Map.get(map, {7, 5}) == "C" and
-    Map.get(map, {9, 2}) == "D" and
-    Map.get(map, {9, 3}) == "D" and
-    Map.get(map, {9, 4}) == "D" and
-    Map.get(map, {9, 5}) == "D"
+      Map.get(map, {3, 3}) == "A" and
+      Map.get(map, {3, 4}) == "A" and
+      Map.get(map, {3, 5}) == "A" and
+      Map.get(map, {5, 2}) == "B" and
+      Map.get(map, {5, 3}) == "B" and
+      Map.get(map, {5, 4}) == "B" and
+      Map.get(map, {5, 5}) == "B" and
+      Map.get(map, {7, 2}) == "C" and
+      Map.get(map, {7, 3}) == "C" and
+      Map.get(map, {7, 4}) == "C" and
+      Map.get(map, {7, 5}) == "C" and
+      Map.get(map, {9, 2}) == "D" and
+      Map.get(map, {9, 3}) == "D" and
+      Map.get(map, {9, 4}) == "D" and
+      Map.get(map, {9, 5}) == "D"
   end
 
   def state(map) do
@@ -112,8 +119,16 @@ defmodule Aoc.Day23 do
     best_score()
   end
 
+  def test(input) do
+    start()
+    # |> IO.inspect()
+    solve(input, 0, &solved3?/1) |> List.flatten() |> Enum.sort()
+    best_score()
+  end
+
   def best_score() do
-    Agent.get(:scores, &(&1), 1000000000)
+    Agent.get(:scores, & &1, 1_000_000_000)
+    # |> IO.inspect()
     |> Enum.min()
   end
 

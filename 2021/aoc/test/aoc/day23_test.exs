@@ -13,4 +13,9 @@ defmodule Day23Test do
   #   input = Aoc.Day23.input("priv/day23/input2.txt")
   #   assert Aoc.Day23.part2(input) == nil
   # end
+
+  test "Test" do
+    input = Aoc.Day23.input("priv/day23/test.txt")
+    assert Aoc.Day23.test(input) == nil
+  end
 end
