@@ -5,7 +5,7 @@ defmodule Aoc.Day24 do
       # 39
   """
   def part1(input) do
-    [93499629698999]
+    [93_499_629_698_999]
     |> Enum.reduce_while([], fn uis, acc ->
       ui =
         uis
@@ -21,21 +21,26 @@ defmodule Aoc.Day24 do
           case command do
             {:inp, reg} ->
               # Map.get(machine, :ui) |> IO.inspect()
-              {val, ui} = List.pop_at(Map.get(machine, :ui), 0)# |> IO.inspect()
+              # |> IO.inspect()
+              {val, ui} = List.pop_at(Map.get(machine, :ui), 0)
               machine |> Map.put(:ui, ui) |> Map.put(reg, val)
+
             {:add, reg, reg_or_val} ->
               add(machine, reg, reg_or_val)
+
             {:mul, reg, reg_or_val} ->
               mul(machine, reg, reg_or_val)
+
             {:div, reg, reg_or_val} ->
               div(machine, reg, reg_or_val)
+
             {:mod, reg, reg_or_val} ->
               mod(machine, reg, reg_or_val)
+
             {:eql, reg, reg_or_val} ->
               eql(machine, reg, reg_or_val)
           end
         end)
-        |> IO.inspect()
         |> Map.get(:z)
 
       if result == 0 do
@@ -47,14 +52,13 @@ defmodule Aoc.Day24 do
     |> Integer.undigits()
   end
 
-
   @doc """
       # iex> input = Aoc.Day24.input("priv/day24/example3.txt")
       # ...> Aoc.Day24.part2(input)
       # 2758514936282435
   """
   def part2(input) do
-    [11164118121471]
+    [11_164_118_121_471]
     |> Enum.reduce_while([], fn uis, acc ->
       ui =
         uis
@@ -70,21 +74,26 @@ defmodule Aoc.Day24 do
           case command do
             {:inp, reg} ->
               # Map.get(machine, :ui) |> IO.inspect()
-              {val, ui} = List.pop_at(Map.get(machine, :ui), 0)# |> IO.inspect()
+              # |> IO.inspect()
+              {val, ui} = List.pop_at(Map.get(machine, :ui), 0)
               machine |> Map.put(:ui, ui) |> Map.put(reg, val)
+
             {:add, reg, reg_or_val} ->
               add(machine, reg, reg_or_val)
+
             {:mul, reg, reg_or_val} ->
               mul(machine, reg, reg_or_val)
+
             {:div, reg, reg_or_val} ->
               div(machine, reg, reg_or_val)
+
             {:mod, reg, reg_or_val} ->
               mod(machine, reg, reg_or_val)
+
             {:eql, reg, reg_or_val} ->
               eql(machine, reg, reg_or_val)
           end
         end)
-        |> IO.inspect()
         |> Map.get(:z)
 
       if result == 0 do
@@ -129,6 +138,7 @@ defmodule Aoc.Day24 do
   def eql(machine, l, r) do
     a = Map.get(machine, l)
     b = value(machine, r)
+
     if a == b do
       Map.put(machine, l, 1)
     else
@@ -141,44 +151,53 @@ defmodule Aoc.Day24 do
     |> File.read!()
     |> String.split("\n", trim: true)
     |> Enum.map(fn line ->
-
       case line do
         <<"inp", " ", register::binary-size(1)>> ->
           {:inp, String.to_atom(register)}
+
         <<"add", " ", register::binary-size(1), " ", rest::binary>> ->
           rest =
             case Integer.parse(rest) do
               :error -> String.to_atom(rest)
               {reg_or_val, _} -> reg_or_val
             end
+
           {:add, String.to_atom(register), rest}
+
         <<"mul", " ", register::binary-size(1), " ", rest::binary>> ->
           rest =
             case Integer.parse(rest) do
               :error -> String.to_atom(rest)
               {reg_or_val, _} -> reg_or_val
             end
+
           {:mul, String.to_atom(register), rest}
+
         <<"div", " ", register::binary-size(1), " ", rest::binary>> ->
           rest =
             case Integer.parse(rest) do
               :error -> String.to_atom(rest)
               {reg_or_val, _} -> reg_or_val
             end
+
           {:div, String.to_atom(register), rest}
+
         <<"mod", " ", register::binary-size(1), " ", rest::binary>> ->
           rest =
             case Integer.parse(rest) do
               :error -> String.to_atom(rest)
               {reg_or_val, _} -> reg_or_val
             end
+
           {:mod, String.to_atom(register), rest}
+
         <<"eql", " ", register::binary-size(1), " ", rest::binary>> ->
           rest =
             case Integer.parse(rest) do
               :error -> String.to_atom(rest)
               {reg_or_val, _} -> reg_or_val
             end
+
           {:eql, String.to_atom(register), rest}
       end
     end)
