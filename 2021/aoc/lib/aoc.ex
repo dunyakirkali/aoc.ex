@@ -1,10 +1,28 @@
 defmodule Aoc do
+  defmodule PriorityQueue do
+    def new() do
+      []
+    end
+
+    def add([{cur_weight, _} | _] = list, value, weight)
+        when weight <= cur_weight,
+        do: [{weight, value} | list]
+
+    def add([head | tail], value, weight),
+      do: [head | add(tail, value, weight)]
+
+    def add([], value, weight),
+      do: [{weight, value}]
+  end
+
   defmodule Zobrist do
     def table(cells, pieces) do
-      for piece <- pieces,
-          cell <- cells,
+      for cell <- cells,
+          piece <- pieces,
           into: %{} do
-        {{piece, cell}, System.unique_integer()}
+        # {{cell, piece}, System.unique_integer([:positive, :monotonic])}
+        <<n::64>> = :crypto.strong_rand_bytes(8)
+        {{cell, piece}, n}
       end
     end
 
@@ -15,7 +33,7 @@ defmodule Aoc do
       |> Enum.map(fn move ->
         Map.get(table, move)
       end)
-      |> Enum.reduce(fn move, acc ->
+      |> Enum.reduce(0, fn move, acc ->
         Bitwise.bxor(acc, move)
       end)
     end

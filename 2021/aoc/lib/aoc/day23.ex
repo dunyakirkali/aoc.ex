@@ -1,13 +1,19 @@
 defmodule Aoc.Day23 do
-  use Memoize
-
   use Agent
 
   def start do
-    Agent.start_link(fn -> [10_000_000_000_000] end, name: :scores)
-    Agent.start_link(fn -> %{} end, name: :visited)
+    Agent.start_link(fn -> Graph.new end, name: __MODULE__)
+    Agent.start_link(fn -> %{} end, name: :states)
   end
 
+  @as [{3, 2}, {3, 3}]
+  # @as [{3, 3}]
+  @bs [{5, 2}, {5, 3}]
+  # @bs [{5, 3}]
+  @cs [{7, 2}, {7, 3}]
+  @ds [{9, 2}, {9, 3}]
+  @hall [{1,1},{2,1},{4,1},{6,1},{8,1},{10,1},{11,1}]
+  @pieces ["A", "B", "C", "D"]
   @costs %{
     "A" => 1,
     "B" => 10,
@@ -15,50 +21,174 @@ defmodule Aoc.Day23 do
     "D" => 1000
   }
   @doc """
-      iex> input = Aoc.Day23.input("priv/day23/example.txt")
-      ...> Aoc.Day23.part1(input)
-      12521
+      # iex> start_state = Aoc.Day23.input("priv/day23/test.txt")
+      # ...> end_state = Aoc.Day23.input("priv/day23/test_final.txt")
+      # ...> Aoc.Day23.part1(start_state, end_state)
+      # 68
+
+      iex> start_state = Aoc.Day23.input("priv/day23/example.txt")
+      ...> end_state = Aoc.Day23.input("priv/day23/final1.txt")
+      ...> Aoc.Day23.part1(start_state, end_state)
+      68
   """
-  def part1(input) do
+  def part1(start_state, end_state) do
     start()
-    solve(input, 0, &solved?/1)
+    zobrist = zobristify(start_state)
+
+    initial_state = statify(zobrist, start_state)
+    # |> IO.inspect(label: "initial_state")
+    Agent.update(__MODULE__, &(Graph.add_vertex(&1, initial_state)))
+
+    final_state = statify(zobrist, end_state)
+    # |> IO.inspect(label: "final_state")
+
+    IO.puts("Generating graph...")
+    graphify(zobrist, start_state)
+    IO.puts("Graph generated.")
+    graph = Agent.get(__MODULE__, &(&1))
+    states = Agent.get(:states, &(&1))
+
+    # {:ok, file} = File.open("graph.dot", [:write])
+    # {:ok, content} = Graph.to_dot(graph)
+    # IO.write(file, content)
+    # File.write!("./graph.dot", content)
+    graph
+    |> Graph.dijkstra(initial_state, final_state)
+    |> Enum.map(fn node ->
+      # IO.inspect(node, label: "node")
+      Map.get(states, node) |> print
+
+      node
+    end)
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.map(fn [from, to] ->
+
+      Graph.edge(graph, from, to).weight |> IO.inspect(label: "cost")
+    end)
+    |> Enum.sum()
   end
 
-  def solve(map, score, solver) do
-    state = state(map)
-    visited = Agent.get(:visited, &Map.get(&1, state), 1_000_000_000)
+  @doc """
+      iex> input = Aoc.Day23.input("priv/day23/example.txt")
+      ...> Aoc.Day23.branch(input, {3, 2})
+      [{1, 1}, {2, 1}, {4, 1}, {6, 1}, {8, 1}, {10, 1}, {11, 1}]
 
-    cond do
-      score > best_score() ->
-        # IO.puts("bbbbbbbbbb")
-        score
+      iex> input = Aoc.Day23.input("priv/day23/example2.txt")
+      ...> Aoc.Day23.branch(input, {1, 1})
+      [{5, 2}]
+  """
+  def branch(map, {x, y} = pos) do
+    all = do_branch(map, pos, [])
 
-      visited ->
-        # IO.puts("cccccccccc")
-        10_000_000_000_000
-
-      true ->
-        # map |> print
-        Agent.update(:visited, &Map.put(&1, state, true), 1_000_000_000)
-        # state|> IO.inspect()
-        if solver.(map) do
-          Agent.update(:scores, &[score | &1], 1_000_000_000)
-          IO.inspect(score, label: "score")
-        else
-          possible_froms = moves(map)
-
-          Enum.map(possible_froms, fn {from, tos} ->
-            tos
-            |> Enum.map(fn to ->
-              nm = move(map, {from, to})
-              solve(nm, score + Map.get(@costs, Map.get(map, from)), solver)
-            end)
+    if y == 1 do
+      case Map.get(map, pos) do
+        "A" ->
+          Enum.filter(all, fn p ->
+            Enum.member?(@as, p)
           end)
-        end
+        "B" ->
+          Enum.filter(all, fn p ->
+            Enum.member?(@bs, p)
+          end)
+        "C" ->
+          Enum.filter(all, fn p ->
+            Enum.member?(@cs, p)
+          end)
+        "D" ->
+          Enum.filter(all, fn p ->
+            Enum.member?(@ds, p)
+          end)
+      end
+    else
+      Enum.filter(all, fn p ->
+        Enum.member?(@hall, p)
+      end)
     end
   end
 
-  def move(map, {from, to}) do
+  def do_branch(map, pos, acc) do
+    if Enum.member?(acc, pos) do
+      acc
+    else
+      pos
+      |> neighbors()
+      |> Enum.filter(fn np ->
+        Map.get(map, np) == "."
+      end)
+      |> Enum.map(fn np ->
+        do_branch(map, np, [pos | acc])
+      end)
+      |> List.flatten()
+      |> Enum.uniq()
+    end
+  end
+
+  def possible_moves(map) do
+    map
+    |> Enum.filter(fn {_, char} ->
+      Enum.member?(@pieces, char)
+    end)
+    |> Enum.flat_map(fn {pos, _} ->
+      map
+      |> branch(pos)
+      |> Enum.map(fn np ->
+        {pos, np}
+      end)
+    end)
+  end
+
+  def graphify(zobrist, map) do
+    graph = Agent.get(__MODULE__, &(&1))
+    current_state = statify(zobrist, map)
+    vertices = Graph.vertices(graph)
+
+    Agent.update(:states, fn sm ->
+      Map.put(sm, current_state, map)
+    end)
+    map
+    |> possible_moves()
+    |> Enum.map(fn {from ,to} ->
+      cost = cost(map, from, to)
+      nm = move(map, from, to)
+      next_state = statify(zobrist, nm)
+
+      if Enum.member?(vertices, next_state) do
+        Agent.update(__MODULE__, fn graph ->
+          graph
+          |> Graph.add_edge(current_state, next_state, weight: cost)
+        end)
+      else
+
+        Agent.update(__MODULE__, fn graph ->
+          graph
+          |> Graph.add_vertex(next_state)
+          |> Graph.add_edge(current_state, next_state, weight: cost)
+        end)
+
+        graphify(zobrist, nm)
+      end
+    end)
+  end
+
+  def statify(zobrist, map) do
+    piece_positions =
+      map
+      |> Enum.filter(fn {_, char} ->
+        Enum.member?(@pieces, char)
+      end)
+
+  end
+
+  def zobristify(map) do
+    map
+    |> Enum.filter(fn {_, char} ->
+      char != "#" and char != " "
+    end)
+    |> Enum.map(&(elem(&1, 0)))
+    |> Aoc.Zobrist.table(@pieces)
+  end
+
+  def move(map, from, to) do
     fc = Map.get(map, from)
 
     map
@@ -66,80 +196,18 @@ defmodule Aoc.Day23 do
     |> Map.put(to, fc)
   end
 
-  def solved?(map) do
-    Map.get(map, {3, 2}) == "A" and
-      Map.get(map, {3, 3}) == "A" and
-      Map.get(map, {5, 2}) == "B" and
-      Map.get(map, {5, 3}) == "B" and
-      Map.get(map, {7, 2}) == "C" and
-      Map.get(map, {7, 3}) == "C" and
-      Map.get(map, {9, 2}) == "D" and
-      Map.get(map, {9, 3}) == "D"
-  end
-
-  def solved3?(map) do
-    Map.get(map, {3, 3}) == "A" and
-      Map.get(map, {9, 3}) == "B"
-  end
-
-  def solved2?(map) do
-    Map.get(map, {3, 2}) == "A" and
-      Map.get(map, {3, 3}) == "A" and
-      Map.get(map, {3, 4}) == "A" and
-      Map.get(map, {3, 5}) == "A" and
-      Map.get(map, {5, 2}) == "B" and
-      Map.get(map, {5, 3}) == "B" and
-      Map.get(map, {5, 4}) == "B" and
-      Map.get(map, {5, 5}) == "B" and
-      Map.get(map, {7, 2}) == "C" and
-      Map.get(map, {7, 3}) == "C" and
-      Map.get(map, {7, 4}) == "C" and
-      Map.get(map, {7, 5}) == "C" and
-      Map.get(map, {9, 2}) == "D" and
-      Map.get(map, {9, 3}) == "D" and
-      Map.get(map, {9, 4}) == "D" and
-      Map.get(map, {9, 5}) == "D"
-  end
-
-  def state(map) do
-    map
-    |> Enum.filter(fn {_, char} ->
-      char != "." and char != "#" and char != " "
-    end)
-  end
-
   @doc """
-      # iex> input = Aoc.Day23.input("priv/day23/example3.txt")
-      # ...> Aoc.Day23.part2(input)
-      # nil
+      iex> input = Aoc.Day23.input("priv/day23/example.txt")
+      ...> Aoc.Day23.cost(input, {3, 2}, {1, 1})
+      30
+
+      iex> input = Aoc.Day23.input("priv/day23/example.txt")
+      ...> Aoc.Day23.cost(input, {5, 2}, {7, 1})
+      300
   """
-  def part2(input) do
-    start()
-    solve(input, 0, &solved2?/1)
-    best_score()
-  end
-
-  def test(input) do
-    start()
-    # |> IO.inspect()
-    solve(input, 0, &solved3?/1) |> List.flatten() |> Enum.sort()
-    best_score()
-  end
-
-  def best_score() do
-    Agent.get(:scores, & &1, 1_000_000_000)
-    # |> IO.inspect()
-    |> Enum.min()
-  end
-
-  def moves(map) do
-    map
-    |> Enum.filter(fn {_, char} ->
-      Enum.member?(["A", "B", "C", "D"], char)
-    end)
-    |> Enum.map(fn {pos, _} ->
-      {pos, neighbors(map, pos)}
-    end)
+  def cost(map, {fx, fy} = from, {tx, ty}) do
+    cost_per_step = Map.get(@costs, Map.get(map, from))
+    cost_per_step * (abs(fx - tx) + abs(fy - ty))
   end
 
   def print(map) do
@@ -162,16 +230,13 @@ defmodule Aoc.Day23 do
     map
   end
 
-  def neighbors(map, {x, y}) do
+  def neighbors({x, y}) do
     [
       {x, y - 1},
       {x - 1, y},
       {x + 1, y},
       {x, y + 1}
     ]
-    |> Enum.filter(fn pos ->
-      Map.get(map, pos) == "."
-    end)
   end
 
   def input(filename) do
