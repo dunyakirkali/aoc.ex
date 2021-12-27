@@ -2,20 +2,15 @@ defmodule Day23Test do
   use ExUnit.Case
   doctest Aoc.Day23
 
-  # Solved by hand
-  # test "Part 1" do
-  #   input = Aoc.Day23.input("priv/day23/input.txt")
-  #   assert Aoc.Day23.part1(input) == 14546
-  # end
+  test "Part 1" do
+    start_state = Aoc.Day23.input("priv/day23/input.txt")
+    end_state = Aoc.Day23.input("priv/day23/final1.txt")
+    assert Aoc.Day23.part1(start_state, end_state) == 14546
+  end
 
-  # Solved by hand
-  # test "Part 2" do
-  #   input = Aoc.Day23.input("priv/day23/input2.txt")
-  #   assert Aoc.Day23.part2(input) == nil
-  # end
-
-  # test "Test" do
-  #   input = Aoc.Day23.input("priv/day23/test.txt")
-  #   assert Aoc.Day23.test(input) == nil
-  # end
+  test "Part 2" do
+    start_state = Aoc.Day23.input("priv/day23/input2.txt")
+    end_state = Aoc.Day23.input("priv/day23/final1.txt")
+    assert Aoc.Day23.part2(start_state, end_state) == 42308
+  end
 end

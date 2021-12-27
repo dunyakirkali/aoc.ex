@@ -1,8 +1,8 @@
 defmodule Aoc.Day23 do
-  @as [{3, 2}, {3, 3}]
-  @bs [{5, 2}, {5, 3}]
-  @cs [{7, 2}, {7, 3}]
-  @ds [{9, 2}, {9, 3}]
+  @as [{3, 2}, {3, 3}, {3, 4}, {3, 5}]
+  @bs [{5, 2}, {5, 3}, {3, 4}, {3, 5}]
+  @cs [{7, 2}, {7, 3}, {3, 4}, {3, 5}]
+  @ds [{9, 2}, {9, 3}, {3, 4}, {3, 5}]
   @hall [{1,1},{2,1},{4,1},{6,1},{8,1},{10,1},{11,1}]
   @pieces ["A", "B", "C", "D"]
   @costs %{
@@ -11,6 +11,7 @@ defmodule Aoc.Day23 do
     "C" => 100,
     "D" => 1000
   }
+
   @doc """
       iex> start_state = Aoc.Day23.input("priv/day23/example.txt")
       ...> end_state = Aoc.Day23.input("priv/day23/final1.txt")
@@ -18,6 +19,11 @@ defmodule Aoc.Day23 do
       12521
   """
   def part1(start_state, end_state) do
+    zobrist = zobristify(start_state)
+    shortest(start_state, end_state, zobrist)
+  end
+
+  def part2(start_state, end_state) do
     zobrist = zobristify(start_state)
     shortest(start_state, end_state, zobrist)
   end
@@ -31,7 +37,7 @@ defmodule Aoc.Day23 do
       ...> Aoc.Day23.branch(input, {1, 1})
       [{5, 2}]
   """
-  def branch(map, {x, y} = pos) do
+  def branch(map, {_, y} = pos) do
     all = do_branch(map, pos, [])
 
     if y == 1 do
@@ -69,10 +75,9 @@ defmodule Aoc.Day23 do
       |> Enum.filter(fn np ->
         Map.get(map, np) == "."
       end)
-      |> Enum.map(fn np ->
+      |> Enum.flat_map(fn np ->
         do_branch(map, np, [pos | acc])
       end)
-      |> List.flatten()
       |> Enum.uniq()
     end
   end
@@ -92,20 +97,16 @@ defmodule Aoc.Day23 do
   end
 
   def statify(zobrist, map) do
-    piece_positions =
-      map
-      |> Enum.filter(fn {_, char} ->
-        Enum.member?(@pieces, char)
-      end)
+    piece_positions = Enum.filter(map, fn {_, char} -> Enum.member?(@pieces, char) end)
     Aoc.Zobrist.hash(zobrist, piece_positions)
   end
 
   def zobristify(map) do
-    map
-    |> Enum.filter(fn {_, char} ->
-      char != "#" and char != " "
-    end)
-    |> Enum.map(&(elem(&1, 0)))
+    for {pos, char} <- map,
+        char != "#",
+        char != " " do
+      pos
+    end
     |> Aoc.Zobrist.table(@pieces)
   end
 
@@ -140,38 +141,54 @@ defmodule Aoc.Day23 do
     ]
   end
 
+  def heuristic(map) do
+    for {{x, y}, char} <- map,
+        Enum.member?(@pieces, char) do
+      case char do
+        "A" -> abs(x - 3) * @costs["A"]
+        "B" -> abs(x - 5) * @costs["B"]
+        "C" -> abs(x - 7) * @costs["C"]
+        "D" -> abs(x - 9) * @costs["D"]
+      end
+    end
+    |> Enum.sum
+  end
+
   def shortest(initial_state, final_state, zobrist) do
     u_state = statify(zobrist, initial_state)
     distances = %{u_state => 0}
+    heuristics = %{u_state => 0}
     queue = PriorityQueue.new() |> PriorityQueue.push(initial_state, 0)
-    recur(distances, queue, final_state, zobrist)
+    recur(distances, queue, final_state, zobrist, heuristics)
   end
 
-  defp recur(distances, queue, target, zobrist) do
+  defp recur(distances, queue, target, zobrist, heuristics) do
     {{:value, u}, queue} = PriorityQueue.pop(queue)
     u_state = statify(zobrist, u)
 
     if u == target do
       distances[u_state]
     else
-      {distances, queue} =
+      {distances, queue, heuristics} =
         u
         |> possible_moves()
-        |> Enum.reduce({distances, queue}, fn {from ,to}, {distances, queue} ->
+        |> Enum.reduce({distances, queue, heuristics}, fn {from ,to}, {distances, queue, heuristics} ->
           cost = cost(u, from, to)
           v = move(u, from, to)
           v_state = statify(zobrist, v)
+          heuristic = heuristic(v)
           distance_from_source = distances[u_state] + cost
 
-          if distance_from_source < Map.get(distances, v_state, :infinity) do
+          if distance_from_source < Map.get(heuristics, v_state, :infinity) do
             distances = Map.put(distances, v_state, distance_from_source)
-            queue = PriorityQueue.push(queue, v, distance_from_source)
-            {distances, queue}
+            heuristics = Map.put(distances, v_state, distance_from_source + heuristic)
+            queue = PriorityQueue.push(queue, v, distance_from_source + heuristic)
+            {distances, queue, heuristics}
           else
-            {distances, queue}
+            {distances, queue, heuristics}
           end
         end)
-      recur(distances, queue, target, zobrist)
+      recur(distances, queue, target, zobrist, heuristics)
     end
   end
 
