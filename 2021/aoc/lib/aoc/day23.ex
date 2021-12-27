@@ -1,15 +1,6 @@
 defmodule Aoc.Day23 do
-  use Agent
-
-  def start do
-    Agent.start_link(fn -> Graph.new end, name: __MODULE__)
-    Agent.start_link(fn -> %{} end, name: :states)
-  end
-
   @as [{3, 2}, {3, 3}]
-  # @as [{3, 3}]
   @bs [{5, 2}, {5, 3}]
-  # @bs [{5, 3}]
   @cs [{7, 2}, {7, 3}]
   @ds [{9, 2}, {9, 3}]
   @hall [{1,1},{2,1},{4,1},{6,1},{8,1},{10,1},{11,1}]
@@ -21,51 +12,14 @@ defmodule Aoc.Day23 do
     "D" => 1000
   }
   @doc """
-      # iex> start_state = Aoc.Day23.input("priv/day23/test.txt")
-      # ...> end_state = Aoc.Day23.input("priv/day23/test_final.txt")
-      # ...> Aoc.Day23.part1(start_state, end_state)
-      # 68
-
       iex> start_state = Aoc.Day23.input("priv/day23/example.txt")
       ...> end_state = Aoc.Day23.input("priv/day23/final1.txt")
       ...> Aoc.Day23.part1(start_state, end_state)
-      68
+      12521
   """
   def part1(start_state, end_state) do
-    start()
     zobrist = zobristify(start_state)
-
-    initial_state = statify(zobrist, start_state)
-    # |> IO.inspect(label: "initial_state")
-    Agent.update(__MODULE__, &(Graph.add_vertex(&1, initial_state)))
-
-    final_state = statify(zobrist, end_state)
-    # |> IO.inspect(label: "final_state")
-
-    IO.puts("Generating graph...")
-    graphify(zobrist, start_state)
-    IO.puts("Graph generated.")
-    graph = Agent.get(__MODULE__, &(&1))
-    states = Agent.get(:states, &(&1))
-
-    # {:ok, file} = File.open("graph.dot", [:write])
-    # {:ok, content} = Graph.to_dot(graph)
-    # IO.write(file, content)
-    # File.write!("./graph.dot", content)
-    graph
-    |> Graph.dijkstra(initial_state, final_state)
-    |> Enum.map(fn node ->
-      # IO.inspect(node, label: "node")
-      Map.get(states, node) |> print
-
-      node
-    end)
-    |> Enum.chunk_every(2, 1, :discard)
-    |> Enum.map(fn [from, to] ->
-
-      Graph.edge(graph, from, to).weight |> IO.inspect(label: "cost")
-    end)
-    |> Enum.sum()
+    shortest(start_state, end_state, zobrist)
   end
 
   @doc """
@@ -137,46 +91,13 @@ defmodule Aoc.Day23 do
     end)
   end
 
-  def graphify(zobrist, map) do
-    graph = Agent.get(__MODULE__, &(&1))
-    current_state = statify(zobrist, map)
-    vertices = Graph.vertices(graph)
-
-    Agent.update(:states, fn sm ->
-      Map.put(sm, current_state, map)
-    end)
-    map
-    |> possible_moves()
-    |> Enum.map(fn {from ,to} ->
-      cost = cost(map, from, to)
-      nm = move(map, from, to)
-      next_state = statify(zobrist, nm)
-
-      if Enum.member?(vertices, next_state) do
-        Agent.update(__MODULE__, fn graph ->
-          graph
-          |> Graph.add_edge(current_state, next_state, weight: cost)
-        end)
-      else
-
-        Agent.update(__MODULE__, fn graph ->
-          graph
-          |> Graph.add_vertex(next_state)
-          |> Graph.add_edge(current_state, next_state, weight: cost)
-        end)
-
-        graphify(zobrist, nm)
-      end
-    end)
-  end
-
   def statify(zobrist, map) do
     piece_positions =
       map
       |> Enum.filter(fn {_, char} ->
         Enum.member?(@pieces, char)
       end)
-
+    Aoc.Zobrist.hash(zobrist, piece_positions)
   end
 
   def zobristify(map) do
@@ -210,26 +131,6 @@ defmodule Aoc.Day23 do
     cost_per_step * (abs(fx - tx) + abs(fy - ty))
   end
 
-  def print(map) do
-    IO.puts("")
-
-    height = Map.keys(map) |> Enum.map(fn {x, _} -> x end) |> Enum.max()
-    width = Map.keys(map) |> Enum.map(fn {_, y} -> y end) |> Enum.max()
-
-    Enum.map(0..width, fn row ->
-      Enum.map(0..height, fn col ->
-        pos = {col, row}
-        value = Map.get(map, pos, " ")
-        to_string(value)
-      end)
-      |> Enum.intersperse("")
-    end)
-    |> Enum.join("\n")
-    |> IO.puts()
-
-    map
-  end
-
   def neighbors({x, y}) do
     [
       {x, y - 1},
@@ -237,6 +138,41 @@ defmodule Aoc.Day23 do
       {x + 1, y},
       {x, y + 1}
     ]
+  end
+
+  def shortest(initial_state, final_state, zobrist) do
+    u_state = statify(zobrist, initial_state)
+    distances = %{u_state => 0}
+    queue = PriorityQueue.new() |> PriorityQueue.push(initial_state, 0)
+    recur(distances, queue, final_state, zobrist)
+  end
+
+  defp recur(distances, queue, target, zobrist) do
+    {{:value, u}, queue} = PriorityQueue.pop(queue)
+    u_state = statify(zobrist, u)
+
+    if u == target do
+      distances[u_state]
+    else
+      {distances, queue} =
+        u
+        |> possible_moves()
+        |> Enum.reduce({distances, queue}, fn {from ,to}, {distances, queue} ->
+          cost = cost(u, from, to)
+          v = move(u, from, to)
+          v_state = statify(zobrist, v)
+          distance_from_source = distances[u_state] + cost
+
+          if distance_from_source < Map.get(distances, v_state, :infinity) do
+            distances = Map.put(distances, v_state, distance_from_source)
+            queue = PriorityQueue.push(queue, v, distance_from_source)
+            {distances, queue}
+          else
+            {distances, queue}
+          end
+        end)
+      recur(distances, queue, target, zobrist)
+    end
   end
 
   def input(filename) do
