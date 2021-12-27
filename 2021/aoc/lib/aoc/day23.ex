@@ -4,12 +4,12 @@ defmodule Aoc.Day23 do
   @cs [{7, 2}, {7, 3}, {3, 4}, {3, 5}]
   @ds [{9, 2}, {9, 3}, {3, 4}, {3, 5}]
   @hall [{1,1},{2,1},{4,1},{6,1},{8,1},{10,1},{11,1}]
-  @pieces ["A", "B", "C", "D"]
+  @pieces [?A, ?B, ?C, ?D]
   @costs %{
-    "A" => 1,
-    "B" => 10,
-    "C" => 100,
-    "D" => 1000
+    ?A => 1,
+    ?B => 10,
+    ?C => 100,
+    ?D => 1000
   }
 
   @doc """
@@ -42,19 +42,19 @@ defmodule Aoc.Day23 do
 
     if y == 1 do
       case Map.get(map, pos) do
-        "A" ->
+        ?A ->
           Enum.filter(all, fn p ->
             Enum.member?(@as, p)
           end)
-        "B" ->
+        ?B ->
           Enum.filter(all, fn p ->
             Enum.member?(@bs, p)
           end)
-        "C" ->
+        ?C ->
           Enum.filter(all, fn p ->
             Enum.member?(@cs, p)
           end)
-        "D" ->
+        ?D ->
           Enum.filter(all, fn p ->
             Enum.member?(@ds, p)
           end)
@@ -73,7 +73,7 @@ defmodule Aoc.Day23 do
       pos
       |> neighbors()
       |> Enum.filter(fn np ->
-        Map.get(map, np) == "."
+        Map.get(map, np) == ?.
       end)
       |> Enum.flat_map(fn np ->
         do_branch(map, np, [pos | acc])
@@ -103,8 +103,8 @@ defmodule Aoc.Day23 do
 
   def zobristify(map) do
     for {pos, char} <- map,
-        char != "#",
-        char != " " do
+        char != ?#,
+        char != ?\s do
       pos
     end
     |> Aoc.Zobrist.table(@pieces)
@@ -114,7 +114,7 @@ defmodule Aoc.Day23 do
     fc = Map.get(map, from)
 
     map
-    |> Map.put(from, ".")
+    |> Map.put(from, ?.)
     |> Map.put(to, fc)
   end
 
@@ -142,13 +142,13 @@ defmodule Aoc.Day23 do
   end
 
   def heuristic(map) do
-    for {{x, y}, char} <- map,
+    for {{x, _}, char} <- map,
         Enum.member?(@pieces, char) do
       case char do
-        "A" -> abs(x - 3) * @costs["A"]
-        "B" -> abs(x - 5) * @costs["B"]
-        "C" -> abs(x - 7) * @costs["C"]
-        "D" -> abs(x - 9) * @costs["D"]
+        ?A -> abs(x - 3) * @costs[?A]
+        ?B -> abs(x - 5) * @costs[?B]
+        ?C -> abs(x - 7) * @costs[?C]
+        ?D -> abs(x - 9) * @costs[?D]
       end
     end
     |> Enum.sum
@@ -199,7 +199,7 @@ defmodule Aoc.Day23 do
     |> Enum.with_index()
     |> Enum.reduce(%{}, fn {row, y}, acc ->
       row
-      |> String.graphemes()
+      |> String.to_charlist()
       |> Enum.with_index()
       |> Enum.reduce(acc, fn {char, x}, acc ->
         Map.put(acc, {x, y}, char)
