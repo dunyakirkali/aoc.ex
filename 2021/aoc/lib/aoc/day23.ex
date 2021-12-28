@@ -1,9 +1,11 @@
 defmodule Aoc.Day23 do
-  @as [{3, 2}, {3, 3}, {3, 4}, {3, 5}]
-  @bs [{5, 2}, {5, 3}, {3, 4}, {3, 5}]
-  @cs [{7, 2}, {7, 3}, {3, 4}, {3, 5}]
-  @ds [{9, 2}, {9, 3}, {3, 4}, {3, 5}]
   @hall [{1,1},{2,1},{4,1},{6,1},{8,1},{10,1},{11,1}]
+  @goals %{
+    ?A => [{3, 2}, {3, 3}, {3, 4}, {3, 5}],
+    ?B => [{5, 2}, {5, 3}, {3, 4}, {3, 5}],
+    ?C => [{7, 2}, {7, 3}, {3, 4}, {3, 5}],
+    ?D => [{9, 2}, {9, 3}, {3, 4}, {3, 5}]
+  }
   @pieces [?A, ?B, ?C, ?D]
   @costs %{
     ?A => 1,
@@ -28,72 +30,86 @@ defmodule Aoc.Day23 do
     shortest(start_state, end_state, zobrist)
   end
 
-  @doc """
-      iex> input = Aoc.Day23.input("priv/day23/example.txt")
-      ...> Aoc.Day23.branch(input, {3, 2})
-      [{1, 1}, {2, 1}, {4, 1}, {6, 1}, {8, 1}, {10, 1}, {11, 1}]
+  def print(map) do
+    IO.puts("")
 
-      iex> input = Aoc.Day23.input("priv/day23/example2.txt")
-      ...> Aoc.Day23.branch(input, {1, 1})
-      [{5, 2}]
-  """
-  def branch(map, {_, y} = pos) do
-    all = do_branch(map, pos, [])
+    height = Map.keys(map) |> Enum.map(fn {x, _} -> x end) |> Enum.max()
+    width = Map.keys(map) |> Enum.map(fn {_, y} -> y end) |> Enum.max()
 
-    if y == 1 do
-      case Map.get(map, pos) do
-        ?A ->
-          Enum.filter(all, fn p ->
-            Enum.member?(@as, p)
-          end)
-        ?B ->
-          Enum.filter(all, fn p ->
-            Enum.member?(@bs, p)
-          end)
-        ?C ->
-          Enum.filter(all, fn p ->
-            Enum.member?(@cs, p)
-          end)
-        ?D ->
-          Enum.filter(all, fn p ->
-            Enum.member?(@ds, p)
-          end)
-      end
-    else
-      Enum.filter(all, fn p ->
-        Enum.member?(@hall, p)
+    Enum.map(0..width, fn row ->
+      Enum.map(0..height, fn col ->
+        pos = {col, row}
+        value = Map.get(map, pos, ?\s)
       end)
-    end
+      |> List.to_string
+    end)
+    |> Enum.join("\n")
+    |> IO.puts()
+
+    map
   end
 
-  def do_branch(map, pos, acc) do
-    if Enum.member?(acc, pos) do
-      acc
-    else
-      pos
-      |> neighbors()
-      |> Enum.filter(fn np ->
-        Map.get(map, np) == ?.
-      end)
-      |> Enum.flat_map(fn np ->
-        do_branch(map, np, [pos | acc])
-      end)
-      |> Enum.uniq()
-    end
+  def in_final_position?(_, {{_, 1}, _}), do: false
+  def in_final_position?(map, {{x, y}, char}) do
+    goals = Map.get(@goals, char)
+    max_y = goals |> Enum.max_by(fn {_, gy} -> gy end) |> elem(1)
+    dest_x = elem(List.first(goals), 0)
+
+    dest_x == x and Enum.all?(y..max_y, &(map[{x, &1}] == char))
   end
 
   def possible_moves(map) do
-    map
-    |> Enum.filter(fn {_, char} ->
-      Enum.member?(@pieces, char)
-    end)
-    |> Enum.flat_map(fn {pos, _} ->
+    {hallway_pods, room_pods} =
       map
-      |> branch(pos)
-      |> Enum.map(fn np ->
-        {pos, np}
+      |> Enum.filter(fn {_, char} ->
+        Enum.member?(@pieces, char)
       end)
-    end)
+      |> Enum.reject(&in_final_position?(map, &1))
+      |> Enum.split_with(fn {pos, _} ->
+        Enum.member?(@hall, pos)
+      end)
+
+    Enum.concat(
+      Enum.map(hallway_pods, fn {from, char} ->
+        goals = Map.get(@goals, char)
+        max_y = goals |> Enum.max_by(fn {_, gy} -> gy end) |> elem(1)
+        dest_x = elem(List.first(goals), 0)
+        dest_y = Enum.find(max_y..2, fn yy ->
+          Map.get(map, {dest_x, yy}) == ?.
+        end)
+        if dest_y == nil do
+          nil
+        else
+          to = {dest_x, dest_y}
+          {from, to}
+        end
+      end)
+      |> Enum.filter(fn x ->
+        x != nil
+      end),
+      Enum.flat_map(room_pods, fn {pos, char} ->
+        Enum.map(@hall, fn to ->
+          {pos, to}
+        end)
+      end)
+    )
+    |> Enum.filter(&has_path?(map, &1))
+  end
+
+  @doc """
+      iex> start_state = Aoc.Day23.input("priv/day23/example.txt")
+      ...> Aoc.Day23.has_path?(start_state, {{9, 2}, {1, 1}})
+      true
+  """
+  def has_path?(map, {from, to}), do: path(map, from, to) |> Enum.all?(fn ch -> ch == ?. end)
+
+  def path(map, {x_from, y_from}, {x_to, y_to}) do
+    Enum.concat(
+      for(x <- x_from..x_to, do: {x, 1}),
+      for(y <- y_from..y_to, do: {if(y_from > y_to, do: x_from, else: x_to), y})
+    )
+    |> List.delete({x_from, y_from})
+    |> Enum.map(&map[&1])
   end
 
   def statify(zobrist, map) do
@@ -157,38 +173,39 @@ defmodule Aoc.Day23 do
   def shortest(initial_state, final_state, zobrist) do
     u_state = statify(zobrist, initial_state)
     distances = %{u_state => 0}
-    heuristics = %{u_state => 0}
     queue = PriorityQueue.new() |> PriorityQueue.push(initial_state, 0)
-    recur(distances, queue, final_state, zobrist, heuristics)
+    # queue = Heap.new() |> Heap.push({0, initial_state})
+    recur(distances, queue, final_state, zobrist)
   end
 
-  defp recur(distances, queue, target, zobrist, heuristics) do
+  defp recur(distances, queue, target, zobrist) do
     {{:value, u}, queue} = PriorityQueue.pop(queue)
+    # {{_, u}, queue} = Heap.split(queue)
     u_state = statify(zobrist, u)
 
     if u == target do
       distances[u_state]
     else
-      {distances, queue, heuristics} =
+      {distances, queue} =
         u
         |> possible_moves()
-        |> Enum.reduce({distances, queue, heuristics}, fn {from ,to}, {distances, queue, heuristics} ->
+        |> Enum.reduce({distances, queue}, fn {from ,to}, {distances, queue} ->
           cost = cost(u, from, to)
           v = move(u, from, to)
           v_state = statify(zobrist, v)
           heuristic = heuristic(v)
           distance_from_source = distances[u_state] + cost
 
-          if distance_from_source < Map.get(heuristics, v_state, :infinity) do
+          if distance_from_source < Map.get(distances, v_state, :infinity) do
             distances = Map.put(distances, v_state, distance_from_source)
-            heuristics = Map.put(distances, v_state, distance_from_source + heuristic)
             queue = PriorityQueue.push(queue, v, distance_from_source + heuristic)
-            {distances, queue, heuristics}
+            # queue = Heap.push(queue, {cost + heuristic, v})
+            {distances, queue}
           else
-            {distances, queue, heuristics}
+            {distances, queue}
           end
         end)
-      recur(distances, queue, target, zobrist, heuristics)
+      recur(distances, queue, target, zobrist)
     end
   end
 
