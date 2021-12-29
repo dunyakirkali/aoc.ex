@@ -1,11 +1,5 @@
 defmodule Aoc.Day23 do
   @hall [{1,1},{2,1},{4,1},{6,1},{8,1},{10,1},{11,1}]
-  @goals %{
-    ?A => [{3, 2}, {3, 3}, {3, 4}, {3, 5}],
-    ?B => [{5, 2}, {5, 3}, {3, 4}, {3, 5}],
-    ?C => [{7, 2}, {7, 3}, {3, 4}, {3, 5}],
-    ?D => [{9, 2}, {9, 3}, {3, 4}, {3, 5}]
-  }
   @pieces [?A, ?B, ?C, ?D]
   @costs %{
     ?A => 1,
@@ -30,18 +24,25 @@ defmodule Aoc.Day23 do
     shortest(start_state, end_state, zobrist)
   end
 
+  def x(?A), do: 3
+  def x(?B), do: 5
+  def x(?C), do: 7
+  def x(?D), do: 9
+
+  def in_final_position?(_, {{_, 1}, _}, _), do: false
+  def in_final_position?(map, {{x, y}, char}) do
+    x(char) == x and Enum.all?(y..6, &(map[{x, &1}] == char))
+  end
+
   def print(map) do
     IO.puts("")
 
-    height = Map.keys(map) |> Enum.map(fn {x, _} -> x end) |> Enum.max()
-    width = Map.keys(map) |> Enum.map(fn {_, y} -> y end) |> Enum.max()
-
-    Enum.map(0..width, fn row ->
-      Enum.map(0..height, fn col ->
+    Enum.map(0..6, fn row ->
+      Enum.map(0..12, fn col ->
         pos = {col, row}
-        value = Map.get(map, pos, ?\s)
+        Map.get(map, pos, ?#)
       end)
-      |> List.to_string
+      |> to_string
     end)
     |> Enum.join("\n")
     |> IO.puts()
@@ -49,16 +50,8 @@ defmodule Aoc.Day23 do
     map
   end
 
-  def in_final_position?(_, {{_, 1}, _}), do: false
-  def in_final_position?(map, {{x, y}, char}) do
-    goals = Map.get(@goals, char)
-    max_y = goals |> Enum.max_by(fn {_, gy} -> gy end) |> elem(1)
-    dest_x = elem(List.first(goals), 0)
-
-    dest_x == x and Enum.all?(y..max_y, &(map[{x, &1}] == char))
-  end
-
   def possible_moves(map) do
+    # map |> print
     {hallway_pods, room_pods} =
       map
       |> Enum.filter(fn {_, char} ->
@@ -71,10 +64,8 @@ defmodule Aoc.Day23 do
 
     Enum.concat(
       Enum.map(hallway_pods, fn {from, char} ->
-        goals = Map.get(@goals, char)
-        max_y = goals |> Enum.max_by(fn {_, gy} -> gy end) |> elem(1)
-        dest_x = elem(List.first(goals), 0)
-        dest_y = Enum.find(max_y..2, fn yy ->
+        dest_x = x(char)
+        dest_y = Enum.find(6..2, fn yy ->
           Map.get(map, {dest_x, yy}) == ?.
         end)
         if dest_y == nil do
@@ -87,13 +78,15 @@ defmodule Aoc.Day23 do
       |> Enum.filter(fn x ->
         x != nil
       end),
-      Enum.flat_map(room_pods, fn {pos, char} ->
+      Enum.flat_map(room_pods, fn {pos, _} ->
         Enum.map(@hall, fn to ->
           {pos, to}
         end)
       end)
     )
+    # |> IO.inspect(label: "BEF")
     |> Enum.filter(&has_path?(map, &1))
+    # |> IO.inspect(label: "AFT")
   end
 
   @doc """
@@ -148,15 +141,6 @@ defmodule Aoc.Day23 do
     cost_per_step * (abs(fx - tx) + abs(fy - ty))
   end
 
-  def neighbors({x, y}) do
-    [
-      {x, y - 1},
-      {x - 1, y},
-      {x + 1, y},
-      {x, y + 1}
-    ]
-  end
-
   def heuristic(map) do
     for {{x, _}, char} <- map,
         Enum.member?(@pieces, char) do
@@ -174,13 +158,11 @@ defmodule Aoc.Day23 do
     u_state = statify(zobrist, initial_state)
     distances = %{u_state => 0}
     queue = PriorityQueue.new() |> PriorityQueue.push(initial_state, 0)
-    # queue = Heap.new() |> Heap.push({0, initial_state})
     recur(distances, queue, final_state, zobrist)
   end
 
   defp recur(distances, queue, target, zobrist) do
     {{:value, u}, queue} = PriorityQueue.pop(queue)
-    # {{_, u}, queue} = Heap.split(queue)
     u_state = statify(zobrist, u)
 
     if u == target do
@@ -199,7 +181,7 @@ defmodule Aoc.Day23 do
           if distance_from_source < Map.get(distances, v_state, :infinity) do
             distances = Map.put(distances, v_state, distance_from_source)
             queue = PriorityQueue.push(queue, v, distance_from_source + heuristic)
-            # queue = Heap.push(queue, {cost + heuristic, v})
+
             {distances, queue}
           else
             {distances, queue}
@@ -219,7 +201,11 @@ defmodule Aoc.Day23 do
       |> String.to_charlist()
       |> Enum.with_index()
       |> Enum.reduce(acc, fn {char, x}, acc ->
-        Map.put(acc, {x, y}, char)
+        if char != ?# and char != ?\s do
+          Map.put(acc, {x, y}, char)
+        else
+          acc
+        end
       end)
     end)
   end
