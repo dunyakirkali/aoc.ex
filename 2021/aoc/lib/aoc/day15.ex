@@ -26,37 +26,71 @@ defmodule Aoc.Day15 do
     sp = {0, 0}
     ep = {mx, my}
     distances = %{sp => 0}
+    paths = %{sp => [sp]}
     queue = PriorityQueue.new() |> PriorityQueue.push(sp, 0)
-    traverse({map, queue, distances, ep})
+    traverse({map, queue, distances, ep, paths})
+    |> then(fn {cost, path} ->
+      path
+      |> Enum.map(fn p ->
+        {p, Map.get(map, p)}
+      end)
+      |> Enum.into(%{})
+      |> print
+
+      cost
+    end)
+
   end
 
-  def traverse({map, queue, distances, ep}) do
+  def print(map) do
+    IO.puts("")
+
+    {minx, maxx} = Map.keys(map) |> Enum.map(fn {x, _} -> x end) |> Enum.min_max()
+    {miny, maxy} = Map.keys(map) |> Enum.map(fn {_, y} -> y end) |> Enum.min_max()
+
+    Enum.map(minx..maxx, fn row ->
+      Enum.map(miny..maxy, fn col ->
+        pos = {col, row}
+        value = Map.get(map, pos, ".")
+        to_string(value)
+      end)
+      |> Enum.intersperse("")
+    end)
+    |> Enum.join("\n")
+    |> IO.puts()
+
+    map
+  end
+
+  def traverse({map, queue, distances, ep, paths}) do
     {{:value, cp}, queue} = PriorityQueue.pop(queue)
     cost = distances[cp]
+    path = paths[cp]
 
     if cp == ep do
-      cost
+      {cost, path}
     else
       cp
       |> neighbors()
       |> Enum.map(fn np ->
-        {np, cost + Map.get(map, np, 999)}
+        {np, cost + Map.get(map, np, 999), [np | path]}
       end)
-      |> Enum.reduce({map, queue, distances, ep}, &assess/2)
+      |> Enum.reduce({map, queue, distances, ep, paths}, &assess/2)
       |> traverse()
     end
   end
 
-  def assess({np, cost}, {map, queue, distances, ep}) do
+  def assess({np, cost, path}, {map, queue, distances, ep, paths}) do
     if not Map.has_key?(distances, np) or cost < distances[np] do
       {
         map,
         PriorityQueue.push(queue, np, cost),
         Map.put(distances, np, cost),
-        ep
+        ep,
+        Map.put(paths, np, path),
       }
     else
-      {map, queue, distances, ep}
+      {map, queue, distances, ep, paths}
     end
   end
 
