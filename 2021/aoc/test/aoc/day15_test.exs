@@ -4,7 +4,7 @@ defmodule Day15Test do
 
   test "Part 1" do
     input = Aoc.Day15.input("priv/day15/input.txt")
-    assert Aoc.Day15.part1(input, {100, 100}) == 503
+    assert Aoc.Day15.part1(input) == 503
   end
 
   test "Part 2" do

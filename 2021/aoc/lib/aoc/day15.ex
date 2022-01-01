@@ -1,96 +1,79 @@
 defmodule Aoc.Day15 do
   @doc """
       iex> input = Aoc.Day15.input("priv/day15/example.txt")
-      ...> Aoc.Day15.part1(input, {10, 10})
+      ...> Aoc.Day15.part1(input)
       40
   """
-  def part1(input, {dx, dy}) do
-    graph = graphify(input)
-
-    graph
-    |> Graph.dijkstra({0, 0}, {dx - 1, dy - 1})
-    |> Enum.drop(1)
-    |> Enum.map(fn pos ->
-      Map.get(input, pos)
-    end)
-    |> Enum.sum()
-  end
-
-  def graphify(map) do
-    graph =
-      Enum.reduce(map, Graph.new(), fn {{x, y}, _}, acc ->
-        Graph.add_vertex(acc, {x, y})
-      end)
-
-    graph =
-      map
-      |> Enum.reduce(graph, fn {pos, val}, acc ->
-        pos
-        |> neighbors()
-        |> Enum.reduce(acc, fn des, acc ->
-          tw = Map.get(map, des, 10)
-          Graph.add_edge(acc, pos, des, weight: val + tw)
-        end)
-      end)
-
-    # Ugly workaround to deal with the libgraph hashing issue
-    # https://github.com/bitwalker/libgraph/issues/44
-    fail =
-      graph
-      |> Graph.edges()
-      |> Enum.filter(fn %Graph.Edge{v1: {x1, y1}, v2: {x2, y2}} ->
-        abs(x1 - x2) > 1 and abs(y1 - y2) > 1
-      end)
-
-    graph
-    |> Graph.delete_edges(fail)
-  end
-
-  def neighbors({x, y}) do
-    [
-      {x, y - 1},
-      {x - 1, y},
-      {x + 1, y},
-      {x, y + 1}
-    ]
+  def part1(input) do
+    input
+    |> solve()
   end
 
   @doc """
       iex> input = Aoc.Day15.input("priv/day15/example.txt")
-      ...> Aoc.Day15.part2(input, {10,10})
+      ...> Aoc.Day15.part2(input, {10, 10})
       315
   """
-  def part2(input, {dx, dy}) do
-    expanded = expand(input, {dx, dy})
-    graph = graphify(expanded)
-
-    graph
-    |> Graph.dijkstra({0, 0}, {5 * dx - 1, 5 * dy - 1})
-    |> Enum.drop(1)
-    |> Enum.map(fn pos ->
-      Map.get(expanded, pos)
-    end)
-    |> Enum.sum()
+  def part2(input, expansion) do
+    input
+    |> expand(expansion)
+    |> solve()
   end
 
-  def print(map) do
-    IO.puts("")
+  def solve(map) do
+    mx = Map.keys(map) |> Enum.map(fn {x, _} -> x end) |> Enum.max()
+    my = Map.keys(map) |> Enum.map(fn {_, y} -> y end) |> Enum.max()
+    sp = {0, 0}
+    ep = {mx, my}
+    distances = %{sp => 0}
+    queue = PriorityQueue.new() |> PriorityQueue.push(sp, 0)
+    traverse({map, queue, distances, ep})
+  end
 
-    height = Map.keys(map) |> Enum.map(fn {x, _} -> x end) |> Enum.max()
-    width = Map.keys(map) |> Enum.map(fn {_, y} -> y end) |> Enum.max()
+  def traverse({map, queue, distances, ep}) do
+    {{:value, cp}, queue} = PriorityQueue.pop(queue)
+    cost = distances[cp]
 
-    Enum.map(0..width, fn row ->
-      Enum.map(0..height, fn col ->
-        pos = {col, row}
-        value = Map.get(map, pos, ".")
-        to_string(value)
+    if cp == ep do
+      cost
+    else
+      cp
+      |> neighbors()
+      |> Enum.map(fn np ->
+        {np, cost + Map.get(map, np, 999)}
       end)
-      |> Enum.intersperse("")
-    end)
-    |> Enum.join("\n")
-    |> IO.puts()
+      |> Enum.reduce({map, queue, distances, ep}, &assess/2)
+      |> traverse()
+    end
+  end
 
-    map
+  def assess({np, cost}, {map, queue, distances, ep}) do
+    if not Map.has_key?(distances, np) or cost < distances[np] do
+      {
+        map,
+        PriorityQueue.push(queue, np, cost),
+        Map.put(distances, np, cost),
+        ep
+      }
+    else
+      {map, queue, distances, ep}
+    end
+  end
+
+  def move({state, max_y}, {{x_from, y_from}, {x_to, y_to}, p}) do
+    state
+    |> Map.put({x_from, y_from}, nil)
+    |> Map.put({x_to, y_to}, p)
+    |> then(&{&1, max_y})
+  end
+
+  def neighbors({x, y}) do
+    [
+      {x - 1, y},
+      {x, y - 1},
+      {x + 1, y},
+      {x, y + 1}
+    ]
   end
 
   @doc """
