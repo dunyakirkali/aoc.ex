@@ -56,7 +56,5 @@ defmodule Aoc.Day1 do
   def input() do
     "priv/day1/input.txt"
     |> File.read!()
-    # |> String.split("\n", trim: true)
-    # |> Stream.map(&String.to_integer/1)
   end
 end
