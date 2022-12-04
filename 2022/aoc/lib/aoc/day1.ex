@@ -5,7 +5,7 @@ defmodule Aoc.Day1 do
   """
   def part1(list) do
     list
-    |> Enum.max
+    |> Enum.max()
   end
 
   @doc """
@@ -14,10 +14,10 @@ defmodule Aoc.Day1 do
   """
   def part2(list) do
     list
-    |> Enum.sort
-    |> Enum.reverse
+    |> Enum.sort()
+    |> Enum.reverse()
     |> Enum.take(3)
-    |> Enum.sum
+    |> Enum.sum()
   end
 
   def input() do
@@ -28,7 +28,7 @@ defmodule Aoc.Day1 do
       elf
       |> String.split("\n", trim: true)
       |> Enum.map(&String.to_integer/1)
-      |> Enum.sum
+      |> Enum.sum()
     end)
   end
 end
