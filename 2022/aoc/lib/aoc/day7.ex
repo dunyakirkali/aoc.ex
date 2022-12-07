@@ -33,7 +33,6 @@ defmodule Aoc.Day7 do
         sizes(graph, node)
       end)
 
-    available = 70_000_000
     used = sizes(graph, "/")
 
     sizes
