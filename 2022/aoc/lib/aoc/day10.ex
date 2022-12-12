@@ -23,6 +23,7 @@ defmodule Aoc.Day10 do
   """
   def part2(moves) do
     IO.write("\n")
+
     moves
     |> run()
     |> elem(3)
