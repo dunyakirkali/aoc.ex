@@ -18,7 +18,7 @@ defmodule Aoc.Day20 do
 	def left_rotate(l, n), do: right_rotate(l, -n)
 
 	def right_rotate(l, n \\ 1)
-	def right_rotate(l, n) when n > 0, do: Enum.reverse(l) |> ListRotation.left_rotate(n) |> Enum.reverse
+	def right_rotate(l, n) when n > 0, do: Enum.reverse(l) |> left_rotate(n) |> Enum.reverse
 	def right_rotate(l, n), do: left_rotate(l, -n)
 
   @doc """
@@ -27,27 +27,26 @@ defmodule Aoc.Day20 do
   """
   def part1(numbers) do
     len = Enum.count(numbers)
+    indices = for x <- 0..len-1, do: x
 
-    numbers
-    |> Enum.reduce(numbers, fn num, acc ->
-      cond do
-        num == 0 ->
-          acc
+    indices
+    |> Enum.reduce({numbers, indices}, fn index, {numbers, indices} ->
+      IO.puts("#{index/len}")
+      location = Enum.find_index(indices, fn x -> x == index end)
 
-        num < 0 ->
-          acc = Enum.reverse(acc)
-          index = Enum.find_index(acc, fn x -> x == num end)
-          to = rem(index - num + 1, len)
-          acc = Enum.slide(acc, index, to)
-          Enum.reverse(acc)
+      numbers = left_rotate(numbers, location)
+      indices = left_rotate(indices, location)
 
-        num > 0 ->
-          index = Enum.find_index(acc, fn x -> x == num end)
-          to = rem(index + num, len)
-          Enum.slide(acc, index, to)
-      end
-      |> IO.inspect()
+      [number | numbers] = numbers
+      [index | indices] = indices
+
+      numbers = left_rotate(numbers, number)
+      indices = left_rotate(indices, number)
+
+      {[number | numbers], [index | indices]}# |> IO.inspect()
+
     end)
+    |> elem(0)
     |> then(fn result ->
       zindex = Enum.find_index(result, fn x -> x == 0 end)
 
