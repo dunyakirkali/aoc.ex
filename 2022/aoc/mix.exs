@@ -34,7 +34,9 @@ defmodule Aoc.MixProject do
       {:tensor, "~> 2.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:exprof, "~> 0.2.0"},
-      {:flow, "~> 1.1.0"}
+      {:flow, "~> 1.1.0"},
+      {:deque, "~> 1.0"},
+      {:cll, "~> 0.1.0"}
     ]
   end
 end
