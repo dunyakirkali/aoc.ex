@@ -24,7 +24,7 @@ defmodule Aoc.MixProject do
       {:libgraph, "~> 0.13.3"},
       {:nimble_parsec, "~> 1.2.0"},
       {:memoize, "~> 1.2"},
-      {:benchee, "~> 1.0.1", only: [:dev, :test]},
+      {:benchee, "~> 1.0"},
       {:benchee_html, "~> 1.0", only: [:dev, :test]},
       {:printex, "~> 1.1.0"},
       {:drawille, "~> 0.0.1"},
