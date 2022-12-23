@@ -37,7 +37,9 @@ defmodule Aoc.MixProject do
       {:flow, "~> 1.1.0"},
       {:deque, "~> 1.0"},
       {:cll, "~> 0.1.0"},
-      {:genex, "~> 1.0.0-beta"}
+      {:genex, "~> 1.0.0-beta"},
+      {:complex, "~> 0.4.1"},
+      {:nx, "~> 0.2"}
     ]
   end
 end

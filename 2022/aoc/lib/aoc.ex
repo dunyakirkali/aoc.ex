@@ -109,11 +109,21 @@ defmodule Aoc do
     end
 
     def draw(map) do
-      size = size(map) |> IO.inspect()
+      {minx, maxx} =
+        map
+        |> Map.keys()
+        |> Enum.map(&elem(&1, 0))
+        |> Enum.min_max()
 
-      Enum.each(0..elem(size, 1), fn y ->
-        Enum.map(0..elem(size, 0), fn x ->
-          Map.get(map, {x, y}, " ")
+      {miny, maxy} =
+        map
+        |> Map.keys()
+        |> Enum.map(&elem(&1, 1))
+        |> Enum.min_max()
+
+      Enum.each(miny..maxy, fn y ->
+        Enum.map(minx..maxx, fn x ->
+          Map.get(map, {x, y}, ".")
         end)
         |> Enum.join("")
         |> IO.puts()
