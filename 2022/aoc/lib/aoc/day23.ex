@@ -1,3 +1,16 @@
+defmodule ListRotation do
+	def left_rotate(l, n \\ 1)
+	def left_rotate([], _), do: []
+	def left_rotate(l, 0), do: l
+	def left_rotate([h | t], 1), do: t ++ [h]
+	def left_rotate(l, n) when n > 0, do: left_rotate(left_rotate(l, 1), n-1)
+	def left_rotate(l, n), do: right_rotate(l, -n)
+
+	def right_rotate(l, n \\ 1)
+	def right_rotate(l, n) when n > 0, do: Enum.reverse(l) |> ListRotation.left_rotate(n) |> Enum.reverse
+	def right_rotate(l, n), do: left_rotate(l, -n)
+end
+
 defmodule Aoc.Day23 do
   def input(filename) do
     filename
@@ -7,21 +20,22 @@ defmodule Aoc.Day23 do
 
   @doc """
       iex> "priv/day23/mini.txt" |> Aoc.Day23.input() |> Aoc.Day23.part1()
-      110
+      25
 
-      # iex> "priv/day23/example.txt" |> Aoc.Day23.input() |> Aoc.Day23.part1()
-      # 110
+      iex> "priv/day23/example.txt" |> Aoc.Day23.input() |> Aoc.Day23.part1()
+      110
   """
   def part1(chart) do
-    chart |> Aoc.Chart.draw()
+    # chart |> Aoc.Chart.draw()
 
     1..10
-    |> Enum.reduce(chart, fn step, acc ->
-      proposals = propose(acc)
+    |> Enum.reduce(chart, fn round, acc ->
+      # round |> IO.inspect(label: "Round")
+      proposals = propose(acc, round - 1)
 
       acc
       |> move(proposals)
-      |> Aoc.Chart.draw()
+      # |> Aoc.Chart.draw()
     end)
     |> score
   end
@@ -32,27 +46,27 @@ defmodule Aoc.Day23 do
       |> Map.keys()
       |> Enum.map(&elem(&1, 0))
       |> Enum.min_max()
+      # |> IO.inspect(label: "xs")
 
     {miny, maxy} =
       chart
       |> Map.keys()
       |> Enum.map(&elem(&1, 1))
       |> Enum.min_max()
+      # |> IO.inspect(label: "ys")
 
     elves = elves(chart)
 
-    full = (maxy - miny) * (maxx - minx)
+    full = (maxy - miny + 1) * (maxx - minx + 1)
     full - Enum.count(elves)
   end
 
   def move(chart, proposals) do
     frequencies =
       proposals
-      |> Enum.flat_map(fn {{c, r}, opts} ->
-        opts
-        |> Enum.map(fn {dc, dr} ->
-          {c + dc, r + dr}
-        end)
+      # |> IO.inspect(label: "proposals")
+      |> Enum.map(fn {{c, r}, {co, ro}} ->
+        {c + co, r + ro}
       end)
       |> Enum.frequencies()
 
@@ -63,32 +77,21 @@ defmodule Aoc.Day23 do
 
   def do_move(chart, [], _, _), do: chart
 
-  def do_move(chart, [{{c, r}, v} | t], frequencies, proposals) do
-    # p |> IO.inspect(label: "elf")
-    options = proposals |> Map.get({c, r})
-
-    can_move =
-      Enum.all?(options, fn {dc, dr} ->
-        Map.get(frequencies, {c + dc, r + dr}) == 1
-      end)
-
-    if can_move do
-      options
-      |> Enum.reduce_while(chart, fn {dc, dr}, acc ->
-        # IO.inspect(Map.get(frequencies, pro), label: "Frew")
-        if Map.get(frequencies, {c + dc, r + dr}) == 1 do
-          {:halt,
-           acc
-           |> Map.put({c, r}, ".")
-           |> Map.put({c + dc, r + dr}, "#")}
-        else
-          {:cont, acc}
-        end
-      end)
-      |> do_move(t, frequencies, proposals)
-    else
+  def do_move(chart, [{{c, r}, _} | t], frequencies, proposals) do
+    if Map.get(proposals, {c, r}) == nil do
       do_move(chart, t, frequencies, proposals)
+    else
+      {dc, dr} = Map.get(proposals, {c, r})
+      if Map.get(frequencies, {c + dc, r + dr}) == 1 do
+        chart
+        |> Map.put({c, r}, ".")
+        |> Map.put({c + dc, r + dr}, "#")
+        |> do_move(t, frequencies, proposals)
+      else
+        do_move(chart, t, frequencies, proposals)
+      end
     end
+
   end
 
   def elves(map) do
@@ -98,62 +101,56 @@ defmodule Aoc.Day23 do
     end)
   end
 
-  def propose(chart) do
+  def propose(chart, round) do
     elves = elves(chart)
 
-    do_propose(chart, elves, [])
+    do_propose(chart, elves, [], round)
     |> Enum.into(%{})
   end
 
-  def do_propose(chart, [], proposals), do: proposals
+  def do_propose(_, [], proposals, _), do: proposals
 
-  def do_propose(chart, [{{c, r}, _} | t], proposals) do
+  def do_propose(chart, [{{c, r}, _} | t], proposals, round) do
+    # IO.inspect({c, r}, label: "Elf at")
+    # Aoc.Chart.draw(chart)
+    # score(chart)
     cn =
       [{-1, -1}, {0, -1}, {1, -1}]
-      |> Enum.map(fn {dc, dr} ->
-        Map.get(chart, {c + dc, r + dr}, ".")
-      end)
-      |> Enum.all?(fn v ->
-        v == "."
+      |> Enum.all?(fn {dc, dr} ->
+        Map.get(chart, {c + dc, r + dr}, ".") == "."
       end)
 
     cs =
       [{-1, 1}, {0, 1}, {1, 1}]
-      |> Enum.map(fn {dc, dr} ->
-        Map.get(chart, {c + dc, r + dr}, ".")
-      end)
-      |> Enum.all?(fn v ->
-        v == "."
-      end)
-
-    ce =
-      [{1, -1}, {1, 0}, {1, 1}]
-      |> Enum.map(fn {dc, dr} ->
-        Map.get(chart, {c + dc, r + dr}, ".")
-      end)
-      |> Enum.all?(fn v ->
-        v == "."
+      |> Enum.all?(fn {dc, dr} ->
+        # {c + dc, r + dr} |> IO.inspect(label: "GRR")
+        # Map.get(chart, {c + dc, r + dr}, ".") |> IO.inspect(label: "WAT")
+        Map.get(chart, {c + dc, r + dr}, ".") == "."
       end)
 
     cw =
       [{-1, -1}, {-1, 0}, {-1, 1}]
-      |> Enum.map(fn {dc, dr} ->
-        Map.get(chart, {c + dc, r + dr}, ".")
-      end)
-      |> Enum.all?(fn v ->
-        v == "."
+      |> Enum.all?(fn {dc, dr} ->
+        Map.get(chart, {c + dc, r + dr}, ".") == "."
       end)
 
-    options =
+    ce =
+      [{1, -1}, {1, 0}, {1, 1}]
+      |> Enum.all?(fn {dc, dr} ->
+        Map.get(chart, {c + dc, r + dr}, ".") == "."
+      end)
+
+    option =
       [cn, cs, cw, ce]
+      |> ListRotation.left_rotate(round)
       |> Enum.with_index()
       |> Enum.map(fn {c, ind} ->
         if c do
-          case ind do
+          case rem(ind + round, 4)  do
             0 -> {0, -1}
             1 -> {0, 1}
-            2 -> {1, 0}
-            3 -> {-1, 0}
+            2 -> {-1, 0}
+            3 -> {1, 0}
           end
         else
           nil
@@ -162,8 +159,14 @@ defmodule Aoc.Day23 do
       |> Enum.reject(fn v ->
         v == nil
       end)
+      |> List.first
+      # |> dbg
 
-    do_propose(chart, t, [{{c, r}, options} | proposals])
+    if option == nil or (cn and cs and cw and ce) do
+      do_propose(chart, t, proposals, round)
+    else
+      do_propose(chart, t, [{{c, r}, option} | proposals], round)
+    end
   end
 
   # @doc """
