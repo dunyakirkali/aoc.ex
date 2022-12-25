@@ -300,8 +300,13 @@ defmodule Aoc.Day22 do
   def solve2({sides, {side, rotation}, [hm | tm]}, position, direction) do
     {{sides, {side, rotation}, tm}, position, direction} =
       cond do
-        is_integer(hm) -> move2({{sides, {side, rotation}, tm}, position, direction}, hm)
-        is_atom(hm) -> {{sides, {side, rotation}, tm}, position, turn(direction, hm)}
+        is_integer(hm) ->
+          IO.puts("move #{hm}")
+          move2({{sides, {side, rotation}, tm}, position, direction}, hm)
+
+        is_atom(hm) ->
+          IO.puts("turn #{direction}")
+          {{sides, {side, rotation}, tm}, position, turn(direction, hm)}
       end
 
     solve2({sides, {side, rotation}, tm}, position, direction)

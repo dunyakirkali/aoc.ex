@@ -1,5 +1,4 @@
 defmodule Aoc.Day25 do
-
   def input(filename) do
     filename
     |> File.read!()
@@ -39,7 +38,7 @@ defmodule Aoc.Day25 do
   def to_integer(snafu) do
     snafu
     |> String.to_charlist()
-    |> Enum.reverse
+    |> Enum.reverse()
     |> do_to_integer([])
     |> Enum.reverse()
     |> Enum.with_index()
@@ -58,6 +57,7 @@ defmodule Aoc.Day25 do
   end
 
   defp do_to_snafu(integer) when integer == 0, do: ''
+
   defp do_to_snafu(integer) do
     char =
       case rem(integer + 2, 5) do
@@ -67,16 +67,19 @@ defmodule Aoc.Day25 do
         3 -> ?1
         4 -> ?2
       end
+
     [char | do_to_snafu(div(integer + 2, 5))]
   end
 
   defp to_decimal([], acc), do: acc
+
   defp to_decimal([{hv, hi} | t], acc) do
-    acc = (5 ** hi) * hv + acc
+    acc = 5 ** hi * hv + acc
     to_decimal(t, acc)
   end
 
   defp do_to_integer([], acc), do: acc
+
   defp do_to_integer([h | t], acc) do
     acc =
       case h do
@@ -86,6 +89,7 @@ defmodule Aoc.Day25 do
         ?1 -> [1 | acc]
         ?2 -> [2 | acc]
       end
+
     do_to_integer(t, acc)
   end
 

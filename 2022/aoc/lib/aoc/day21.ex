@@ -65,17 +65,15 @@ defmodule Aoc.Day21 do
 
     res =
       run(
-        population_size: 500,
-        mutation_type: Mutation.scramble(),
-        mutation_rate: 0.1,
-        selection_type: Selection.roulette(),
+        # population_size: 5,
+        mutation_type: Mutation.bit_flip()
       )
 
     stop()
 
     res.strongest.genes
     |> List.to_string()
-    |> IO.inspect()
+    |> IO.inspect(label: "ret")
     |> String.to_integer()
   end
 
@@ -155,9 +153,9 @@ defmodule Aoc.Day21 do
     end
   end
 
-  def crossover_rate(population), do: 0.60
-  def mutation_rate(population), do: 0.08
-  def radiation(population), do: 0.50
+  # def crossover_rate(_), do: 0.60
+  # def mutation_rate(population), do: 0.08
+  # def radiation(population), do: 0.50
 
   def genotype, do: for(_ <- 1..15, do: Enum.random(?0..?9))
 
@@ -174,12 +172,13 @@ defmodule Aoc.Day21 do
       |> Integer.to_string()
       |> String.pad_leading(15, "0")
 
-    # if String.jaro_distance(resu, goal) == 1.0 do
-    #   String.jaro_distance(resu, goal) |> IO.inspect(label: "dist")
-    #   {resu, goal} |> IO.inspect()
-    # end
-    String.jaro_distance(resu, goal)# |> IO.inspect()
+    compare(resu, goal, 0) / String.length(resu)
   end
+
+  def compare(<<>>, <<>>, acc), do: acc
+  def compare(<<h, rl::binary>>, <<h, rr::binary>>, acc), do: compare(rl, rr, acc + 1)
+  def compare(<<_, rl::binary>>, <<_, rr::binary>>, acc), do: compare(rl, rr, acc)
+  def compare(_, <<>>, acc), do: acc
 
   def terminate?(p) do
     p.max_fitness == 1.0

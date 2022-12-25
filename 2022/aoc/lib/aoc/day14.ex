@@ -9,7 +9,6 @@ defmodule Aoc.Day14 do
 
     Stream.iterate(0, &(&1 + 1))
     |> Enum.reduce_while({map, {500, 0}}, fn _, {m, {sx, sy}} ->
-
       {m, result} = move_sand(m, {sx, sy})
 
       return =
@@ -137,7 +136,6 @@ defmodule Aoc.Day14 do
 
     Stream.iterate(0, &(&1 + 1))
     |> Enum.reduce_while({map, {500, 0}}, fn _, {m, {sx, sy}} ->
-
       {m, result} = move_sand(m, {sx, sy})
 
       return =
