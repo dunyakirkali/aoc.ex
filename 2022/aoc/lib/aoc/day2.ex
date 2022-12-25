@@ -1,66 +1,60 @@
 defmodule Aoc.Day2 do
-  defmodule RPS do
-    def score_game({opp, you}) do
-      case opp do
-        :r ->
-          case you do
-            :r -> 3
-            :p -> 6
-            :s -> 0
-          end
+  def score_game({opp, you}) do
+    case opp do
+      :r ->
+        case you do
+          :r -> 3
+          :p -> 6
+          :s -> 0
+        end
 
-        :p ->
-          case you do
-            :r -> 0
-            :p -> 3
-            :s -> 6
-          end
+      :p ->
+        case you do
+          :r -> 0
+          :p -> 3
+          :s -> 6
+        end
 
-        :s ->
-          case you do
-            :r -> 6
-            :p -> 0
-            :s -> 3
-          end
-      end
+      :s ->
+        case you do
+          :r -> 6
+          :p -> 0
+          :s -> 3
+        end
     end
+  end
 
-    def score_move(move) do
-      case move do
-        :r -> 1
-        :p -> 2
-        :s -> 3
-      end
-    end
+  defp score_move(:r), do: 1
+  defp score_move(:p), do: 2
+  defp score_move(:s), do: 3
 
-    def decide_move({opp, exp}) do
-      case opp do
-        :r ->
-          case exp do
-            "X" -> :s
-            "Y" -> :r
-            "Z" -> :p
-          end
+  def decide_move({opp, exp}) do
+    case opp do
+      :r ->
+        case exp do
+          "X" -> :s
+          "Y" -> :r
+          "Z" -> :p
+        end
 
-        :p ->
-          case exp do
-            "X" -> :r
-            "Y" -> :p
-            "Z" -> :s
-          end
+      :p ->
+        case exp do
+          "X" -> :r
+          "Y" -> :p
+          "Z" -> :s
+        end
 
-        :s ->
-          case exp do
-            "X" -> :p
-            "Y" -> :s
-            "Z" -> :r
-          end
-      end
+      :s ->
+        case exp do
+          "X" -> :p
+          "Y" -> :s
+          "Z" -> :r
+        end
     end
   end
 
   @doc """
-      iex> Aoc.Day2.part1([["A", "Y"], ["B", "X"], ["C", "Z"]])
+      iex> "priv/day2/example.txt" |> Aoc.Day2.input |> Aoc.Day2.part1()
       15
   """
   def part1(list) do
@@ -85,14 +79,14 @@ defmodule Aoc.Day2 do
     |> Enum.map(fn move ->
       move
       |> then(fn {_, you} = move ->
-        RPS.score_move(you) + RPS.score_game(move)
+        score_move(you) + score_game(move)
       end)
     end)
     |> Enum.sum()
   end
 
   @doc """
-      iex> Aoc.Day2.part2([["A", "Y"], ["B", "X"], ["C", "Z"]])
+      iex> "priv/day2/example.txt" |> Aoc.Day2.input |> Aoc.Day2.part2()
       12
   """
   def part2(list) do
@@ -105,20 +99,20 @@ defmodule Aoc.Day2 do
           "C" -> :s
         end
 
-      you = RPS.decide_move({opp, exp})
+      you = decide_move({opp, exp})
       {opp, you}
     end)
     |> Enum.map(fn move ->
       move
       |> then(fn {_, you} = move ->
-        RPS.score_move(you) + RPS.score_game(move)
+        score_move(you) + score_game(move)
       end)
     end)
     |> Enum.sum()
   end
 
-  def input() do
-    "priv/day2/input.txt"
+  def input(filename) do
+    filename
     |> File.read!()
     |> String.split("\n", trim: true)
     |> Enum.map(&String.split(&1, " ", trim: true))
