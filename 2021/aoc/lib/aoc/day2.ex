@@ -53,5 +53,6 @@ defmodule Aoc.Day2 do
       [dir, am] = String.split(line, " ")
       {dir, String.to_integer(am)}
     end)
+    |> IO.inspect()
   end
 end
