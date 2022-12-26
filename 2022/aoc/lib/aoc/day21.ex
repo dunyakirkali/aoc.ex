@@ -1,12 +1,4 @@
 defmodule Aoc.Day21 do
-  use Genex
-  use Agent
-  use Genex.Tools
-
-  def start do
-    Agent.start_link(fn -> {[], "", 0} end, name: __MODULE__)
-  end
-
   def input(filename) do
     filename
     |> File.read!()
@@ -24,6 +16,7 @@ defmodule Aoc.Day21 do
   def part1(numbers) do
     numbers
     |> solve("root")
+    |> trunc()
   end
 
   def solve(rules, monkey) do
@@ -39,7 +32,7 @@ defmodule Aoc.Day21 do
             solve(rules, ca1) * solve(rules, ca2)
 
           <<ca1::binary-size(4), " / ", ca2::binary-size(4)>> ->
-            div(solve(rules, ca1), solve(rules, ca2))
+            solve(rules, ca1) / solve(rules, ca2)
 
           <<ca1::binary-size(4), " - ", ca2::binary-size(4)>> ->
             solve(rules, ca1) - solve(rules, ca2)
@@ -51,34 +44,31 @@ defmodule Aoc.Day21 do
   end
 
   @doc """
-      iex> "priv/day21/example.txt" |> Aoc.Day21.input() |> Aoc.Day21.part2()
+      iex> "priv/day21/example.txt" |> Aoc.Day21.input() |> Aoc.Day21.part2(true)
       301
   """
-  def part2(numbers) do
-    start()
+  def part2(rules, example \\ false) do
+    {monkey, goal} = solve_goal(rules, "root")
 
-    {monkey, goal} = solve_goal(numbers, "root")
+    min = 0
+    max = 1_000_000_000_000_000_000
 
-    Agent.update(__MODULE__, fn _ ->
-      {numbers, monkey, Integer.to_string(goal) |> String.pad_leading(15, "0")}
-    end)
-
-    res =
-      run(
-        # population_size: 5,
-        mutation_type: Mutation.bit_flip()
-      )
-
-    stop()
-
-    res.strongest.genes
-    |> List.to_string()
-    |> IO.inspect(label: "ret")
-    |> String.to_integer()
+    if example do
+      search(rules, goal, monkey, max, min)
+    else
+      search(rules, goal, monkey, min, max)
+    end
+    |> trunc()
   end
 
-  def stop() do
-    Agent.stop(__MODULE__)
+  def search(rules, goal, monkey, min, max) do
+    mid = div(min + max, 2)
+    res = solve_human(rules, monkey, mid)
+    cond do
+      res == goal -> mid
+      res < goal -> search(rules, goal, monkey, min, mid)
+      res > goal -> search(rules, goal, monkey, mid + 1, max)
+    end
   end
 
   def solve_goal(rules, monkey) do
@@ -107,7 +97,7 @@ defmodule Aoc.Day21 do
                 solve_goal(rules, ca1) * solve_goal(rules, ca2)
 
               <<ca1::binary-size(4), " / ", ca2::binary-size(4)>> ->
-                div(solve_goal(rules, ca1), solve_goal(rules, ca2))
+                solve_goal(rules, ca1) / solve_goal(rules, ca2)
 
               <<ca1::binary-size(4), " - ", ca2::binary-size(4)>> ->
                 solve_goal(rules, ca1) - solve_goal(rules, ca2)
@@ -141,7 +131,7 @@ defmodule Aoc.Day21 do
                 solve_human(rules, ca1, answer) * solve_human(rules, ca2, answer)
 
               <<ca1::binary-size(4), " / ", ca2::binary-size(4)>> ->
-                div(solve_human(rules, ca1, answer), solve_human(rules, ca2, answer))
+                solve_human(rules, ca1, answer) / solve_human(rules, ca2, answer)
 
               <<ca1::binary-size(4), " - ", ca2::binary-size(4)>> ->
                 solve_human(rules, ca1, answer) - solve_human(rules, ca2, answer)
@@ -151,36 +141,5 @@ defmodule Aoc.Day21 do
             no
         end
     end
-  end
-
-  # def crossover_rate(_), do: 0.60
-  # def mutation_rate(population), do: 0.08
-  # def radiation(population), do: 0.50
-
-  def genotype, do: for(_ <- 1..15, do: Enum.random(?0..?9))
-
-  def fitness_function(c) do
-    {rules, monkey, goal} = Agent.get(__MODULE__, fn acc -> acc end)
-
-    resu =
-      c.genes
-      |> List.to_string()
-      |> String.to_integer()
-      |> then(fn human ->
-        solve_human(rules, monkey, human)
-      end)
-      |> Integer.to_string()
-      |> String.pad_leading(15, "0")
-
-    compare(resu, goal, 0) / String.length(resu)
-  end
-
-  def compare(<<>>, <<>>, acc), do: acc
-  def compare(<<h, rl::binary>>, <<h, rr::binary>>, acc), do: compare(rl, rr, acc + 1)
-  def compare(<<_, rl::binary>>, <<_, rr::binary>>, acc), do: compare(rl, rr, acc)
-  def compare(_, <<>>, acc), do: acc
-
-  def terminate?(p) do
-    p.max_fitness == 1.0
   end
 end
