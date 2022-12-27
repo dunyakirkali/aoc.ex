@@ -60,107 +60,107 @@ defmodule Aoc.Day22 do
     defp point_to(side, :e), do: side |> Nx.transpose() |> Nx.reverse(axes: [:x])
     defp point_to(side, :w), do: side |> Nx.transpose() |> Nx.reverse(axes: [:y])
 
-    def rotate_to({1, :n}, :n), do: {2, :s}
-    def rotate_to({1, :n}, :s), do: {4, :n}
-    def rotate_to({1, :n}, :e), do: {6, :s}
-    def rotate_to({1, :n}, :w), do: {3, :e}
-    def rotate_to({1, :s}, :n), do: {4, :s}
-    def rotate_to({1, :s}, :s), do: {2, :n}
-    def rotate_to({1, :s}, :e), do: {3, :w}
-    def rotate_to({1, :s}, :w), do: {6, :n}
-    def rotate_to({1, :e}, :n), do: {3, :s}
-    def rotate_to({1, :e}, :s), do: {6, :w}
-    def rotate_to({1, :e}, :e), do: {2, :w}
-    def rotate_to({1, :e}, :w), do: {4, :w}
-    def rotate_to({1, :w}, :n), do: {6, :e}
-    def rotate_to({1, :w}, :s), do: {3, :n}
-    def rotate_to({1, :w}, :e), do: {4, :w}
-    def rotate_to({1, :w}, :w), do: {2, :e}
+    def rotate_to({1, :n}, :n), do: {6, :w}
+    def rotate_to({1, :n}, :s), do: {3, :n}
+    def rotate_to({1, :n}, :e), do: {2, :n}
+    def rotate_to({1, :n}, :w), do: {4, :s}
+    def rotate_to({1, :s}, :n), do: {3, :s}
+    def rotate_to({1, :s}, :s), do: {6, :e}
+    def rotate_to({1, :s}, :e), do: {4, :n}
+    def rotate_to({1, :s}, :w), do: {2, :s}
+    def rotate_to({1, :e}, :n), do: {4, :w}
+    def rotate_to({1, :e}, :s), do: {2, :e}
+    def rotate_to({1, :e}, :e), do: {6, :n}
+    def rotate_to({1, :e}, :w), do: {3, :e}
+    def rotate_to({1, :w}, :n), do: {2, :w}
+    def rotate_to({1, :w}, :s), do: {4, :e}
+    def rotate_to({1, :w}, :e), do: {3, :w}
+    def rotate_to({1, :w}, :w), do: {6, :s}
 
-    # def rotate_to({2, :n}, :n), do: {}
-    # def rotate_to({2, :n}, :s), do: {}
-    # def rotate_to({2, :n}, :e), do: {}
-    # def rotate_to({2, :n}, :w), do: {}
-    # def rotate_to({2, :s}, :n), do: {}
-    # def rotate_to({2, :s}, :s), do: {}
-    def rotate_to({2, :s}, :e), do: {6, :e}
-    # def rotate_to({2, :s}, :w), do: {}
-    # def rotate_to({2, :e}, :n), do: {}
-    def rotate_to({2, :e}, :s), do: {3, :e}
-    # def rotate_to({2, :e}, :e), do: {}
-    # def rotate_to({2, :e}, :w), do: {}
-    # def rotate_to({2, :w}, :n), do: {}
-    # def rotate_to({2, :w}, :s), do: {}
-    # def rotate_to({2, :w}, :e), do: {}
-    # def rotate_to({2, :w}, :w), do: {}
+    def rotate_to({2, :n}, :n), do: {6, :n}
+    def rotate_to({2, :n}, :s), do: {3, :w}
+    def rotate_to({2, :n}, :e), do: {5, :s}
+    def rotate_to({2, :n}, :w), do: {1, :n}
+    def rotate_to({2, :s}, :n), do: {3, :e}
+    def rotate_to({2, :s}, :s), do: {6, :s}
+    def rotate_to({2, :s}, :e), do: {1, :s}
+    def rotate_to({2, :s}, :w), do: {5, :n}
+    def rotate_to({2, :e}, :n), do: {1, :e}
+    def rotate_to({2, :e}, :s), do: {5, :w}
+    def rotate_to({2, :e}, :e), do: {6, :e}
+    def rotate_to({2, :e}, :w), do: {3, :n}
+    def rotate_to({2, :w}, :n), do: {5, :e}
+    def rotate_to({2, :w}, :s), do: {1, :w}
+    def rotate_to({2, :w}, :e), do: {3, :s}
+    def rotate_to({2, :w}, :w), do: {6, :w}
 
-    # def rotate_to({3, :n}, :n), do: {}
-    # def rotate_to({3, :n}, :s), do: {}
-    # def rotate_to({3, :n}, :e), do: {}
-    # def rotate_to({3, :n}, :w), do: {}
-    # def rotate_to({3, :s}, :n), do: {}
-    # def rotate_to({3, :s}, :s), do: {}
-    def rotate_to({3, :s}, :e), do: {2, :s}
-    # def rotate_to({3, :s}, :w), do: {}
-    # def rotate_to({3, :e}, :n), do: {}
-    # def rotate_to({3, :e}, :s), do: {}
-    def rotate_to({3, :e}, :e), do: {1, :n}
-    # def rotate_to({3, :e}, :w), do: {}
-    # def rotate_to({3, :w}, :n), do: {}
-    # def rotate_to({3, :w}, :s), do: {}
-    # def rotate_to({3, :w}, :e), do: {}
-    # def rotate_to({3, :w}, :w), do: {}
+    def rotate_to({3, :n}, :n), do: {1, :n}
+    def rotate_to({3, :n}, :s), do: {5, :n}
+    def rotate_to({3, :n}, :e), do: {2, :e}
+    def rotate_to({3, :n}, :w), do: {4, :e}
+    def rotate_to({3, :s}, :n), do: {5, :s}
+    def rotate_to({3, :s}, :s), do: {1, :s}
+    def rotate_to({3, :s}, :e), do: {4, :w}
+    def rotate_to({3, :s}, :w), do: {2, :w}
+    def rotate_to({3, :e}, :n), do: {4, :s}
+    def rotate_to({3, :e}, :s), do: {2, :s}
+    def rotate_to({3, :e}, :e), do: {1, :e}
+    def rotate_to({3, :e}, :w), do: {5, :e}
+    def rotate_to({3, :w}, :n), do: {2, :n}
+    def rotate_to({3, :w}, :s), do: {4, :n}
+    def rotate_to({3, :w}, :e), do: {5, :w}
+    def rotate_to({3, :w}, :w), do: {1, :w}
 
-    # def rotate_to({4, :n}, :n), do: {}
-    def rotate_to({4, :n}, :s), do: {5, :n}
-    def rotate_to({4, :n}, :e), do: {6, :w}
-    # def rotate_to({4, :n}, :w), do: {}
-    # def rotate_to({4, :s}, :n), do: {}
-    # def rotate_to({4, :s}, :s), do: {}
-    # def rotate_to({4, :s}, :e), do: {}
-    # def rotate_to({4, :s}, :w), do: {}
-    # def rotate_to({4, :e}, :n), do: {}
-    # def rotate_to({4, :e}, :s), do: {}
-    # def rotate_to({4, :e}, :e), do: {}
-    # def rotate_to({4, :e}, :w), do: {}
-    # def rotate_to({4, :w}, :n), do: {}
-    # def rotate_to({4, :w}, :s), do: {}
-    # def rotate_to({4, :w}, :e), do: {}
-    # def rotate_to({4, :w}, :w), do: {}
+    def rotate_to({4, :n}, :n), do: {3, :w}
+    def rotate_to({4, :n}, :s), do: {6, :n}
+    def rotate_to({4, :n}, :e), do: {5, :n}
+    def rotate_to({4, :n}, :w), do: {1, :s}
+    def rotate_to({4, :s}, :n), do: {6, :s}
+    def rotate_to({4, :s}, :s), do: {3, :e}
+    def rotate_to({4, :s}, :e), do: {1, :n}
+    def rotate_to({4, :s}, :w), do: {5, :s}
+    def rotate_to({4, :e}, :n), do: {1, :w}
+    def rotate_to({4, :e}, :s), do: {5, :e}
+    def rotate_to({4, :e}, :e), do: {3, :n}
+    def rotate_to({4, :e}, :w), do: {6, :e}
+    def rotate_to({4, :w}, :n), do: {5, :w}
+    def rotate_to({4, :w}, :s), do: {1, :e}
+    def rotate_to({4, :w}, :e), do: {6, :w}
+    def rotate_to({4, :w}, :w), do: {3, :s}
 
-    # def rotate_to({5, :n}, :n), do: {}
-    # def rotate_to({5, :n}, :s), do: {}
-    # def rotate_to({5, :n}, :e), do: {}
-    # def rotate_to({5, :n}, :w), do: {}
-    # def rotate_to({5, :s}, :n), do: {}
-    # def rotate_to({5, :s}, :s), do: {}
-    # def rotate_to({5, :s}, :e), do: {}
-    # def rotate_to({5, :s}, :w), do: {}
-    # def rotate_to({5, :e}, :n), do: {}
-    # def rotate_to({5, :e}, :s), do: {}
-    # def rotate_to({5, :e}, :e), do: {}
-    # def rotate_to({5, :e}, :w), do: {}
-    # def rotate_to({5, :w}, :n), do: {}
-    def rotate_to({5, :w}, :s), do: {3, :s}
-    def rotate_to({5, :w}, :e), do: {2, :e}
-    # def rotate_to({5, :w}, :w), do: {}
+    def rotate_to({5, :n}, :n), do: {3, :n}
+    def rotate_to({5, :n}, :s), do: {6, :w}
+    def rotate_to({5, :n}, :e), do: {2, :s}
+    def rotate_to({5, :n}, :w), do: {4, :n}
+    def rotate_to({5, :s}, :n), do: {6, :e}
+    def rotate_to({5, :s}, :s), do: {3, :s}
+    def rotate_to({5, :s}, :e), do: {4, :s}
+    def rotate_to({5, :s}, :w), do: {2, :n}
+    def rotate_to({5, :e}, :n), do: {4, :e}
+    def rotate_to({5, :e}, :s), do: {2, :w}
+    def rotate_to({5, :e}, :e), do: {3, :e}
+    def rotate_to({5, :e}, :w), do: {6, :n}
+    def rotate_to({5, :w}, :n), do: {2, :e}
+    def rotate_to({5, :w}, :s), do: {4, :w}
+    def rotate_to({5, :w}, :e), do: {6, :s}
+    def rotate_to({5, :w}, :w), do: {3, :w}
 
-    # def rotate_to({6, :n}, :n), do: {}
-    # def rotate_to({6, :n}, :s), do: {}
-    # def rotate_to({6, :n}, :e), do: {}
-    # def rotate_to({6, :n}, :w), do: {}
-    # def rotate_to({6, :s}, :n), do: {}
-    # def rotate_to({6, :s}, :s), do: {}
-    # def rotate_to({6, :s}, :e), do: {}
-    # def rotate_to({6, :s}, :w), do: {}
-    # def rotate_to({6, :e}, :n), do: {}
-    # def rotate_to({6, :e}, :s), do: {}
-    # def rotate_to({6, :e}, :e), do: {}
-    # def rotate_to({6, :e}, :w), do: {}
-    # def rotate_to({6, :w}, :n), do: {}
-    def rotate_to({6, :w}, :s), do: {5, :w}
-    # def rotate_to({6, :w}, :e), do: {}
-    # def rotate_to({6, :w}, :w), do: {}
+    def rotate_to({6, :n}, :n), do: {4, :n}
+    def rotate_to({6, :n}, :s), do: {2, :n}
+    def rotate_to({6, :n}, :e), do: {5, :e}
+    def rotate_to({6, :n}, :w), do: {1, :e}
+    def rotate_to({6, :s}, :n), do: {2, :s}
+    def rotate_to({6, :s}, :s), do: {4, :s}
+    def rotate_to({6, :s}, :e), do: {1, :w}
+    def rotate_to({6, :s}, :w), do: {5, :w}
+    def rotate_to({6, :e}, :n), do: {1, :s}
+    def rotate_to({6, :e}, :s), do: {5, :s}
+    def rotate_to({6, :e}, :e), do: {4, :e}
+    def rotate_to({6, :e}, :w), do: {2, :e}
+    def rotate_to({6, :w}, :n), do: {5, :n}
+    def rotate_to({6, :w}, :s), do: {1, :n}
+    def rotate_to({6, :w}, :e), do: {2, :w}
+    def rotate_to({6, :w}, :w), do: {4, :w}
 
     def new(filename) do
       size = line_size(filename)
@@ -191,17 +191,21 @@ defmodule Aoc.Day22 do
   end
 
   @doc """
-      iex> "priv/day22/example.txt" |> Aoc.Day22.part1()
-      25
+      iex> "priv/day22/example.txt" |> Aoc.Day22.part2()
+      5031
   """
-  def part1(filename) do
+  def part2(filename) do
     cube = Aoc.Day22.Cube.new(filename)
     moves = moves(filename)
 
-    {side, rotation, position} = step(cube, {1, :n}, moves, {{0, 0}, :e}) |> IO.inspect()
-
-    Aoc.Day22.Cube.draw(Map.get(cube, side), position)
+    {side, rotation, position, direction} = step(cube, {1, :n}, moves, {{0, 0}, :e})
+    |> IO.inspect()
+    score(cube, side, rotation, position, direction)
   end
+
+  def score(_, _, _, {c, r}, direction), do: ((50 - r) + 100) * 1000 + ((50 - c) + 50) * 4 + dir_score(direction)
+
+  def dir_score(:e), do: 2
 
   defp turn(:n, :l), do: :w
   defp turn(:n, :r), do: :e
@@ -212,7 +216,7 @@ defmodule Aoc.Day22 do
   defp turn(:w, :l), do: :s
   defp turn(:w, :r), do: :n
 
-  defp step(_, {side, rotation}, [], {position, _}), do: {side, rotation, position}
+  defp step(_, {side, rotation}, [], {position, direction}), do: {side, rotation, position, direction}
 
   defp step(cube, {side, rotation}, [h | t], {position, direction}) when is_integer(h) do
     {{side, rotation}, position} = move(cube, {side, rotation}, {position, direction}, h)
@@ -220,7 +224,7 @@ defmodule Aoc.Day22 do
   end
 
   defp step(cube, {side, rotation}, [h | t], {position, direction}) when is_atom(h) do
-    direction = turn(direction, h) |> IO.inspect(label: "rotation")
+    direction = turn(direction, h)# |> IO.inspect(label: "rotation")
     step(cube, {side, rotation}, t, {position, direction})
   end
 
@@ -258,15 +262,15 @@ defmodule Aoc.Day22 do
       end
       # |> IO.inspect(label: "movement")
 
-    {side, rotation} |> IO.inspect()
+    # {side, rotation} |> IO.inspect()
     visible_side = Aoc.Day22.Cube.side(cube, nsid, nrot)
 
     if Nx.to_number(visible_side[nr][nc]) == 46 do
-      Aoc.Day22.Cube.draw(visible_side, {nc, nr})
+      # Aoc.Day22.Cube.draw(visible_side, {nc, nr})
       move(cube, {nsid, nrot}, {{nc, nr}, direction}, n - 1)
     else
-      visible_side = Aoc.Day22.Cube.side(cube, side, rotation)
-      Aoc.Day22.Cube.draw(visible_side, {c, r})
+      # visible_side = Aoc.Day22.Cube.side(cube, side, rotation)
+      # Aoc.Day22.Cube.draw(visible_side, {c, r})
       move(cube, {side, rotation}, {{c, r}, direction}, n - 1)
     end
   end
