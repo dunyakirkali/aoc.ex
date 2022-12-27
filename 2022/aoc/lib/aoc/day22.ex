@@ -1,107 +1,55 @@
 defmodule Aoc.Day22 do
   defmodule Cube do
-    def new(filename) do
-      [map_data, move_data] =
-        filename
-        |> File.read!()
-        |> String.split("\n\n", trim: true)
-
-      moves =
-        ~r/(\d+|\w)/
-        |> Regex.scan(move_data)
-        |> Enum.map(fn [el, _] -> el end)
-        |> Enum.map(fn i ->
-          case Integer.parse(i) do
-            :error ->
-              case i do
-                "R" -> :r
-                "L" -> :l
-              end
-
-            {n, _} ->
-              n
-          end
-        end)
-
-      chart = Aoc.Chart.new(map_data)
-
-      one =
-        for(c <- 50..99, r <- 0..49, do: {c, r})
-        |> Enum.map(fn {c, r} ->
-          Map.get(chart, {c, r})
-          |> String.to_charlist()
-          |> Enum.at(0)
-        end)
-        |> Enum.chunk_every(50)
-        |> Nx.tensor(names: [:x, :y])
-
-      two =
-        for(c <- 100..149, r <- 0..49, do: {c, r})
-        |> Enum.map(fn {c, r} ->
-          Map.get(chart, {c, r})
-          |> String.to_charlist()
-          |> Enum.at(0)
-        end)
-        |> Enum.chunk_every(50)
-        |> Nx.tensor(names: [:x, :y])
-
-      three =
-        for(c <- 50..99, r <- 50..99, do: {c, r})
-        |> Enum.map(fn {c, r} ->
-          Map.get(chart, {c, r})
-          |> String.to_charlist()
-          |> Enum.at(0)
-        end)
-        |> Enum.chunk_every(50)
-        |> Nx.tensor(names: [:x, :y])
-
-      four =
-        for(c <- 0..49, r <- 100..149, do: {c, r})
-        |> Enum.map(fn {c, r} ->
-          Map.get(chart, {c, r})
-          |> String.to_charlist()
-          |> Enum.at(0)
-        end)
-        |> Enum.chunk_every(50)
-        |> Nx.tensor(names: [:x, :y])
-
-      five =
-        for(c <- 50..99, r <- 100..149, do: {c, r})
-        |> Enum.map(fn {c, r} ->
-          Map.get(chart, {c, r})
-          |> String.to_charlist()
-          |> Enum.at(0)
-        end)
-        |> Enum.chunk_every(50)
-        |> Nx.tensor(names: [:x, :y])
-
-      six =
-        for(c <- 0..49, r <- 150..199, do: {c, r})
-        |> Enum.map(fn {c, r} ->
-          Map.get(chart, {c, r})
-          |> String.to_charlist()
-          |> Enum.at(0)
-        end)
-        |> Enum.chunk_every(50)
-        |> Nx.tensor(names: [:x, :y])
-
-      {
-        %{
-          1 => one,
-          2 => two,
-          3 => three,
-          4 => four,
-          5 => five,
-          6 => six
-        },
-        {1, :n},
-        moves
-      }
+    defp ranges("priv/day22/example.txt") do
+      [
+        {8..11, 0..3},
+        {0..3, 4..7},
+        {4..7, 4..7},
+        {8..11, 4..7},
+        {8..11, 8..11},
+        {12..15, 8..11}
+      ]
     end
 
-    def point_to(side, :n), do: side
+    defp ranges("priv/day22/input.txt") do
+      [
+        {50..99, 0..49},
+        {100..149, 0..49},
+        {50..99, 50..99},
+        {0..49, 100..149},
+        {50..99, 100..149},
+        {0..49, 150..199}
+      ]
+    end
 
-    def point_to(side, :s),
+    def size(side), do: Nx.shape(side) |> elem(0)
+
+    defp line_size("priv/day22/example.txt"), do: 4
+    defp line_size("priv/day22/input.txt"), do: 50
+
+    def side(cube, side, rotation) do
+      cube
+      |> Map.get(side)
+      |> point_to(rotation)
+    end
+
+    def draw(side, {c, r}) do
+      size = Aoc.Day22.Cube.size(side)
+
+      side
+      |> Nx.to_flat_list()
+      |> Enum.chunk_every(size)
+      |> Enum.with_index()
+      |> Enum.map(fn {line, index} ->
+        (if index == r, do: List.replace_at(line, c, ?*), else: line)
+        |> List.to_string()
+        |> IO.puts
+      end)
+    end
+
+    defp point_to(side, :n), do: side
+
+    defp point_to(side, :s),
       do:
         side
         |> Nx.transpose()
@@ -109,266 +57,241 @@ defmodule Aoc.Day22 do
         |> Nx.transpose()
         |> Nx.reverse(axes: [:x])
 
-    def point_to(side, :e), do: side |> Nx.transpose() |> Nx.reverse(axes: [:x])
-    def point_to(side, :w), do: side |> Nx.transpose() |> Nx.reverse(axes: [:y])
+    defp point_to(side, :e), do: side |> Nx.transpose() |> Nx.reverse(axes: [:x])
+    defp point_to(side, :w), do: side |> Nx.transpose() |> Nx.reverse(axes: [:y])
 
-    def rotate_to(sides, side, direction) do
-      case side do
-        1 ->
-          case direction do
-            :n -> {sides, {6, :w}}
-            :s -> {sides, {3, :s}}
-            :e -> {sides, {4, :w}}
-            :w -> {sides, {2, :w}}
-          end
+    def rotate_to({1, :n}, :n), do: {2, :s}
+    def rotate_to({1, :n}, :s), do: {4, :n}
+    def rotate_to({1, :n}, :e), do: {6, :s}
+    def rotate_to({1, :n}, :w), do: {3, :e}
+    def rotate_to({1, :s}, :n), do: {4, :s}
+    def rotate_to({1, :s}, :s), do: {2, :n}
+    def rotate_to({1, :s}, :e), do: {3, :w}
+    def rotate_to({1, :s}, :w), do: {6, :n}
+    def rotate_to({1, :e}, :n), do: {3, :s}
+    def rotate_to({1, :e}, :s), do: {6, :w}
+    def rotate_to({1, :e}, :e), do: {2, :w}
+    def rotate_to({1, :e}, :w), do: {4, :w}
+    def rotate_to({1, :w}, :n), do: {6, :e}
+    def rotate_to({1, :w}, :s), do: {3, :n}
+    def rotate_to({1, :w}, :e), do: {4, :w}
+    def rotate_to({1, :w}, :w), do: {2, :e}
 
-        2 ->
-          case direction do
-            :n -> {sides, {6, :n}}
-            :s -> {sides, {3, :e}}
-            :e -> {sides, {1, :e}}
-            :w -> {sides, {5, :e}}
-          end
+    # def rotate_to({2, :n}, :n), do: {}
+    # def rotate_to({2, :n}, :s), do: {}
+    # def rotate_to({2, :n}, :e), do: {}
+    # def rotate_to({2, :n}, :w), do: {}
+    # def rotate_to({2, :s}, :n), do: {}
+    # def rotate_to({2, :s}, :s), do: {}
+    def rotate_to({2, :s}, :e), do: {6, :e}
+    # def rotate_to({2, :s}, :w), do: {}
+    # def rotate_to({2, :e}, :n), do: {}
+    def rotate_to({2, :e}, :s), do: {3, :e}
+    # def rotate_to({2, :e}, :e), do: {}
+    # def rotate_to({2, :e}, :w), do: {}
+    # def rotate_to({2, :w}, :n), do: {}
+    # def rotate_to({2, :w}, :s), do: {}
+    # def rotate_to({2, :w}, :e), do: {}
+    # def rotate_to({2, :w}, :w), do: {}
 
-        3 ->
-          case direction do
-            :n -> {sides, {1, :n}}
-            :s -> {sides, {5, :s}}
-            :e -> {sides, {4, :s}}
-            :w -> {sides, {2, :n}}
-          end
+    # def rotate_to({3, :n}, :n), do: {}
+    # def rotate_to({3, :n}, :s), do: {}
+    # def rotate_to({3, :n}, :e), do: {}
+    # def rotate_to({3, :n}, :w), do: {}
+    # def rotate_to({3, :s}, :n), do: {}
+    # def rotate_to({3, :s}, :s), do: {}
+    def rotate_to({3, :s}, :e), do: {2, :s}
+    # def rotate_to({3, :s}, :w), do: {}
+    # def rotate_to({3, :e}, :n), do: {}
+    # def rotate_to({3, :e}, :s), do: {}
+    def rotate_to({3, :e}, :e), do: {1, :n}
+    # def rotate_to({3, :e}, :w), do: {}
+    # def rotate_to({3, :w}, :n), do: {}
+    # def rotate_to({3, :w}, :s), do: {}
+    # def rotate_to({3, :w}, :e), do: {}
+    # def rotate_to({3, :w}, :w), do: {}
 
-        4 ->
-          case direction do
-            :n -> {sides, {3, :w}}
-            :s -> {sides, {6, :s}}
-            :e -> {sides, {1, :w}}
-            :w -> {sides, {5, :w}}
-          end
+    # def rotate_to({4, :n}, :n), do: {}
+    def rotate_to({4, :n}, :s), do: {5, :n}
+    def rotate_to({4, :n}, :e), do: {6, :w}
+    # def rotate_to({4, :n}, :w), do: {}
+    # def rotate_to({4, :s}, :n), do: {}
+    # def rotate_to({4, :s}, :s), do: {}
+    # def rotate_to({4, :s}, :e), do: {}
+    # def rotate_to({4, :s}, :w), do: {}
+    # def rotate_to({4, :e}, :n), do: {}
+    # def rotate_to({4, :e}, :s), do: {}
+    # def rotate_to({4, :e}, :e), do: {}
+    # def rotate_to({4, :e}, :w), do: {}
+    # def rotate_to({4, :w}, :n), do: {}
+    # def rotate_to({4, :w}, :s), do: {}
+    # def rotate_to({4, :w}, :e), do: {}
+    # def rotate_to({4, :w}, :w), do: {}
 
-        5 ->
-          case direction do
-            :n -> {sides, {3, :n}}
-            :s -> {sides, {6, :e}}
-            :e -> {sides, {4, :e}}
-            :w -> {sides, {2, :e}}
-          end
+    # def rotate_to({5, :n}, :n), do: {}
+    # def rotate_to({5, :n}, :s), do: {}
+    # def rotate_to({5, :n}, :e), do: {}
+    # def rotate_to({5, :n}, :w), do: {}
+    # def rotate_to({5, :s}, :n), do: {}
+    # def rotate_to({5, :s}, :s), do: {}
+    # def rotate_to({5, :s}, :e), do: {}
+    # def rotate_to({5, :s}, :w), do: {}
+    # def rotate_to({5, :e}, :n), do: {}
+    # def rotate_to({5, :e}, :s), do: {}
+    # def rotate_to({5, :e}, :e), do: {}
+    # def rotate_to({5, :e}, :w), do: {}
+    # def rotate_to({5, :w}, :n), do: {}
+    def rotate_to({5, :w}, :s), do: {3, :s}
+    def rotate_to({5, :w}, :e), do: {2, :e}
+    # def rotate_to({5, :w}, :w), do: {}
 
-        6 ->
-          case direction do
-            :n -> {sides, {4, :n}}
-            :s -> {sides, {2, :s}}
-            :e -> {sides, {1, :s}}
-            :w -> {sides, {5, :n}}
-          end
-      end
-    end
-  end
+    # def rotate_to({6, :n}, :n), do: {}
+    # def rotate_to({6, :n}, :s), do: {}
+    # def rotate_to({6, :n}, :e), do: {}
+    # def rotate_to({6, :n}, :w), do: {}
+    # def rotate_to({6, :s}, :n), do: {}
+    # def rotate_to({6, :s}, :s), do: {}
+    # def rotate_to({6, :s}, :e), do: {}
+    # def rotate_to({6, :s}, :w), do: {}
+    # def rotate_to({6, :e}, :n), do: {}
+    # def rotate_to({6, :e}, :s), do: {}
+    # def rotate_to({6, :e}, :e), do: {}
+    # def rotate_to({6, :e}, :w), do: {}
+    # def rotate_to({6, :w}, :n), do: {}
+    def rotate_to({6, :w}, :s), do: {5, :w}
+    # def rotate_to({6, :w}, :e), do: {}
+    # def rotate_to({6, :w}, :w), do: {}
 
-  def input(filename) do
-    [map_data, move_data] =
+    def new(filename) do
+      size = line_size(filename)
+
+      chart =
+        filename
+        |> File.read!()
+        |> Aoc.Chart.new()
+
       filename
-      |> File.read!()
-      |> String.split("\n\n", trim: true)
+      |> ranges()
+      |> Enum.with_index()
+      |> Enum.map(fn {{c_ran, r_ran}, index} ->
+        tensor =
+          for(r <- r_ran, c <- c_ran, do: {c, r})
+          |> Enum.map(fn {c, r} ->
+            Map.get(chart, {c, r})
+            |> String.to_charlist()
+            |> Enum.at(0)
+          end)
+          |> Enum.chunk_every(size)
+          |> Nx.tensor(names: [:x, :y])
 
-    moves =
-      ~r/(\d+|\w)/
-      |> Regex.scan(move_data)
-      |> Enum.map(fn [el, _] -> el end)
-      |> Enum.map(fn i ->
-        case Integer.parse(i) do
-          :error ->
-            case i do
-              "R" -> :r
-              "L" -> :l
-            end
-
-          {n, _} ->
-            n
-        end
+        {index + 1, tensor}
       end)
-
-    {
-      Aoc.Chart.new(map_data),
-      moves
-    }
+      |> Enum.into(%{})
+    end
   end
 
   @doc """
-      iex> "priv/day22/example.txt" |> Aoc.Day22.input() |> Aoc.Day22.part1()
-      6032
+      iex> "priv/day22/example.txt" |> Aoc.Day22.part1()
+      25
   """
-  def part1({chart, moves}) do
-    start = Aoc.Chart.start(chart)
-    # Aoc.Chart.draw(chart)
-    solve(chart, start, :e, moves)
-    |> then(fn {{c, r}, direction} ->
-      facing =
-        case direction do
-          :n -> 3
-          :s -> 1
-          :e -> 0
-          :w -> 2
-        end
+  def part1(filename) do
+    cube = Aoc.Day22.Cube.new(filename)
+    moves = moves(filename)
 
-      4 * (c + 1) + 1000 * (r + 1) + facing
-    end)
+    {side, rotation, position} = step(cube, {1, :n}, moves, {{0, 0}, :e}) |> IO.inspect()
+
+    Aoc.Day22.Cube.draw(Map.get(cube, side), position)
   end
 
-  def solve(_, position, direction, []), do: {position, direction}
+  defp turn(:n, :l), do: :w
+  defp turn(:n, :r), do: :e
+  defp turn(:s, :l), do: :e
+  defp turn(:s, :r), do: :w
+  defp turn(:e, :l), do: :n
+  defp turn(:e, :r), do: :s
+  defp turn(:w, :l), do: :s
+  defp turn(:w, :r), do: :n
 
-  def solve(chart, position, direction, [hm | tm]) do
-    {chart, position, direction} =
-      cond do
-        is_integer(hm) -> move(chart, position, direction, hm)
-        is_atom(hm) -> {chart, position, turn(direction, hm)}
-      end
+  defp step(_, {side, rotation}, [], {position, _}), do: {side, rotation, position}
 
-    solve(chart, position, direction, tm)
+  defp step(cube, {side, rotation}, [h | t], {position, direction}) when is_integer(h) do
+    {{side, rotation}, position} = move(cube, {side, rotation}, {position, direction}, h)
+    step(cube, {side, rotation}, t, {position, direction})
   end
 
-  def turn(:n, :l), do: :w
-  def turn(:n, :r), do: :e
-  def turn(:s, :l), do: :e
-  def turn(:s, :r), do: :w
-  def turn(:e, :l), do: :n
-  def turn(:e, :r), do: :s
-  def turn(:w, :l), do: :s
-  def turn(:w, :r), do: :n
-
-  def move(chart, position, direction, 0), do: {chart, position, direction}
-
-  def move(chart, position, direction, n) do
-    next = scout(chart, position, direction)
-    move(chart, next, direction, n - 1)
+  defp step(cube, {side, rotation}, [h | t], {position, direction}) when is_atom(h) do
+    direction = turn(direction, h) |> IO.inspect(label: "rotation")
+    step(cube, {side, rotation}, t, {position, direction})
   end
 
-  def scout(chart, {c, r}, direction) do
-    {nc, nr} =
-      case direction do
-        :n ->
-          cols = Aoc.Chart.cols(chart, c)
-          off = Enum.map(cols, fn {{_, r}, _} -> r end) |> Enum.min()
+  defp move(_, {side, rotation}, {position, _}, 0), do: {{side, rotation}, position}
 
-          nr = if r - off == 0, do: Enum.count(cols) + off - 1, else: r - 1
-          {c, nr}
+  defp move(cube, {side, rotation}, {{c, r}, direction}, n) do
+    size = Aoc.Day22.Cube.size(Map.get(cube, 1))
 
-        :s ->
-          cols = Aoc.Chart.cols(chart, c)
-          off = Enum.map(cols, fn {{_, r}, _} -> r end) |> Enum.min()
-
-          nr = rem(r - off + 1, Enum.count(cols)) + off
-          {c, nr}
-
-        :e ->
-          rows = Aoc.Chart.rows(chart, r)
-          off = Enum.map(rows, fn {{c, _}, _} -> c end) |> Enum.min()
-
-          nc = rem(c - off + 1, Enum.count(rows)) + off
-          {nc, r}
-
-        :w ->
-          rows = Aoc.Chart.rows(chart, r)
-          off = Enum.map(rows, fn {{c, _}, _} -> c end) |> Enum.min()
-
-          nc = if c - off == 0, do: Enum.count(rows) + off - 1, else: c - 1
-          {nc, r}
-      end
-
-    if Map.get(chart, {nc, nr}, ".") == ".", do: {nc, nr}, else: {c, r}
-  end
-
-  def part2(filename) do
-    filename
-    |> Cube.new()
-    |> solve2({0, 0}, :e)
-    |> then(fn {{c, r}, direction} ->
-      facing =
-        case direction do
-          :n -> 3
-          :s -> 1
-          :e -> 0
-          :w -> 2
-        end
-
-      4 * (c + 1) + 1000 * (r + 1) + facing
-    end)
-  end
-
-  def solve2({sides, {side, _}, []}, position, direction), do: {position, direction}
-
-  def solve2({sides, {side, rotation}, [hm | tm]}, position, direction) do
-    {{sides, {side, rotation}, tm}, position, direction} =
-      cond do
-        is_integer(hm) ->
-          IO.puts("move #{hm}")
-          move2({{sides, {side, rotation}, tm}, position, direction}, hm)
-
-        is_atom(hm) ->
-          IO.puts("turn #{direction}")
-          {{sides, {side, rotation}, tm}, position, turn(direction, hm)}
-      end
-
-    solve2({sides, {side, rotation}, tm}, position, direction)
-  end
-
-  def move2({{sides, {side, rotation}, tm}, position, direction}, 0) do
-    {{sides, {side, rotation}, tm}, position, direction}
-  end
-
-  def move2({{sides, {side, rotation}, tm}, position, direction}, step) do
-    next = scout2({{sides, {side, rotation}, tm}, position, direction})
-    move2(next, step - 1)
-  end
-
-  def scout2({{sides, {side, rotation}, tm}, {c, r}, direction}) do
-    {{sides, {side, rotation}, tm}, {nc, nr}, direction} =
+    {nsid, nrot, {nc, nr}} =
       case direction do
         :n ->
           if r == 0 do
-            {_, {si, ri}} = Cube.rotate_to(sides, side, :n)
-
-            {{sides, {si, ri}, tm}, {c, 49}, direction}
+            Tuple.append(Aoc.Day22.Cube.rotate_to({side, rotation}, direction), {c, size - 1})
           else
-            {{sides, {side, rotation}, tm}, {c, r - 1}, direction}
+            {side, rotation, {c, r - 1}}
           end
-
         :s ->
-          if r == 49 do
-            {_, {si, ri}} = Cube.rotate_to(sides, side, :s)
-
-            {{sides, {si, ri}, tm}, {c, 0}, direction}
+          if r == size - 1 do
+            Tuple.append(Aoc.Day22.Cube.rotate_to({side, rotation}, direction), {c, 0})
           else
-            {{sides, {side, rotation}, tm}, {c, r + 1}, direction}
+            {side, rotation, {c, r + 1}}
           end
-
         :e ->
-          if c == 49 do
-            {_, {si, ri}} = Cube.rotate_to(sides, side, :e)
-
-            {{sides, {si, ri}, tm}, {0, r}, direction}
+          if c == size - 1 do
+            Tuple.append(Aoc.Day22.Cube.rotate_to({side, rotation}, direction), {0, r})
           else
-            {{sides, {side, rotation}, tm}, {c + 1, r}, direction}
+            {side, rotation, {c + 1, r}}
           end
-
         :w ->
           if c == 0 do
-            {_, {si, ri}} = Cube.rotate_to(sides, side, :w)
-
-            {{sides, {si, ri}, tm}, {49, r}, direction}
+            Tuple.append(Aoc.Day22.Cube.rotate_to({side, rotation}, direction), {size - 1, r})
           else
-            {{sides, {side, rotation}, tm}, {c - 1, r}, direction}
+            {side, rotation, {c - 1, r}}
           end
       end
+      # |> IO.inspect(label: "movement")
 
-    value =
-      Cube.point_to(Map.get(sides, side), rotation)[nc][nr]
-      |> Nx.to_number()
+    {side, rotation} |> IO.inspect()
+    visible_side = Aoc.Day22.Cube.side(cube, nsid, nrot)
 
-    if value == 46 do
-      {{sides, {side, rotation}, tm}, {nc, nr}, direction}
+    if Nx.to_number(visible_side[nr][nc]) == 46 do
+      Aoc.Day22.Cube.draw(visible_side, {nc, nr})
+      move(cube, {nsid, nrot}, {{nc, nr}, direction}, n - 1)
     else
-      {{sides, {side, rotation}, tm}, {c, r}, direction}
+      visible_side = Aoc.Day22.Cube.side(cube, side, rotation)
+      Aoc.Day22.Cube.draw(visible_side, {c, r})
+      move(cube, {side, rotation}, {{c, r}, direction}, n - 1)
     end
+  end
+
+  defp moves(filename) do
+    move_data =
+      filename
+      |> File.read!()
+      |> String.split("\n\n", trim: true)
+      |> List.last()
+
+    ~r/(\d+|\w)/
+    |> Regex.scan(move_data)
+    |> Enum.map(fn [el, _] -> el end)
+    |> Enum.map(fn i ->
+      case Integer.parse(i) do
+        :error ->
+          case i do
+            "R" -> :r
+            "L" -> :l
+          end
+
+        {n, _} ->
+          n
+      end
+    end)
   end
 end

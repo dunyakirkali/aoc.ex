@@ -7,7 +7,7 @@ defmodule Day22Test do
   #   assert Aoc.Day22.part1(input) == 88_268
   # end
 
-  test "Part 2" do
-    assert Aoc.Day22.part2("priv/day22/input.txt") == 124_302
-  end
+  # test "Part 2" do
+  #   assert Aoc.Day22.part2("priv/day22/input.txt") == 124_302
+  # end
 end
