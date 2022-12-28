@@ -92,12 +92,4 @@ defmodule Aoc.Day25 do
 
     do_to_integer(t, acc)
   end
-
-  # @doc """
-  #     iex> "priv/day24/example.txt" |> Aoc.Day24.input() |> Aoc.Day24.part2()
-  #     1
-  # """
-  # def part2(input) do
-  #   input
-  # end
 end
