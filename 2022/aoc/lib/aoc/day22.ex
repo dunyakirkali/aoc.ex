@@ -2,7 +2,7 @@ defmodule Aoc.Day22 do
   defmodule Cube do
     defstruct [:sides, :dimension]
 
-    defp ranges("priv/day22/example.txt") do
+    def ranges(4) do
       [
         {8..11, 0..3},
         {0..3, 4..7},
@@ -13,7 +13,7 @@ defmodule Aoc.Day22 do
       ]
     end
 
-    defp ranges("priv/day22/input.txt") do
+    def ranges(50) do
       [
         {50..99, 0..49},
         {100..149, 0..49},
@@ -173,7 +173,7 @@ defmodule Aoc.Day22 do
       side_length = trunc(:math.sqrt(non_empty / 6))
 
       sides =
-        filename
+        side_length
         |> ranges()
         |> Enum.with_index()
         |> Enum.map(fn {{c_ran, r_ran}, index} ->
@@ -204,11 +204,18 @@ defmodule Aoc.Day22 do
     moves = moves(filename)
 
     {side, rotation, position, direction} = step(cube.sides, {1, :n}, moves, {{0, 0}, :e})
-    |> IO.inspect()
-    score(cube.sides, side, rotation, position, direction)
+    # |> IO.inspect()
+    score(cube, side, rotation, position, direction)
   end
 
-  def score(_, _, _, {c, r}, direction), do: ((50 - r) + 100) * 1000 + ((50 - c) + 50) * 4 + dir_score(direction)
+  def score(cube, side, _, {c, r}, direction) do
+    ranges = Aoc.Day22.Cube.ranges(cube.dimension)
+    {cols, rows} = Enum.at(ranges, side - 1)
+    coffset = cols |> Enum.at(0)
+    roffset = rows |> Enum.at(0)
+
+    ((50 - r) + roffset) * 1000 + ((50 - c) + coffset) * 4 + dir_score(direction)
+  end
 
   def dir_score(:e), do: 2
 
