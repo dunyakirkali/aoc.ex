@@ -204,7 +204,7 @@ defmodule Aoc.Day22 do
     moves = moves(filename)
 
     {side, rotation, position, direction} = step(cube.sides, {1, :n}, moves, {{0, 0}, :e})
-    # |> IO.inspect()
+
     score(cube, side, rotation, position, direction)
   end
 
@@ -272,17 +272,12 @@ defmodule Aoc.Day22 do
             {side, rotation, {c - 1, r}}
           end
       end
-      # |> IO.inspect(label: "movement")
 
-    # {side, rotation} |> IO.inspect()
     visible_side = Aoc.Day22.Cube.side(cube, nsid, nrot)
 
     if Nx.to_number(visible_side[nr][nc]) == 46 do
-      # Aoc.Day22.Cube.draw(visible_side, {nc, nr})
       move(cube, {nsid, nrot}, {{nc, nr}, direction}, n - 1)
     else
-      # visible_side = Aoc.Day22.Cube.side(cube, side, rotation)
-      # Aoc.Day22.Cube.draw(visible_side, {c, r})
       move(cube, {side, rotation}, {{c, r}, direction}, n - 1)
     end
   end
