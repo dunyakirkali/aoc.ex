@@ -46,9 +46,9 @@ defmodule Aoc.Day22 do
       end)
     end
 
-    defp point_to(side, :n), do: side
+    def point_to(side, :n), do: side
 
-    defp point_to(side, :s),
+    def point_to(side, :s),
       do:
         side
         |> Nx.transpose()
@@ -56,8 +56,8 @@ defmodule Aoc.Day22 do
         |> Nx.transpose()
         |> Nx.reverse(axes: [:x])
 
-    defp point_to(side, :e), do: side |> Nx.transpose() |> Nx.reverse(axes: [:x])
-    defp point_to(side, :w), do: side |> Nx.transpose() |> Nx.reverse(axes: [:y])
+    def point_to(side, :e), do: side |> Nx.transpose() |> Nx.reverse(axes: [:x])
+    def point_to(side, :w), do: side |> Nx.transpose() |> Nx.reverse(axes: [:y])
 
     def rotate_to({1, :n}, :n), do: {6, :w}
     def rotate_to({1, :n}, :s), do: {3, :n}
@@ -169,7 +169,7 @@ defmodule Aoc.Day22 do
         |> List.first()
         |> Aoc.Chart.new()
 
-      non_empty = Enum.filter(chart, fn {_, val} -> val != " " end) |> Enum.count() |> IO.inspect()
+      non_empty = Enum.filter(chart, fn {_, val} -> val != " " end) |> Enum.count()
       side_length = trunc(:math.sqrt(non_empty / 6))
 
       sides =
@@ -203,10 +203,32 @@ defmodule Aoc.Day22 do
     cube = Aoc.Day22.Cube.new(filename)
     moves = moves(filename)
 
-    {side, rotation, position, direction} = step(cube.sides, {1, :n}, moves, {{0, 0}, :e})
+    {side, rotation, {c, r}, direction} = step(cube.sides, {1, :n}, moves, {{0, 0}, :e})
 
-    score(cube, side, rotation, position, direction)
+    target_tensor =
+      Nx.broadcast(0, {cube.dimension, cube.dimension}, names: [:x, :y])
+      |> Nx.put_slice([r, c], Nx.tensor([[1], [0]]))
+
+    position =
+      case rotation do
+        :e -> Aoc.Day22.Cube.point_to(target_tensor, :w)
+        :s -> Aoc.Day22.Cube.point_to(target_tensor, :s)
+      end
+      |> Nx.to_flat_list()
+      |> Enum.find_index(fn x -> x == 1 end)
+      |> then(fn x ->
+        {rem(x, cube.dimension) + 1, div(x, cube.dimension) + 1}
+      end)
+
+    score(cube, side, rotation, position, normalize(rotation, direction))
   end
+
+  def normalize(:n, dir), do: dir
+  def normalize(:s, :n), do: :s
+  def normalize(:s, :w), do: :e
+  def normalize(:s, :e), do: :w
+  def normalize(:s, :s), do: :n
+  def normalize(:e, :e), do: :n
 
   def score(cube, side, _, {c, r}, direction) do
     ranges = Aoc.Day22.Cube.ranges(cube.dimension)
@@ -214,10 +236,13 @@ defmodule Aoc.Day22 do
     coffset = cols |> Enum.at(0)
     roffset = rows |> Enum.at(0)
 
-    ((50 - r) + roffset) * 1000 + ((50 - c) + coffset) * 4 + dir_score(direction)
+    (r + roffset) * 1000 + (c + coffset) * 4 + dir_score(direction)
   end
 
-  def dir_score(:e), do: 2
+  def dir_score(:e), do: 0
+  def dir_score(:s), do: 1
+  def dir_score(:w), do: 2
+  def dir_score(:n), do: 3
 
   defp turn(:n, :l), do: :w
   defp turn(:n, :r), do: :e
@@ -236,7 +261,7 @@ defmodule Aoc.Day22 do
   end
 
   defp step(cube, {side, rotation}, [h | t], {position, direction}) when is_atom(h) do
-    direction = turn(direction, h)# |> IO.inspect(label: "rotation")
+    direction = turn(direction, h)
     step(cube, {side, rotation}, t, {position, direction})
   end
 
