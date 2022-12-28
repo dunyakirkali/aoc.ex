@@ -1,5 +1,7 @@
 defmodule Aoc.Day22 do
   defmodule Cube do
+    defstruct [:sides, :dimension]
+
     defp ranges("priv/day22/example.txt") do
       [
         {8..11, 0..3},
@@ -23,9 +25,6 @@ defmodule Aoc.Day22 do
     end
 
     def size(side), do: Nx.shape(side) |> elem(0)
-
-    defp line_size("priv/day22/example.txt"), do: 4
-    defp line_size("priv/day22/input.txt"), do: 50
 
     def side(cube, side, rotation) do
       cube
@@ -163,30 +162,36 @@ defmodule Aoc.Day22 do
     def rotate_to({6, :w}, :w), do: {4, :w}
 
     def new(filename) do
-      size = line_size(filename)
-
       chart =
         filename
         |> File.read!()
+        |> String.split("\n\n", trim: true)
+        |> List.first()
         |> Aoc.Chart.new()
 
-      filename
-      |> ranges()
-      |> Enum.with_index()
-      |> Enum.map(fn {{c_ran, r_ran}, index} ->
-        tensor =
-          for(r <- r_ran, c <- c_ran, do: {c, r})
-          |> Enum.map(fn {c, r} ->
-            Map.get(chart, {c, r})
-            |> String.to_charlist()
-            |> Enum.at(0)
-          end)
-          |> Enum.chunk_every(size)
-          |> Nx.tensor(names: [:x, :y])
+      non_empty = Enum.filter(chart, fn {_, val} -> val != " " end) |> Enum.count() |> IO.inspect()
+      side_length = trunc(:math.sqrt(non_empty / 6))
 
-        {index + 1, tensor}
-      end)
-      |> Enum.into(%{})
+      sides =
+        filename
+        |> ranges()
+        |> Enum.with_index()
+        |> Enum.map(fn {{c_ran, r_ran}, index} ->
+          tensor =
+            for(r <- r_ran, c <- c_ran, do: {c, r})
+            |> Enum.map(fn {c, r} ->
+              Map.get(chart, {c, r})
+              |> String.to_charlist()
+              |> Enum.at(0)
+            end)
+            |> Enum.chunk_every(side_length)
+            |> Nx.tensor(names: [:x, :y])
+
+          {index + 1, tensor}
+        end)
+        |> Enum.into(%{})
+
+      %Aoc.Day22.Cube{sides: sides, dimension: side_length}
     end
   end
 
@@ -198,9 +203,9 @@ defmodule Aoc.Day22 do
     cube = Aoc.Day22.Cube.new(filename)
     moves = moves(filename)
 
-    {side, rotation, position, direction} = step(cube, {1, :n}, moves, {{0, 0}, :e})
+    {side, rotation, position, direction} = step(cube.sides, {1, :n}, moves, {{0, 0}, :e})
     |> IO.inspect()
-    score(cube, side, rotation, position, direction)
+    score(cube.sides, side, rotation, position, direction)
   end
 
   def score(_, _, _, {c, r}, direction), do: ((50 - r) + 100) * 1000 + ((50 - c) + 50) * 4 + dir_score(direction)
