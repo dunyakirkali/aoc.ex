@@ -64,6 +64,7 @@ defmodule Aoc.Day21 do
   def search(rules, goal, monkey, min, max) do
     mid = div(min + max, 2)
     res = solve_human(rules, monkey, mid)
+
     cond do
       res == goal -> mid
       res < goal -> search(rules, goal, monkey, min, mid)

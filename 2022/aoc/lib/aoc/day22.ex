@@ -40,9 +40,9 @@ defmodule Aoc.Day22 do
       |> Enum.chunk_every(size)
       |> Enum.with_index()
       |> Enum.map(fn {line, index} ->
-        (if index == r, do: List.replace_at(line, c, ?*), else: line)
+        if(index == r, do: List.replace_at(line, c, ?*), else: line)
         |> List.to_string()
-        |> IO.puts
+        |> IO.puts()
       end)
     end
 
@@ -253,7 +253,8 @@ defmodule Aoc.Day22 do
   defp turn(:w, :l), do: :s
   defp turn(:w, :r), do: :n
 
-  defp step(_, {side, rotation}, [], {position, direction}), do: {side, rotation, position, direction}
+  defp step(_, {side, rotation}, [], {position, direction}),
+    do: {side, rotation, position, direction}
 
   defp step(cube, {side, rotation}, [h | t], {position, direction}) when is_integer(h) do
     {{side, rotation}, position} = move(cube, {side, rotation}, {position, direction}, h)
@@ -278,18 +279,21 @@ defmodule Aoc.Day22 do
           else
             {side, rotation, {c, r - 1}}
           end
+
         :s ->
           if r == size - 1 do
             Tuple.append(Aoc.Day22.Cube.rotate_to({side, rotation}, direction), {c, 0})
           else
             {side, rotation, {c, r + 1}}
           end
+
         :e ->
           if c == size - 1 do
             Tuple.append(Aoc.Day22.Cube.rotate_to({side, rotation}, direction), {0, r})
           else
             {side, rotation, {c + 1, r}}
           end
+
         :w ->
           if c == 0 do
             Tuple.append(Aoc.Day22.Cube.rotate_to({side, rotation}, direction), {size - 1, r})
