@@ -19,7 +19,7 @@ defmodule Aoc.Day24 do
           if col == " " do
             acc
           else
-            Map.put(acc, {ci, ri}, col)
+            Map.put(acc, {ci, ri}, ".")
           end
         end)
       end)
@@ -57,15 +57,31 @@ defmodule Aoc.Day24 do
       |> Kernel.+(1)
     end
 
-    @doc """
-        iex> map = Aoc.Day24.Chart.new("priv/day3/example.txt")
-        ...> Aoc.Day24.Chart.number_of_cols(map)
-        11
+    def blizzards(data) do
+      data
+      |> String.split("\n", trim: true)
+      |> Enum.drop(1)
+      |> Enum.drop(-1)
+      |> Enum.map(fn line ->
+        line
+        |> String.graphemes()
+        |> Enum.drop(1)
+        |> Enum.drop(-1)
+      end)
+      |> Enum.with_index()
+      |> Enum.reduce([], fn {row, ri}, acc ->
+        row
+        |> Enum.with_index()
+        |> Enum.reduce(acc, fn {col, ci}, acc ->
+          if col == "#" or col == "." do
+            acc
+          else
+            [{ci, ri, col} | acc]
+          end
+        end)
+      end)
+    end
 
-        iex> map = Aoc.Day24.Chart.new("priv/day3/input.txt")
-        ...> Aoc.Day24.Chart.number_of_cols(map)
-        31
-    """
     def number_of_cols(map) do
       map
       |> Map.keys()
@@ -118,13 +134,7 @@ defmodule Aoc.Day24 do
 
       Enum.each(miny..maxy, fn y ->
         Enum.map(minx..maxx, fn x ->
-          l = Map.get(map, {x, y}, ["."])
-
-          if Enum.count(l) == 1 do
-            List.first(l)
-          else
-            Enum.count(l)
-          end
+          Map.get(map, {x, y}, ".")
         end)
         |> Enum.join("")
         |> IO.puts()
@@ -136,57 +146,111 @@ defmodule Aoc.Day24 do
   end
 
   def input(filename) do
-    filename
-    |> File.read!()
-    |> Aoc.Day24.Chart.new()
-    |> Enum.map(fn {p, v} ->
-      {p, List.wrap(v)}
-    end)
-    |> Enum.into(%{})
+    file = File.read!(filename)
+    chart =
+      file
+      |> Aoc.Day24.Chart.new()
+      |> Enum.map(fn {p, v} ->
+        {p, List.wrap(v)}
+      end)
+      |> Enum.into(%{})
+
+    blizzards =
+      file
+      |>Aoc.Day24.Chart.blizzards()
+
+    {chart, blizzards}
   end
 
   @doc """
-      iex> "priv/day24/example.txt" |> Aoc.Day24.input() |> Aoc.Day24.part1()
-      1
-  """
-  def part1(chart) do
-    chart
-    |> Aoc.Day24.Chart.draw()
+      # iex> "priv/day24/example.txt" |> Aoc.Day24.input() |> Aoc.Day24.part1()
+      # 10
 
+      iex> "priv/day24/example2.txt" |> Aoc.Day24.input() |> Aoc.Day24.part1()
+      18
+  """
+  def part1({chart, blizzards}) do
     sp = {0, -1}
     ep = {Aoc.Day24.Chart.number_of_cols(chart) - 1, find_end(chart)}
-    solve(chart, sp, ep)
+    solve(chart, sp, ep, blizzards)
   end
 
-  def solve(chart, sp, ep) do
-    bs = blizzards(chart)
+  def solve(chart, sp, ep, blizzards) do
     queue = PriorityQueue.new() |> PriorityQueue.push({0, sp}, 0)
-    traverse({chart, queue, ep, bs})
-  end
+    visited = MapSet.new()
+    {width, height} = Aoc.Day24.Chart.size(chart)
 
-  def traverse({chart, queue, ep, bs}) do
-    {{:value, {time, cp}}, queue} = PriorityQueue.pop(queue)
-
-    time = time + 1
-
-    if cp == ep do
-      IO.inspect(time)
-      exit("Complete")
-    else
-      cp
-      |> neighbors()
-      |> Enum.reduce({chart, queue, ep, bs}, &assess/2)
-      |> traverse()
+    try do
+      traverse({chart, queue, visited, ep, blizzards, width, height})
+    catch
+      time -> time
     end
   end
 
-  def assess({cnp, rnp}, {chart, queue, ep, bs}) do
-    # {cnp - }
-    # {chart, PriorityQueue.push(queue, np), ep, bs}
+  def move(blizzards, t, {w, h}) do
+    blizzards
+    |> Enum.map(fn {c, r, dir} ->
+      case dir do
+        "^" -> {c, rem(r - t + 1000 * h, h)}
+        "v" -> {c, rem(r + t, h)}
+        ">" -> {rem(c + t, w), r}
+        "<" -> {rem(c - t + 1000 * w, w), r}
+      end
+    end)
+  end
+
+  def traverse({chart, queue, visited, {ec, er} = ep, blizzards, width, height}) do
+    {{:value, {time, cp}}, queue} = PriorityQueue.pop(queue)
+    # |> dbg
+
+
+    if MapSet.member?(visited, {time, cp}) do
+      traverse({chart, queue, visited, ep, blizzards, width, height})
+    else
+      visited = MapSet.put(visited, {time, cp})
+
+      time = time + 1
+
+      # if rem(time, 5) == 0 do
+      #   IO.inspect(time)
+      # end
+
+      if cp == ep do
+        throw(time - 1)
+      else
+        queue =
+          cp
+          |> neighbors()
+          |> then(fn list ->
+            list ++ [cp]
+          end)
+          |> Enum.filter(fn {nc, nr} ->
+            (nc == 0 and nr == -1) or (nc == ec and nr == er) or (nc >= 0 and nr >= 0 and nc < width and nr < height)
+          end)
+          |> Enum.reject(fn point ->
+            Enum.member?(move(blizzards, time, {width, height}), point)
+          end)
+          # |> dbg
+          |> Enum.reduce(queue, fn np, queue ->
+            PriorityQueue.push(queue, {time, np}, 0)
+          end)
+
+        traverse({chart, queue, visited, ep, blizzards, width, height})
+      end
+    end
+  end
+
+  def debug(chart, blizzards, player) do
+    blizzards
+    |> Enum.reduce(chart, fn {bzc, bzr}, acc ->
+      Map.put(acc, {bzc, bzr}, "x")
+    end)
+    |> Map.put(player, "E")
+    |> Aoc.Day24.Chart.draw()
   end
 
   def neighbors({c, r}) do
-    [{0, -1}, {0, 1}, {1, 0}, {-1, 0}]
+    [{0, 1}, {1, 0}, {0, -1}, {-1, 0}]
     |> Enum.map(fn {dc, dr} ->
       {c + dc, r + dr}
     end)
@@ -198,17 +262,6 @@ defmodule Aoc.Day24 do
     |> Enum.map(&elem(&1, 1))
     |> Enum.max()
     |> Kernel.+(1)
-  end
-
-  def blizzards(chart) do
-    chart
-    |> Enum.filter(fn {_, l} ->
-      Enum.any?(l, fn v ->
-        Enum.member?(["^", "v", ">", "<"], v)
-      end)
-    end)
-    |> Enum.map(fn x -> elem(x, 0) end)
-    |> Enum.uniq()
   end
 
   # @doc """
