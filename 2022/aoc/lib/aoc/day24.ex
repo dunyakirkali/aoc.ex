@@ -163,8 +163,8 @@ defmodule Aoc.Day24 do
   end
 
   @doc """
-      # iex> "priv/day24/example.txt" |> Aoc.Day24.input() |> Aoc.Day24.part1()
-      # 10
+      iex> "priv/day24/example.txt" |> Aoc.Day24.input() |> Aoc.Day24.part1()
+      10
 
       iex> "priv/day24/example2.txt" |> Aoc.Day24.input() |> Aoc.Day24.part1()
       18
@@ -175,13 +175,13 @@ defmodule Aoc.Day24 do
     solve(chart, sp, ep, blizzards)
   end
 
-  def solve(chart, sp, ep, blizzards) do
-    queue = PriorityQueue.new() |> PriorityQueue.push({0, sp}, 0)
+  def solve(chart, sp, ep, blizzards, t \\ 0) do
+    queue = PriorityQueue.new() |> PriorityQueue.push({t, sp}, 0)
     visited = MapSet.new()
     {width, height} = Aoc.Day24.Chart.size(chart)
 
     try do
-      traverse({chart, queue, visited, ep, blizzards, width, height})
+      traverse({chart, queue, visited, sp, ep, blizzards, width, height})
     catch
       time -> time
     end
@@ -199,21 +199,16 @@ defmodule Aoc.Day24 do
     end)
   end
 
-  def traverse({chart, queue, visited, {ec, er} = ep, blizzards, width, height}) do
+  def traverse({chart, queue, visited, sp, ep, blizzards, width, height}) do
     {{:value, {time, cp}}, queue} = PriorityQueue.pop(queue)
-    # |> dbg
-
 
     if MapSet.member?(visited, {time, cp}) do
-      traverse({chart, queue, visited, ep, blizzards, width, height})
+      traverse({chart, queue, visited, sp, ep, blizzards, width, height})
     else
       visited = MapSet.put(visited, {time, cp})
 
       time = time + 1
-
-      # if rem(time, 5) == 0 do
-      #   IO.inspect(time)
-      # end
+      # |> IO.inspect()
 
       if cp == ep do
         throw(time - 1)
@@ -224,8 +219,8 @@ defmodule Aoc.Day24 do
           |> then(fn list ->
             list ++ [cp]
           end)
-          |> Enum.filter(fn {nc, nr} ->
-            (nc == 0 and nr == -1) or (nc == ec and nr == er) or (nc >= 0 and nr >= 0 and nc < width and nr < height)
+          |> Enum.filter(fn {nc, nr} = np ->
+            np == sp or np == ep or (nc >= 0 and nr >= 0 and nc < width and nr < height)
           end)
           |> Enum.reject(fn point ->
             Enum.member?(move(blizzards, time, {width, height}), point)
@@ -235,7 +230,7 @@ defmodule Aoc.Day24 do
             PriorityQueue.push(queue, {time, np}, 0)
           end)
 
-        traverse({chart, queue, visited, ep, blizzards, width, height})
+        traverse({chart, queue, visited, sp, ep, blizzards, width, height})
       end
     end
   end
@@ -264,11 +259,23 @@ defmodule Aoc.Day24 do
     |> Kernel.+(1)
   end
 
-  # @doc """
-  #     iex> "priv/day24/example.txt" |> Aoc.Day24.input() |> Aoc.Day24.part2()
-  #     1
-  # """
-  # def part2(input) do
-  #   input
-  # end
+  @doc """
+      iex> "priv/day24/example2.txt" |> Aoc.Day24.input() |> Aoc.Day24.part2()
+      54
+  """
+  def part2({chart, blizzards}) do
+    sp = {0, -1}
+    ep = {Aoc.Day24.Chart.number_of_cols(chart) - 1, find_end(chart)}
+    one = solve(chart, sp, ep, blizzards)
+
+    sp = {Aoc.Day24.Chart.number_of_cols(chart) - 1, find_end(chart)}
+    ep = {0, -1}
+    two = solve(chart, sp, ep, blizzards, one)
+
+    sp = {0, -1}
+    ep = {Aoc.Day24.Chart.number_of_cols(chart) - 1, find_end(chart)}
+    three = solve(chart, sp, ep, blizzards, two)
+
+    three
+  end
 end
