@@ -4,11 +4,11 @@ defmodule Day1Test do
 
   test "Part 1" do
     input = Aoc.Day1.input("priv/day1/input.txt")
-    assert Aoc.Day1.part1(input) == 68787
+    assert Aoc.Day1.part1(input) == 53_386
   end
 
-  # test "Part 2" do
-  #   input = Aoc.Day1.input("priv/day1/input.txt")
-  #   assert Aoc.Day1.part2(input) == 198_041
-  # end
+  test "Part 2" do
+    input = Aoc.Day1.input("priv/day1/input.txt")
+    assert Aoc.Day1.part2(input) == 53_312
+  end
 end
