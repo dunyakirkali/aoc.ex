@@ -66,9 +66,9 @@ defmodule Aoc.Day1 do
     |> Enum.sum()
   end
 
-  def start("", acc), do: acc
+  defp start("", acc), do: acc
 
-  def start(line, acc) do
+  defp start(line, acc) do
     rpl =
       cond do
         String.starts_with?(line, "one") -> String.replace(line, "one", "1")
@@ -87,9 +87,9 @@ defmodule Aoc.Day1 do
     start(r, acc <> f)
   end
 
-  def endd("", acc), do: acc
+  defp endd("", acc), do: acc
 
-  def endd(line, acc) do
+  defp endd(line, acc) do
     rpl =
       cond do
         String.ends_with?(line, "one") -> String.replace(line, "one", "1")
