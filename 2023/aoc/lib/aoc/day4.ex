@@ -1,4 +1,6 @@
 defmodule Aoc.Day4 do
+  use Memoize
+
   @doc """
       iex> "priv/day4/example.txt" |> Aoc.Day4.input() |> Aoc.Day4.part1()
       13
@@ -38,33 +40,30 @@ defmodule Aoc.Day4 do
         {i, {thing, i}}
       end)
 
-    process(cards_map, cards, [])
-    |> Enum.count()
+    process(cards_map, cards, 0)
   end
 
   def process(_, [], processed), do: processed
 
-  def process(cards_map, [{{winning, numbers}, ind} = card | t], processed) do
-    # processed |> IO.inspect(label: "processed")
-    score =
-      MapSet.intersection(winning, numbers)
-      |> Enum.count()
-
-    # |> IO.inspect(label: "score")
-
-    if score == 0 do
-      process(cards_map, t, [card | processed])
+  def process(cards_map, [{{winning, numbers}, ind} | t], processed) do
+    if score(winning, numbers) == 0 do
+      process(cards_map, t, processed + 1)
     else
-      cards_to_add =
-        1..score
-        |> Enum.map(fn i ->
-          Map.get(cards_map, i + ind)
-        end)
-
-      # |> IO.inspect(label: "cards_to_add")
-
-      process(cards_map, t ++ cards_to_add, [card | processed])
+      process(cards_map, t ++ cards_to_add(cards_map, ind, score(winning, numbers)), processed + 1)
     end
+  end
+
+
+  defmemo score(winning, numbers) do
+    MapSet.intersection(winning, numbers)
+    |> Enum.count()
+  end
+
+  defmemo cards_to_add(cards_map, ind, score) do
+    1..score
+    |> Enum.map(fn i ->
+      Map.get(cards_map, i + ind)
+    end)
   end
 
   def input(filename) do
