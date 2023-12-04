@@ -1,6 +1,6 @@
 defmodule Aoc.Day3 do
   @doc """
-      iex> "priv/day3/example.txt"  |> Aoc.Day3.part1()
+      iex> "priv/day3/example.txt" |> Aoc.Day3.part1()
       4361
   """
   def part1(filename) do
@@ -8,121 +8,61 @@ defmodule Aoc.Day3 do
       filename
       |> Aoc.Day3.input()
 
-    syms =
-      map
-      |> Enum.filter(fn {_, v} ->
-        Integer.parse(v) == :error
-      end)
-      |> Enum.flat_map(fn {pos, _} ->
-        neighbours(pos)
-      end)
+    syms = symbols(map)
 
-    touchys =
-      map
-      |> Enum.filter(fn {pos, _} ->
-        Enum.member?(syms, pos)
-      end)
-      |> pmap(fn {pos, _} ->
-        pos
-      end)
-
-    valid =
-      map
-      |> Enum.reduce([], fn {pos, v}, acc ->
-        if Enum.member?(touchys, pos) do
-          Enum.concat(acc, walk(pos, map, acc) |> Enum.uniq())
-        else
-          acc
-        end
-      end)
-
-    map
-    |> Enum.filter(fn {pos, v} ->
-      Enum.member?(valid, pos)
+    syms
+    |> Enum.map(fn {pos, _} -> pos end)
+    |> Enum.flat_map(fn pos -> neighbours(pos) end)
+    |> Enum.filter(fn pos ->
+      Map.get(map, pos, ".")
+      |> Integer.parse()
+      |> Kernel.!=(:error)
     end)
-    |> Enum.into(%{})
-    |> print
-    |> pmap(fn line ->
-      Regex.scan(~r/(\d+)/, line, capture: :all)
+    |> Enum.map(fn pos ->
+      walk_left(map, pos)
     end)
-    |> Enum.filter(fn x -> x != [] end)
-    |> Enum.map(fn l1 ->
-      Enum.map(l1, fn l2 ->
-        Enum.at(l2, 0)
-      end)
+    |> MapSet.new()
+    |> Enum.map(fn pos ->
+      get_number_at(map, pos, [])
     end)
-    |> List.flatten()
-    |> pmap(&String.to_integer/1)
     |> Enum.sum()
   end
 
-  def walk({x, y}, map, acc) do
-    acc =
-      Stream.iterate(0, &(&1 + 1))
-      |> Enum.reduce_while(acc, fn i, accc ->
-        if Map.get(map, {x + i, y}) != nil and Integer.parse(Map.get(map, {x + i, y})) != :error do
-          {:cont, [{x + i, y} | accc]}
-        else
-          {:halt, accc}
-        end
+  @doc """
+      iex> "priv/day3/example.txt" |> Aoc.Day3.part2()
+      467835
+  """
+  def part2(filename) do
+    map =
+      filename
+      |> Aoc.Day3.input()
+
+    gears = gears(map)
+
+    gears
+    |> Enum.map(fn {pos, _} -> pos end)
+    |> Enum.map(fn pos ->
+      neighbours(pos)
+      |> Enum.filter(fn pos ->
+        Map.get(map, pos, ".")
+        |> Integer.parse()
+        |> Kernel.!=(:error)
       end)
-
-    acc =
-      Stream.iterate(0, &(&1 + 1))
-      |> Enum.reduce_while(acc, fn i, accc ->
-        if Map.get(map, {x - i, y}) != nil and Integer.parse(Map.get(map, {x - i, y})) != :error do
-          {:cont, [{x - i, y} | accc]}
-        else
-          {:halt, accc}
-        end
+      |> Enum.map(fn pos ->
+        walk_left(map, pos)
       end)
-
-    acc
-  end
-
-  def pmap(collection, func) do
-    collection
-    |> Enum.map(&Task.async(fn -> func.(&1) end))
-    |> Enum.map(&Task.await/1)
-  end
-
-  def size(map) do
-    map
-    |> Map.keys()
-    |> Enum.reduce({0, 0}, fn {x, y}, {maxX, maxY} ->
-      {max(x, maxX), max(y, maxY)}
+      |> MapSet.new()
     end)
-    |> Tuple.to_list()
-    |> Enum.map(&(&1 + 1))
-    |> List.to_tuple()
-  end
+    |> Enum.filter(fn lefts -> Enum.count(lefts) == 2 end)
+    |> Enum.map(fn lefts ->
+      [first, second] =
+        lefts
+        |> Enum.map(fn left -> get_number_at(map, left, []) end)
 
-  def print(map) do
-    size = size(map)
-
-    Enum.map(0..elem(size, 1), fn y ->
-      Enum.map(0..elem(size, 0), fn x ->
-        Map.get(map, {x, y}, ".")
-      end)
-      |> Enum.join("")
-      |> IO.inspect()
+      first * second
     end)
+    |> Enum.sum()
   end
-
-  def lins({x, y}) do
-    [{x + 1, y}, {x - 1, y}]
-    |> Enum.filter(fn {x, y} ->
-      x > -1 and y > -1
-    end)
-  end
-
-  # @doc """
-  #     iex> "priv/day3/example.txt" |> Aoc.Day3.input() |> Aoc.Day3.part2()
-  #     2286
-  # """
-  # def part2(list) do
-  #   list
-  # end
 
   def neighbours({x, y}) do
     [
@@ -140,10 +80,50 @@ defmodule Aoc.Day3 do
     end)
   end
 
-  def lines(filename) do
-    filename
-    |> File.read!()
-    |> String.split("\n", trim: true)
+  @doc """
+      iex> %{{0, 0} => ".", {1, 0} => "2", {2, 0} => "3"} |> Aoc.Day3.get_number_at({1, 0}, [])
+      23
+  """
+  def get_number_at(map, {x, y} = pos, acc) do
+    val = Map.get(map, pos, ".")
+
+    if val |> Integer.parse() |> Kernel.==(:error) do
+      acc |> Enum.reverse() |> Integer.undigits()
+    else
+      get_number_at(map, {x + 1, y}, [String.to_integer(val) | acc])
+    end
+  end
+
+  @doc """
+      iex> %{{0, 0} => ".", {1, 0} => "2", {2, 0} => "3"} |> Aoc.Day3.walk_left({2, 0})
+      {1, 0}
+  """
+  def walk_left(map, {x, y} = pos) do
+    if Map.get(map, pos, ".") |> Integer.parse() |> Kernel.==(:error) do
+      {x + 1, y}
+    else
+      walk_left(map, {x - 1, y})
+    end
+  end
+
+  @doc """
+      iex> %{{0, 0} => "*", {0, 1} => "."} |> Aoc.Day3.gears()
+      %{{0, 0} => "*"}
+  """
+  def gears(map) do
+    map
+    |> Enum.filter(fn {_, v} -> v == "*" end)
+    |> Enum.into(%{})
+  end
+
+  @doc """
+      iex> %{{0, 0} => ".", {0, 1} => "2"} |> Aoc.Day3.symbols()
+      %{{0, 0} => "."}
+  """
+  def symbols(map) do
+    map
+    |> Enum.filter(fn {_, v} -> Integer.parse(v) == :error end)
+    |> Enum.into(%{})
   end
 
   def input(filename) do
@@ -159,12 +139,6 @@ defmodule Aoc.Day3 do
       line
       |> Enum.with_index()
       |> Enum.reduce(acc, fn {cell, x}, aacc ->
-        # v =
-        #   case Integer.parse(cell) do
-        #     :error -> cell
-        #     {val, _} -> val
-        #   end
-
         if cell == "." do
           aacc
         else
