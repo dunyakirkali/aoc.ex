@@ -7,9 +7,8 @@ defmodule Day5Test do
   #   assert Aoc.Day5.part1(input) == 331_445_006
   # end
 
-  #
-  # test "Part 2" do
-  #   input = Aoc.Day5.input("priv/day5/input.txt")
-  #   assert Aoc.Day5.part2(input) == 5_571_760
-  # end
+  test "Part 2" do
+    input = "priv/day5/input.txt"
+    assert Aoc.Day5.part2(input) == 6_472_060
+  end
 end
