@@ -33,41 +33,41 @@ defmodule Aoc.Day8 do
       # 6
   """
   def part2({dirs, moves}) do
-    # starts =
-    #   moves
-    #   |> IO.inspect(label: "starts")
-    #   |> Map.keys()
-    #   |> Enum.filter(fn k -> String.ends_with?(k, "A") end)
-    #
-    # Stream.iterate(0, &(&1 + 1))
-    # |> Enum.reduce_while({dirs, moves, starts, 1}, fn x, {dirs, moves, cnodes, step} ->
-    #   cd = Enum.at(dirs, rem(x, Enum.count(dirs)))
-    #
-    #   cnodes =
-    #     Enum.map(cnodes, fn cnode ->
-    #       [lm, rm] =
-    #         Map.get(moves, cnode)
-    #
-    #       case cd do
-    #         "L" -> lm
-    #         "R" -> rm
-    #       end
-    #     end)
-    #
-    #   # IO.inspect(step, label: "step")
-    #
-    #   if Enum.any?(cnodes, fn cnode -> String.ends_with?(cnode, "Z") end) do
-    #     IO.inspect({cnodes, step})
-    #   end
-    #
-    #   if Enum.all?(cnodes, fn cnode -> String.ends_with?(cnode, "Z") end) do
-    #     {:halt, step}
-    #   else
-    #     {:cont, {dirs, moves, cnodes, step + 1}}
-    #   end
-    # end)
+    starts =
+      moves
+      |> Map.keys()
+      |> Enum.filter(fn k -> String.ends_with?(k, "A") end)
 
-    [14363, 15989, 16531, 19241, 19783, 21409]
+    Stream.iterate(0, &(&1 + 1))
+    |> Enum.reduce_while({dirs, moves, starts, 1, []}, fn x,
+                                                          {dirs, moves, cnodes, step, collected} ->
+      cd = Enum.at(dirs, rem(x, Enum.count(dirs)))
+
+      cnodes =
+        Enum.map(cnodes, fn cnode ->
+          [lm, rm] =
+            Map.get(moves, cnode)
+
+          case cd do
+            "L" -> lm
+            "R" -> rm
+          end
+        end)
+
+      collected =
+        if Enum.any?(cnodes, fn cnode -> String.ends_with?(cnode, "Z") end) do
+          collected =
+            [step | collected]
+        else
+          collected
+        end
+
+      if Enum.count(collected) == 6 do
+        {:halt, collected}
+      else
+        {:cont, {dirs, moves, cnodes, step + 1, collected}}
+      end
+    end)
     |> Enum.reduce(1, fn x, acc -> Math.lcm(x, acc) end)
   end
 
