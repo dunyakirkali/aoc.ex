@@ -40,7 +40,7 @@ defmodule Aoc.MixProject do
       {:genex, "~> 1.0.0-beta"},
       {:complex, "~> 0.4.1"},
       {:nx, "~> 0.2"},
-      {:math, "~> 0.6.0"}
+      {:math, "~> 0.7.0"}
     ]
   end
 end
