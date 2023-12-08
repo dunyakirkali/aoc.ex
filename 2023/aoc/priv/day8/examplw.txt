@@ -1,0 +1,11 @@
+L
+
+1AA = (1BB, XX)
+1BB = (1CC, XX)
+1CC = (1ZZ, XX)
+1ZZ = (1CC, XX)
+2AA = (2BB, XX)
+2BB = (2ZZ, XX)
+2ZZ = (2CC, XX)
+2CC = (2DD, XX)
+2DD = (2AA, XX)

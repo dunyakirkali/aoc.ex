@@ -29,8 +29,11 @@ defmodule Aoc.Day8 do
   end
 
   @doc """
-      # iex> "priv/day8/example3.txt" |> Aoc.Day8.input() |> Aoc.Day8.part2()
-      # 6
+      iex> "priv/day8/example3.txt" |> Aoc.Day8.input() |> Aoc.Day8.part2()
+      6
+
+      iex> "priv/day8/examplw.txt" |> Aoc.Day8.input() |> Aoc.Day8.part2()
+      6
   """
   def part2({dirs, moves}) do
     starts =
@@ -56,13 +59,12 @@ defmodule Aoc.Day8 do
 
       collected =
         if Enum.any?(cnodes, fn cnode -> String.ends_with?(cnode, "Z") end) do
-          collected =
-            [step | collected]
+          [step | collected]
         else
           collected
         end
 
-      if Enum.count(collected) == 6 do
+      if Enum.count(collected) == Enum.count(starts) do
         {:halt, collected}
       else
         {:cont, {dirs, moves, cnodes, step + 1, collected}}
