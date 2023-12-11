@@ -10,7 +10,7 @@ defmodule Aoc.Day10 do
       Deque.new(19_600)
       |> Deque.appendleft(sp)
 
-    wonder(map, deque, MapSet.new([sp]))
+    wonder(map, deque, [sp])
     |> Enum.count()
     |> Kernel./(2)
     |> Kernel.trunc()
@@ -26,11 +26,21 @@ defmodule Aoc.Day10 do
       ch = Map.get(map, {x, y})
 
       {deque, visited} =
+        if x < Enum.map(map, fn {{x, _y}, _v} -> x end) |> Enum.max() and
+             Enum.member?(["S", "-", "L", "F"], ch) and
+             Enum.member?(["-", "J", "7"], Map.get(map, {x + 1, y})) and
+             not Enum.member?(visited, {x + 1, y}) do
+          {Deque.appendleft(deque, {x + 1, y}), [{x + 1, y} | visited]}
+        else
+          {deque, visited}
+        end
+
+      {deque, visited} =
         if y > 0 and
              Enum.member?(["S", "|", "J", "L"], ch) and
              Enum.member?(["|", "7", "F"], Map.get(map, {x, y - 1})) and
              not Enum.member?(visited, {x, y - 1}) do
-          {Deque.appendleft(deque, {x, y - 1}), MapSet.put(visited, {x, y - 1})}
+          {Deque.appendleft(deque, {x, y - 1}), [{x, y - 1} | visited]}
         else
           {deque, visited}
         end
@@ -40,7 +50,7 @@ defmodule Aoc.Day10 do
              Enum.member?(["S", "|", "F", "7"], ch) and
              Enum.member?(["|", "J", "L"], Map.get(map, {x, y + 1})) and
              not Enum.member?(visited, {x, y + 1}) do
-          {Deque.appendleft(deque, {x, y + 1}), MapSet.put(visited, {x, y + 1})}
+          {Deque.appendleft(deque, {x, y + 1}), [{x, y + 1} | visited]}
         else
           {deque, visited}
         end
@@ -50,17 +60,7 @@ defmodule Aoc.Day10 do
              Enum.member?(["S", "-", "J", "7"], ch) and
              Enum.member?(["-", "L", "F"], Map.get(map, {x - 1, y})) and
              not Enum.member?(visited, {x - 1, y}) do
-          {Deque.appendleft(deque, {x - 1, y}), MapSet.put(visited, {x - 1, y})}
-        else
-          {deque, visited}
-        end
-
-      {deque, visited} =
-        if x < Enum.map(map, fn {{x, _y}, _v} -> x end) |> Enum.max() and
-             Enum.member?(["S", "-", "L", "F"], ch) and
-             Enum.member?(["-", "J", "7"], Map.get(map, {x + 1, y})) and
-             not Enum.member?(visited, {x + 1, y}) do
-          {Deque.appendleft(deque, {x + 1, y}), MapSet.put(visited, {x + 1, y})}
+          {Deque.appendleft(deque, {x - 1, y}), [{x - 1, y} | visited]}
         else
           {deque, visited}
         end
@@ -69,63 +69,136 @@ defmodule Aoc.Day10 do
     end
   end
 
-  def walk(map, acc, direction, pos, steps, visited) do
-    # if Enum.member?(visited, pos) do
-    #   acc
-    # else
-    #   pos |> IO.inspect(label: "cp")
-    #   direction |> IO.inspect(label: "cd")
-    #   cc = Map.get(map, pos) |> IO.inspect(label: "cc")
-    #
-    #   np =
-    #     pos
-    #     |> neighbours()
-    #     |> Enum.filter(fn x -> !Enum.member?(visited, x) end)
-    #     |> Enum.filter(fn nasd ->
-    #       direction
-    #       |> valid_in()
-    #       |> Enum.member?(Map.get(map, nasd, "."))
-    #     end)
-    #     |> IO.inspect(label: "nps")
-    #     |> Enum.at(0)
-    #
-    #   # Enum.flat_map(nps, fn np ->
-    #   nd =
-    #     next_direction(Map.get(map, np), direction)
-    #
-    #   acc = Map.put(acc, pos, steps)
-    #   draw(acc)
-    #   walk(map, acc, nd, np, steps + 1, [pos | visited])
-    #   # end)
-    #   # |> Enum.into(%{})
-    # end
-  end
-
-  def next_direction(cc, cd) do
-    case {cc, cd} do
-      {"-", :right} -> :right
-      {"-", :left} -> :left
-      {"7", :right} -> :down
-      {"7", :up} -> :left
-      {"|", :down} -> :down
-      {"|", :up} -> :up
-      {"J", :down} -> :left
-      {"J", :right} -> :up
-      {"F", :left} -> :down
-      {"F", :up} -> :right
-      {"L", :down} -> :right
-      {"L", :left} -> :up
-      {"S", :right} -> :right
-      {"S", :up} -> :up
-      {"S", :down} -> :down
-      {"S", :left} -> :left
-    end
-  end
-
   def start(map) do
     map
     |> Enum.find(fn {_, val} -> val == "S" end)
     |> elem(0)
+  end
+
+  @doc """
+      iex> "priv/day10/example2.txt" |> Aoc.Day10.input() |> Aoc.Day10.part2()
+      4
+
+      iex> "priv/day10/example3.txt" |> Aoc.Day10.input() |> Aoc.Day10.part2()
+      10
+  """
+  def part2(map) do
+    sp =
+      map
+      |> start()
+      |> IO.inspect(label: "start")
+
+    deque =
+      19_600
+      |> Deque.new()
+      |> Deque.appendleft(sp)
+
+    path = wonder(map, deque, [sp])
+
+    ordered_path =
+      order(map, path, sp, :right, [])
+      |> Enum.reverse()
+      |> IO.inspect(label: "ordered_path")
+
+    nmap =
+      map
+      |> Enum.map(fn {pos, v} ->
+        if Enum.member?(Enum.map(ordered_path, fn {p, _} -> p end), pos) do
+          {pos, v}
+        else
+          {pos, "."}
+        end
+      end)
+      |> Enum.into(%{})
+      |> draw
+
+    find_outers(ordered_path, [])
+    |> then(fn a ->
+      Enum.count(a) |> IO.inspect()
+      [{0, 0} | a]
+    end)
+    |> Enum.filter(fn p -> Map.get(nmap, p) == "." end)
+    |> Enum.uniq()
+    |> Enum.reduce({map, nmap}, fn pos, {om, nm} ->
+      pos |> IO.inspect(label: "Flood from")
+      draw(nm)
+      res = flood({om, nm}, pos, [])
+      res
+    end)
+    |> elem(1)
+    |> draw()
+    |> Enum.filter(fn {_, v} -> v == "." end)
+    |> Enum.into(%{})
+    |> Enum.count()
+  end
+
+  def order(map, path, {x, y} = pos, direction, acc) do
+    if Enum.count(acc) > 1 and Map.get(map, pos) == "S" do
+      acc
+    else
+      next_direction = pivot(Map.get(map, pos), direction)
+
+      next_position =
+        case next_direction do
+          :right -> {x + 1, y}
+          :down -> {x, y + 1}
+          :left -> {x - 1, y}
+          :up -> {x, y - 1}
+        end
+
+      order(map, List.delete(path, pos), next_position, next_direction, [{pos, direction} | acc])
+    end
+  end
+
+  def find_outers([], acc), do: acc
+
+  def find_outers([{{x, y}, direction} | t], acc) do
+    np =
+      case direction do
+        :right -> {x, y - 1}
+        :down -> {x + 1, y}
+        :left -> {x, y + 1}
+        :up -> {x - 1, y}
+      end
+
+    find_outers(t, [np | acc])
+  end
+
+  def pivot(char, direction) do
+    case char do
+      "|" ->
+        direction
+
+      "-" ->
+        direction
+
+      "L" ->
+        case direction do
+          :left -> :up
+          :down -> :right
+        end
+
+      "J" ->
+        case direction do
+          :right -> :up
+          :down -> :left
+        end
+
+      "7" ->
+        case direction do
+          :right -> :down
+          :up -> :left
+        end
+
+      "F" ->
+        case direction do
+          :left -> :down
+          :up -> :right
+        end
+
+      "S" ->
+        :right
+    end
   end
 
   def neighbours({x, y}) do
@@ -140,42 +213,29 @@ defmodule Aoc.Day10 do
     end)
   end
 
-  def valid_in(direction) do
-    case direction do
-      :right -> ["-", "7", "J", "S"]
-      :down -> ["|", "J", "L", "S"]
-      :left -> ["-", "L", "F", "S"]
-      :up -> ["|", "F", "7", "S"]
-    end
-  end
-
-  @doc """
-      # iex> "priv/day10/example2.txt" |> Aoc.Day10.input() |> Aoc.Day10.part2()
-      # 4
-  """
-  def part2(list) do
-    list
-    |> flood({0, 0}, [])
-    |> Enum.filter(fn {_, v} -> v == "." end)
-    |> Enum.count()
-  end
-
-  def flood(map, pos, visited) do
-    draw(map)
-
+  def flood({om, nm}, pos, visited) do
     if Enum.member?(visited, pos) do
-      map
+      {om, nm}
     else
-      pos
-      |> neighbours()
-      |> Enum.filter(fn {x, y} ->
-        x <= Map.keys(map) |> Enum.map(fn p -> elem(p, 0) end) |> Enum.max() and
-          y <= Map.keys(map) |> Enum.map(fn p -> elem(p, 1) end) |> Enum.max()
-      end)
-      |> Enum.filter(fn p -> Map.get(map, p, ".") == "." end)
-      |> Enum.reduce(map, fn np, map ->
-        flood(Map.put(map, np, "O"), np, [pos, visited])
-      end)
+      nnm =
+        pos
+        |> neighbours()
+        |> then(fn ns ->
+          [pos | ns]
+        end)
+        |> Enum.filter(fn {x, y} ->
+          max_x = Map.keys(om) |> Enum.map(fn {x, _} -> x end) |> Enum.max()
+          max_y = Map.keys(om) |> Enum.map(fn {_, y} -> y end) |> Enum.max()
+
+          x <= max_x and y <= max_y
+        end)
+        |> Enum.filter(fn p -> Map.get(nm, p, ".") == "." end)
+        |> Enum.reduce(nm, fn np, nmm ->
+          {_, b} = flood({om, Map.put(nmm, np, "O")}, np, [pos | visited])
+          b
+        end)
+
+      {om, nnm}
     end
   end
 
