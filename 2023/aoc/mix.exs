@@ -35,7 +35,7 @@ defmodule Aoc.MixProject do
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:exprof, "~> 0.2.0"},
       {:flow, "~> 1.1.0"},
-      {:deque, "~> 1.0"},
+      {:deque, "~> 1.2"},
       {:cll, "~> 0.1.0"},
       {:genex, "~> 1.0.0-beta"},
       {:complex, "~> 0.4.1"},
