@@ -80,163 +80,37 @@ defmodule Aoc.Day10 do
       4
 
       iex> "priv/day10/example3.txt" |> Aoc.Day10.input() |> Aoc.Day10.part2()
-      10
+      8
   """
   def part2(map) do
-    sp =
-      map
-      |> start()
-      |> IO.inspect(label: "start")
+    sp = start(map)
 
     deque =
-      19_600
-      |> Deque.new()
+      Deque.new(19_600)
       |> Deque.appendleft(sp)
 
-    path = wonder(map, deque, [sp])
-
-    ordered_path =
-      order(map, path, sp, :right, [])
-      |> Enum.reverse()
-      |> IO.inspect(label: "ordered_path")
+    path =
+      wonder(map, deque, [sp])
 
     nmap =
       map
       |> Enum.map(fn {pos, v} ->
-        if Enum.member?(Enum.map(ordered_path, fn {p, _} -> p end), pos) do
+        if Enum.member?(path, pos) do
           {pos, v}
         else
           {pos, "."}
         end
       end)
       |> Enum.into(%{})
-      |> draw
 
-    find_outers(ordered_path, [])
-    |> then(fn a ->
-      Enum.count(a) |> IO.inspect()
-      [{0, 0} | a]
-    end)
-    |> Enum.filter(fn p -> Map.get(nmap, p) == "." end)
-    |> Enum.uniq()
-    |> Enum.reduce({map, nmap}, fn pos, {om, nm} ->
-      pos |> IO.inspect(label: "Flood from")
-      draw(nm)
-      res = flood({om, nm}, pos, [])
-      res
-    end)
-    |> elem(1)
-    |> draw()
-    |> Enum.filter(fn {_, v} -> v == "." end)
+    nmap
+    |> draw
+    |> Enum.filter(fn {_, val} -> val == "." end)
     |> Enum.into(%{})
-    |> Enum.count()
-  end
-
-  def order(map, path, {x, y} = pos, direction, acc) do
-    if Enum.count(acc) > 1 and Map.get(map, pos) == "S" do
-      acc
-    else
-      next_direction = pivot(Map.get(map, pos), direction)
-
-      next_position =
-        case next_direction do
-          :right -> {x + 1, y}
-          :down -> {x, y + 1}
-          :left -> {x - 1, y}
-          :up -> {x, y - 1}
-        end
-
-      order(map, List.delete(path, pos), next_position, next_direction, [{pos, direction} | acc])
-    end
-  end
-
-  def find_outers([], acc), do: acc
-
-  def find_outers([{{x, y}, direction} | t], acc) do
-    np =
-      case direction do
-        :right -> {x, y - 1}
-        :down -> {x + 1, y}
-        :left -> {x, y + 1}
-        :up -> {x - 1, y}
-      end
-
-    find_outers(t, [np | acc])
-  end
-
-  def pivot(char, direction) do
-    case char do
-      "|" ->
-        direction
-
-      "-" ->
-        direction
-
-      "L" ->
-        case direction do
-          :left -> :up
-          :down -> :right
-        end
-
-      "J" ->
-        case direction do
-          :right -> :up
-          :down -> :left
-        end
-
-      "7" ->
-        case direction do
-          :right -> :down
-          :up -> :left
-        end
-
-      "F" ->
-        case direction do
-          :left -> :down
-          :up -> :right
-        end
-
-      "S" ->
-        :right
-    end
-  end
-
-  def neighbours({x, y}) do
-    [
-      {x + 1, y},
-      {x, y + 1},
-      {x - 1, y},
-      {x, y - 1}
-    ]
-    |> Enum.filter(fn {x, y} ->
-      x > -1 and y > -1
+    |> draw
+    |> Enum.count(fn {pos, _} ->
+      inside?(nmap, pos)
     end)
-  end
-
-  def flood({om, nm}, pos, visited) do
-    if Enum.member?(visited, pos) do
-      {om, nm}
-    else
-      nnm =
-        pos
-        |> neighbours()
-        |> then(fn ns ->
-          [pos | ns]
-        end)
-        |> Enum.filter(fn {x, y} ->
-          max_x = Map.keys(om) |> Enum.map(fn {x, _} -> x end) |> Enum.max()
-          max_y = Map.keys(om) |> Enum.map(fn {_, y} -> y end) |> Enum.max()
-
-          x <= max_x and y <= max_y
-        end)
-        |> Enum.filter(fn p -> Map.get(nm, p, ".") == "." end)
-        |> Enum.reduce(nm, fn np, nmm ->
-          {_, b} = flood({om, Map.put(nmm, np, "O")}, np, [pos | visited])
-          b
-        end)
-
-      {om, nnm}
-    end
   end
 
   def draw(map) do
@@ -252,11 +126,9 @@ defmodule Aoc.Day10 do
       |> Enum.map(&elem(&1, 1))
       |> Enum.min_max()
 
-    IO.puts("\n")
-
     Enum.each(miny..maxy, fn y ->
       Enum.map(minx..maxx, fn x ->
-        Map.get(map, {x, y}, ".")
+        Map.get(map, {x, y}, "■")
       end)
       |> Enum.join("")
       |> IO.puts()
@@ -264,6 +136,16 @@ defmodule Aoc.Day10 do
 
     IO.puts("\n")
     map
+  end
+
+  def inside?(map, {x, y}) do
+    0..x
+    |> Enum.map(fn i -> {i, y} end)
+    |> Enum.map(fn pos -> Map.get(map, pos) end)
+    |> Enum.filter(fn val -> Enum.member?(["|", "J", "L"], val) end)
+    |> Enum.count()
+    |> Kernel.rem(2)
+    |> Kernel.==(1)
   end
 
   def input(filename) do

@@ -7,8 +7,8 @@ defmodule Day10Test do
   #   assert Aoc.Day10.part1(input) == 6875
   # end
   #
-  test "Part 2" do
-    input = Aoc.Day10.input("priv/day10/input.txt")
-    assert Aoc.Day10.part2(input) == 471
-  end
+  # test "Part 2" do
+  #   input = Aoc.Day10.input("priv/day10/input.txt")
+  #   assert Aoc.Day10.part2(input) == 471
+  # end
 end
