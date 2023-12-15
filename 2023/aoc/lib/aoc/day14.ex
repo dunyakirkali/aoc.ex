@@ -1,11 +1,87 @@
 defmodule Aoc.Day14 do
   @doc """
+      iex> "priv/day14/example.txt" |> Aoc.Day14.input() |> Aoc.Day14.part2()
+      64
+  """
+  def part2(map) do
+    1..1_000
+    |> Enum.reduce(map, fn cycle, mmap ->
+      IO.puts(cycle)
+
+      [:north, :west, :south, :east]
+      |> Enum.reduce(mmap, fn direction, mmmap ->
+        tilt(mmmap, direction)
+      end)
+    end)
+    |> score()
+  end
+
+  @doc """
       iex> "priv/day14/example.txt" |> Aoc.Day14.input() |> Aoc.Day14.part1()
       136
   """
   def part1(map) do
-    draw(map)
+    map
+    |> tilt(:north)
+    |> score()
+  end
 
+  def tilt(map, :east) do
+    {_, height} = size(map)
+
+    0..(height - 1)
+    |> Enum.flat_map(fn cn ->
+      row(map, cn)
+      |> Enum.reverse()
+      |> Enum.join("")
+      |> slide()
+      |> String.split("", trim: true)
+      |> Enum.reverse()
+      |> Enum.with_index()
+      |> Enum.map(fn {v, index} ->
+        {{index, cn}, v}
+      end)
+    end)
+    |> Enum.into(%{})
+  end
+
+  def tilt(map, :west) do
+    {_, height} = size(map)
+
+    0..(height - 1)
+    |> Enum.flat_map(fn cn ->
+      row(map, cn)
+      |> Enum.join("")
+      |> slide()
+      |> String.split("", trim: true)
+      |> Enum.with_index()
+      |> Enum.map(fn {v, index} ->
+        {{index, cn}, v}
+      end)
+    end)
+    |> Enum.into(%{})
+  end
+
+  def tilt(map, :south) do
+    {width, _} = size(map)
+
+    0..(width - 1)
+    |> Enum.flat_map(fn cn ->
+      col(map, cn)
+      |> Enum.reverse()
+      |> Enum.join("")
+      |> slide()
+      |> String.split("", trim: true)
+      |> Enum.reverse()
+      |> Enum.with_index()
+      |> Enum.map(fn {v, index} ->
+        {{cn, index}, v}
+      end)
+    end)
+    |> Enum.into(%{})
+  end
+
+  def tilt(map, :north) do
     {width, _} = size(map)
 
     0..(width - 1)
@@ -20,8 +96,14 @@ defmodule Aoc.Day14 do
       end)
     end)
     |> Enum.into(%{})
-    |> draw()
-    |> score()
+  end
+
+  def row(map, r) do
+    Enum.filter(map, fn {{_, y}, _} ->
+      y == r
+    end)
+    |> Enum.sort_by(fn {{x, _}, _} -> x end)
+    |> Enum.map(fn {_, v} -> v end)
   end
 
   def score(map) do
@@ -69,19 +151,6 @@ defmodule Aoc.Day14 do
       |> Enum.join()
     end)
     |> Enum.join("#")
-  end
-
-  def tilt(map) do
-    {width, _} = size(map)
-
-    0..width
-    |> Enum.map(fn col ->
-      col(map, col)
-      |> Enum.map(fn {_, v} -> v end)
-      |> Enum.join()
-      |> slide()
-      |> String.graphemes()
-    end)
   end
 
   def col(map, c) do
