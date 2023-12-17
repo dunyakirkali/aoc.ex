@@ -23,11 +23,10 @@ defmodule Aoc.Day17 do
       if MapSet.member?(visited, {pos, direction, steps}) do
         walk(map, deque, visited, {width, height})
       else
-        IO.inspect(hl)
         visited = MapSet.put(visited, {pos, direction, steps})
 
         deque =
-          options(pos, direction, steps)
+          options(pos, direction, steps, 3)
           |> Enum.filter(fn {{nx, ny}, _steps, _direction} ->
             nx > -1 and ny > -1 and nx < width and ny < height
           end)
@@ -70,19 +69,19 @@ defmodule Aoc.Day17 do
   end
 
   @doc """
-      iex> Aoc.Day17.options({0, 0}, :right, 0)
+      iex> Aoc.Day17.options({0, 0}, :right, 0, 3)
       [{{1, 0}, 1, :right}, {{0, -1}, 1, :up}, {{0, 1}, 1, :down}]
 
-      iex> Aoc.Day17.options({0, 0}, :right, 3)
+      iex> Aoc.Day17.options({0, 0}, :right, 3, 3)
       [{{0, -1}, 1, :up}, {{0, 1}, 1, :down}]
   """
-  def options({x, y}, :right, steps) do
+  def options({x, y}, :right, steps, min) do
     [
       {{x, y - 1}, 1, :up},
       {{x, y + 1}, 1, :down}
     ]
     |> then(fn list ->
-      if steps == 3 do
+      if steps == min do
         list
       else
         [{{x + 1, y}, steps + 1, :right} | list]
@@ -90,13 +89,13 @@ defmodule Aoc.Day17 do
     end)
   end
 
-  def options({x, y}, :left, steps) do
+  def options({x, y}, :left, steps, min) do
     [
       {{x, y - 1}, 1, :up},
       {{x, y + 1}, 1, :down}
     ]
     |> then(fn list ->
-      if steps == 3 do
+      if steps == min do
         list
       else
         [{{x - 1, y}, steps + 1, :left} | list]
@@ -104,13 +103,13 @@ defmodule Aoc.Day17 do
     end)
   end
 
-  def options({x, y}, :up, steps) do
+  def options({x, y}, :up, steps, min) do
     [
       {{x - 1, y}, 1, :left},
       {{x + 1, y}, 1, :right}
     ]
     |> then(fn list ->
-      if steps == 3 do
+      if steps == min do
         list
       else
         [{{x, y - 1}, steps + 1, :up} | list]
@@ -118,13 +117,13 @@ defmodule Aoc.Day17 do
     end)
   end
 
-  def options({x, y}, :down, steps) do
+  def options({x, y}, :down, steps, min) do
     [
       {{x - 1, y}, 1, :left},
       {{x + 1, y}, 1, :right}
     ]
     |> then(fn list ->
-      if steps == 3 do
+      if steps == min do
         list
       else
         [{{x, y + 1}, steps + 1, :down} | list]
@@ -132,13 +131,56 @@ defmodule Aoc.Day17 do
     end)
   end
 
-  # @doc """
-  #     iex> "priv/day17/example.txt" |> Aoc.Day17.input() |> Aoc.Day17.part2()
-  #     51
-  # """
-  # def part2(map) do
-  #
-  # end
+  @doc """
+      iex> "priv/day17/example.txt" |> Aoc.Day17.input() |> Aoc.Day17.part2()
+      94
+
+      iex> "priv/day17/example2.txt" |> Aoc.Day17.input() |> Aoc.Day17.part2()
+      71
+  """
+  def part2(map) do
+    start = {0, 0}
+
+    queue = PriorityQueue.new() |> PriorityQueue.push({start, :right, 0, 0}, 0)
+
+    visited = MapSet.new([])
+    size = size(map)
+
+    walk2(map, queue, visited, size)
+  end
+
+  def walk2(map, deque, visited, {width, height}) do
+    {{:value, {pos, direction, steps, hl}}, deque} = PriorityQueue.pop(deque)
+
+    if pos == {width - 1, height - 1} and steps >= 4 do
+      hl
+    else
+      if MapSet.member?(visited, {pos, direction, steps}) do
+        walk2(map, deque, visited, {width, height})
+      else
+        # IO.inspect(hl)
+        visited = MapSet.put(visited, {pos, direction, steps})
+
+        deque =
+          options(pos, direction, steps, 10)
+          # |> IO.inspect(label: "rop")
+          |> Enum.filter(fn {_pos, _steps, dir} ->
+            steps >= 4 or direction == dir
+          end)
+          |> Enum.filter(fn {{nx, ny}, _steps, _direction} ->
+            nx > -1 and ny > -1 and nx < width and ny < height
+          end)
+          # |> IO.inspect(label: "opt")
+          |> Enum.reduce(deque, fn {npos, nsteps, ndirection}, accd ->
+            val = Map.get(map, npos)
+
+            PriorityQueue.push(accd, {npos, ndirection, nsteps, hl + val}, hl + val)
+          end)
+
+        walk2(map, deque, visited, {width, height})
+      end
+    end
+  end
 
   def size(map) do
     map
