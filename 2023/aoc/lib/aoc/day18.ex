@@ -4,124 +4,84 @@ defmodule Aoc.Day18 do
       62
   """
   def part1(map) do
-    nm = to_map(map, false)
+    {b, points} = to_map(map, false)
 
-    minx =
-      nm
-      |> Map.keys()
-      |> Enum.map(fn {x, _} -> x end)
-      |> Enum.min()
+    a =
+      Range.new(0, Enum.count(points) - 1)
+      |> Enum.map(fn i ->
+        {xi, _} = Enum.at(points, i)
+        {_, yib} = Enum.at(points, i - 1)
+        {_, yia} = Enum.at(points, rem(i + 1, Enum.count(points)))
 
-    nm
-    |> Enum.map(fn {{px, py}, val} ->
-      case val do
-        "#" ->
-          # {{px, py}, val}
-          1
-
-        "." ->
-          # if inside(nm, {px, py}), do: {{px, py}, "#"}, else: {{px, py}, "."}
-          if inside(nm, {px, py}, minx), do: 1, else: 0
-      end
-    end)
-    # |> Enum.into(%{})
-    |> Enum.sum()
-
-    # |> draw()
-  end
-
-  def inside(map, {px, py}, minx) do
-    for(cx <- minx..px, do: Map.get(map, {cx, py}))
-    |> Enum.dedup()
-    |> Enum.count(fn v -> v == "#" end)
-    |> Kernel.rem(2)
-    |> Kernel.==(1)
-  end
-
-  def draw(map) do
-    IO.puts("\n")
-
-    {minx, maxx} =
-      map
-      |> Map.keys()
-      |> Enum.map(&elem(&1, 0))
-      |> Enum.min_max()
-
-    {miny, maxy} =
-      map
-      |> Map.keys()
-      |> Enum.map(&elem(&1, 1))
-      |> Enum.min_max()
-
-    Enum.each(miny..maxy, fn y ->
-      Enum.map(minx..maxx, fn x ->
-        Map.get(map, {x, y}, ".")
+        xi * (yib - yia)
       end)
-      |> Enum.join("")
-      |> IO.puts()
-    end)
+      |> Enum.sum()
+      |> abs
+      |> Kernel.div(2)
 
-    IO.puts("\n")
-    map
+    i = a - div(b, 2) + 1
+    i + b
   end
 
   @doc """
-      # iex> "priv/day18/example.txt" |> Aoc.Day18.input() |> Aoc.Day18.part2()
-      # 94
+      iex> "priv/day18/example.txt" |> Aoc.Day18.input() |> Aoc.Day18.part2()
+      952408144115
   """
   def part2(map) do
-    # nm = to_map(map, true)
+    {b, points} = to_map(map, true)
 
-    # returns {192, ""}
+    a =
+      Range.new(0, Enum.count(points) - 1)
+      |> Enum.map(fn i ->
+        {xi, _} = Enum.at(points, i)
+        {_, yib} = Enum.at(points, i - 1)
+        {_, yia} = Enum.at(points, rem(i + 1, Enum.count(points)))
+
+        xi * (yib - yia)
+      end)
+      |> Enum.sum()
+      |> abs
+      |> Kernel.div(2)
+
+    i = a - div(b, 2) + 1
+    i + b
   end
 
   def to_map(ins, part2) do
-    map =
-      ins
-      |> Enum.reduce({%{}, {10000, 10000}}, fn {dir, amnt, pam}, {map, {px, py}} ->
-        map =
-          case dir do
-            :r ->
-              for(dx <- 0..if(part2, do: pam, else: amnt), into: map, do: {{px + dx, py}, "#"})
+    ins
+    |> Enum.reduce(
+      {0, {0, 0}, [{0, 0}]},
+      fn {dir, amnt, pam, pd}, {len, {px, py}, points} ->
+        len =
+          len +
+            case if(part2, do: pd, else: dir) do
+              :r ->
+                if(part2, do: pam, else: amnt)
 
-            :d ->
-              for(dy <- 0..if(part2, do: pam, else: amnt), into: map, do: {{px, py + dy}, "#"})
+              :d ->
+                if(part2, do: pam, else: amnt)
 
-            :u ->
-              for(dy <- 0..if(part2, do: pam, else: amnt), into: map, do: {{px, py - dy}, "#"})
+              :u ->
+                if(part2, do: pam, else: amnt)
 
-            :l ->
-              for(dx <- 0..if(part2, do: pam, else: amnt), into: map, do: {{px - dx, py}, "#"})
-          end
+              :l ->
+                if(part2, do: pam, else: amnt)
+            end
 
         {px, py} =
-          case dir do
+          case if(part2, do: pd, else: dir) do
             :r -> {px + if(part2, do: pam, else: amnt), py}
             :d -> {px, py + if(part2, do: pam, else: amnt)}
             :u -> {px, py - if(part2, do: pam, else: amnt)}
             :l -> {px - if(part2, do: pam, else: amnt), py}
           end
 
-        {map, {px, py}}
-      end)
-      |> elem(0)
-
-    {minx, maxx} =
-      map
-      |> Map.keys()
-      |> Enum.map(&elem(&1, 0))
-      |> Enum.min_max()
-
-    {miny, maxy} =
-      map
-      |> Map.keys()
-      |> Enum.map(&elem(&1, 1))
-      |> Enum.min_max()
-
-    for cx <- minx..maxx,
-        cy <- miny..maxy,
-        into: %{},
-        do: {{cx, cy}, Map.get(map, {cx, cy}, ".")}
+        {len, {px, py}, [{px, py} | points]}
+      end
+    )
+    |> then(fn {map, _, points} ->
+      {map, points}
+    end)
   end
 
   def input(filename) do
@@ -133,12 +93,24 @@ defmodule Aoc.Day18 do
         line
         |> String.split(" ", trim: true)
 
-      {ncs, _} =
+      hex =
         cs
         |> String.slice(2, 6)
+
+      {ncs, _} =
+        hex
+        |> String.slice(0, 5)
         |> Integer.parse(16)
 
-      {String.downcase(ds) |> String.to_atom(), String.to_integer(ms), ncs}
+      dcs =
+        case hex |> String.slice(5, 1) do
+          "0" -> :r
+          "1" -> :d
+          "2" -> :l
+          "3" -> :u
+        end
+
+      {String.downcase(ds) |> String.to_atom(), String.to_integer(ms), ncs, dcs}
     end)
   end
 end
