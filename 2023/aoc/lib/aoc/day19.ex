@@ -1,14 +1,12 @@
 defmodule Aoc.Day19 do
+  use Memoize
+
   @doc """
       iex> "priv/day19/example.txt" |> Aoc.Day19.input() |> Aoc.Day19.part1()
       19114
   """
   def part1({workflows, ratings}) do
-    workflows
-    |> IO.inspect(label: "workflows")
-
     ratings
-    |> IO.inspect(label: "ratings")
     |> Enum.filter(fn rating ->
       rate(workflows, "in", rating) == :accepted
     end)
@@ -42,7 +40,6 @@ defmodule Aoc.Day19 do
             if Map.get(rating, cat) < String.to_integer(amt), do: {:halt, wf}, else: {:cont, acc}
         end
       end)
-      |> IO.inspect(label: "match -")
 
     case nw do
       "A" -> :accepted
@@ -91,10 +88,70 @@ defmodule Aoc.Day19 do
   end
 
   @doc """
-      # iex> "priv/day19/example.txt" |> Aoc.Day19.input() |> Aoc.Day19.part2()
-      # 952408144115
+      iex> "priv/day19/example.txt" |> Aoc.Day19.input() |> Aoc.Day19.part2()
+      167409079868000
   """
-  def part2(map) do
+  def part2({workflows, _}) do
+    count(
+      workflows,
+      %{"x" => [1, 4000], "m" => [1, 4000], "a" => [1, 4000], "s" => [1, 4000]},
+      "in"
+    )
+  end
+
+  def count(workflows, ranges, flow) do
+    case flow do
+      "R" ->
+        0
+
+      "A" ->
+        Enum.reduce(ranges, 1, fn {_, [lo, hi]}, acc ->
+          acc * (hi - lo + 1)
+        end)
+
+      _ ->
+        workflow = Map.get(workflows, flow)
+
+        res =
+          Enum.reduce_while(Map.get(workflow, :conds), {0, ranges}, fn %{
+                                                                         "category" => cat,
+                                                                         "operation" => op,
+                                                                         "amount" => amt,
+                                                                         "workflow" => wf
+                                                                       },
+                                                                       {total, racc} ->
+            [lo, hi] =
+              Map.get(racc, cat)
+
+            {trus, fals} =
+              if op == "<" do
+                {[lo, String.to_integer(amt) - 1], [String.to_integer(amt), hi]}
+              else
+                {[String.to_integer(amt) + 1, hi], [lo, String.to_integer(amt)]}
+              end
+
+            total =
+              if Enum.at(trus, 0) <= Enum.at(trus, 1) do
+                total + count(workflows, Map.put(racc, cat, trus), wf)
+              else
+                total
+              end
+
+            if Enum.at(fals, 0) <= Enum.at(fals, 1) do
+              racc =
+                Map.put(racc, cat, fals)
+
+              {:cont, {total, racc}}
+            else
+              {:halt, total}
+            end
+          end)
+
+        case res do
+          {total, ranges} -> total + count(workflows, ranges, Map.get(workflow, :else_cond))
+          total -> total
+        end
+    end
   end
 
   def input(filename) do
