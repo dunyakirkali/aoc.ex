@@ -7,9 +7,8 @@ defmodule Day21Test do
     assert Aoc.Day21.part1(input, 64) == 3820
   end
 
-  #
-  # test "Part 2" do
-  #   input = Aoc.Day21.input("priv/day21/input.txt")
-  #   assert Aoc.Day21.part2(input) == 222_718_819_437_131
-  # end
+  test "Part 2" do
+    input = Aoc.Day21.input("priv/day21/input.txt")
+    assert Aoc.Day21.part2(input, 26_501_365) == 632_421_652_138_917
+  end
 end
