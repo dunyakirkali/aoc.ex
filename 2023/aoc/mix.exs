@@ -21,7 +21,8 @@ defmodule Aoc.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:libgraph, "~> 0.13"},
+      # {:libgraph, "~> 0.14"},
+      {:libgraph, git: "https://github.com/tcoopman/libgraph", branch: "undirected"},
       {:nimble_parsec, "~> 1.4.0"},
       {:memoize, "~> 1.4.2"},
       {:benchee, "~> 1.0"},
@@ -37,7 +38,7 @@ defmodule Aoc.MixProject do
       {:flow, "~> 1.1.0"},
       {:deque, "~> 1.2"},
       {:cll, "~> 0.1.0"},
-      {:genex, "~> 1.0.0-beta"},
+      # {:genex, "~> 1.0.0-beta"},
       {:complex, "~> 0.4.1"},
       {:nx, "~> 0.2"},
       {:math, "~> 0.7.0"}
