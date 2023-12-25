@@ -1,0 +1,50 @@
+strict graph {
+    "rzs"
+    "xhk"
+    "bvb"
+    "nvd"
+    "rhn"
+    "ntq"
+    "cmg"
+    "rsh"
+    "qnr"
+    "pzl"
+    "lsr"
+    "jqt"
+    "hfx"
+    "lhk"
+    "frs"
+    "bvb" -- "xhk" [weight=1]
+    "bvb" -- "rhn" [weight=1]
+    "bvb" -- "ntq" [weight=1]
+    "bvb" -- "cmg" [weight=1]
+    "bvb" -- "hfx" [weight=1]
+    "nvd" -- "qnr" [weight=1]
+    "nvd" -- "pzl" [weight=1]
+    "rhn" -- "xhk" [weight=1]
+    "ntq" -- "xhk" [weight=1]
+    "cmg" -- "rzs" [weight=1]
+    "cmg" -- "nvd" [weight=1]
+    "cmg" -- "qnr" [weight=1]
+    "cmg" -- "lhk" [weight=1]
+    "rsh" -- "rzs" [weight=1]
+    "qnr" -- "rzs" [weight=1]
+    "pzl" -- "rsh" [weight=1]
+    "lsr" -- "rzs" [weight=1]
+    "lsr" -- "rsh" [weight=1]
+    "lsr" -- "pzl" [weight=1]
+    "jqt" -- "xhk" [weight=1]
+    "jqt" -- "nvd" [weight=1]
+    "jqt" -- "rhn" [weight=1]
+    "jqt" -- "ntq" [weight=1]
+    "hfx" -- "xhk" [weight=1]
+    "hfx" -- "rhn" [weight=1]
+    "hfx" -- "ntq" [weight=1]
+    "hfx" -- "pzl" [weight=1]
+    "lhk" -- "nvd" [weight=1]
+    "lhk" -- "lsr" [weight=1]
+    "frs" -- "rsh" [weight=1]
+    "frs" -- "qnr" [weight=1]
+    "frs" -- "lsr" [weight=1]
+    "frs" -- "lhk" [weight=1]
+}
