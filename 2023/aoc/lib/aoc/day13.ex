@@ -6,9 +6,9 @@ defmodule Aoc.Day13 do
   def part1(list) do
     list
     |> Enum.flat_map(fn map ->
-      [&find_vertical_mirror/1, &find_horizontal_mirror/1]
+      [&find_vertical_mirror/2, &find_horizontal_mirror/2]
       |> Enum.map(fn func ->
-        func.(map)
+        func.(map, false)
       end)
     end)
     |> Enum.filter(fn res ->
@@ -22,47 +22,49 @@ defmodule Aoc.Day13 do
   def collect([{:horizontal, num} | t], [cols, rows]), do: collect(t, [cols, [num | rows]])
   def collect([{:vertical, num} | t], [cols, rows]), do: collect(t, [[num | cols], rows])
 
-  def find_horizontal_mirror(map) do
+  def find_horizontal_mirror(map, part2) do
     {_, height} = size(map)
 
-    do_find_horizontal_mirror(map, 0, 0, 1, height - 1, false)
+    do_find_horizontal_mirror(map, 0, 0, 1, height - 1, false, part2)
   end
 
-  def do_find_horizontal_mirror(_, split, left, _, _, acc) when left < 0,
+  def do_find_horizontal_mirror(_, split, left, _, _, acc, part2) when left < 0,
     do: if(acc, do: {:horizontal, split + 1}, else: {:error})
 
-  def do_find_horizontal_mirror(_, split, _, right, limit, acc) when right > limit,
+  def do_find_horizontal_mirror(_, split, _, right, limit, acc, part2) when right > limit,
     do: if(acc, do: {:horizontal, split + 1}, else: {:error})
 
-  def do_find_horizontal_mirror(map, split, left, right, limit, _) do
-    IO.inspect({left, right})
+  def do_find_horizontal_mirror(map, split, left, right, limit, _, part2) do
+    diff_count = compare_rows(row(map, left), row(map, right))
 
-    if compare_rows(row(map, left), row(map, right)) do
-      do_find_horizontal_mirror(map, split, left - 1, right + 1, limit, true)
+    if (part2 and diff_count == 1) or (!part2 and diff_count == 0) do
+      do_find_horizontal_mirror(map, split, left - 1, right + 1, limit, true, part2)
     else
-      do_find_horizontal_mirror(map, split + 1, split + 1, split + 2, limit, false)
+      do_find_horizontal_mirror(map, split + 1, split + 1, split + 2, limit, false, part2)
     end
   end
 
-  def find_vertical_mirror(map) do
+  def find_vertical_mirror(map, part2) do
     {width, _} = size(map)
 
-    do_find_vertical_mirror(map, 0, 0, 1, width - 1, false)
+    do_find_vertical_mirror(map, 0, 0, 1, width - 1, false, part2)
   end
 
-  def do_find_vertical_mirror(_, split, left, _, _, acc) when left < 0,
+  def do_find_vertical_mirror(_, split, left, _, _, acc, _part2) when left < 0,
     do: if(acc, do: {:vertical, split + 1}, else: {:error})
 
-  def do_find_vertical_mirror(_, split, _, right, limit, acc) when right > limit,
+  def do_find_vertical_mirror(_, split, _, right, limit, acc, _part2) when right > limit,
     do: if(acc, do: {:vertical, split + 1}, else: {:error})
 
-  def do_find_vertical_mirror(map, split, left, right, limit, _) do
-    IO.inspect({left, right})
+  def do_find_vertical_mirror(map, split, left, right, limit, _, part2) do
+    diff_count =
+      compare_cols(col(map, left), col(map, right))
+      |> IO.inspect()
 
-    if compare_cols(col(map, left), col(map, right)) do
-      do_find_vertical_mirror(map, split, left - 1, right + 1, limit, true)
+    if (part2 and diff_count == 1) or (!part2 and diff_count == 0) do
+      do_find_vertical_mirror(map, split, left - 1, right + 1, limit, true, part2)
     else
-      do_find_vertical_mirror(map, split + 1, split + 1, split + 2, limit, false)
+      do_find_vertical_mirror(map, split + 1, split + 1, split + 2, limit, false, part2)
     end
   end
 
@@ -76,30 +78,76 @@ defmodule Aoc.Day13 do
     |> Kernel.+(100 * Enum.sum(rows))
   end
 
-  # @doc """
-  #     iex> "priv/day13/example.txt" |> Aoc.Day13.input() |> Aoc.Day13.part2()
-  #     525152
-  # """
-  # def part2(list) do
-  # end
-  #
+  def draw(map) do
+    IO.puts("\n")
+
+    {minx, maxx} =
+      map
+      |> Map.keys()
+      |> Enum.map(&elem(&1, 0))
+      |> Enum.min_max()
+
+    {miny, maxy} =
+      map
+      |> Map.keys()
+      |> Enum.map(&elem(&1, 1))
+      |> Enum.min_max()
+
+    Enum.each(miny..maxy, fn y ->
+      Enum.map(minx..maxx, fn x ->
+        Map.get(map, {x, y}, ".")
+      end)
+      |> Enum.join("")
+      |> IO.puts()
+    end)
+
+    IO.puts("\n")
+    map
+  end
+
+  @doc """
+      # iex> "priv/day13/example.txt" |> Aoc.Day13.input() |> Aoc.Day13.part2()
+      # 400
+  """
+  def part2(list) do
+    list
+    |> Enum.flat_map(fn map ->
+      [&find_vertical_mirror/2, &find_horizontal_mirror/2]
+      |> Enum.map(fn func ->
+        func.(map)
+      end)
+    end)
+    |> Enum.filter(fn res ->
+      res != {:error}
+    end)
+    |> collect([[], []])
+    |> score()
+  end
 
   def compare_cols(lm, rm) do
-    lm
-    |> Enum.map(fn {{_, y}, _} -> y end)
-    |> Kernel.==(
+    ll =
+      lm
+      |> Enum.map(fn {{_, y}, _} -> y end)
+
+    rl =
       rm
       |> Enum.map(fn {{_, y}, _} -> y end)
-    )
+
+    Enum.reject(ll, &Enum.member?(rl, &1))
+    |> Enum.count()
   end
 
   def compare_rows(lm, rm) do
-    lm
-    |> Enum.map(fn {{x, _}, _} -> x end)
-    |> Kernel.==(
+    ll =
+      lm
+      |> Enum.map(fn {{x, _}, _} -> x end)
+
+    rl =
       rm
       |> Enum.map(fn {{x, _}, _} -> x end)
-    )
+
+    Enum.reject(ll, &Enum.member?(rl, &1))
+    |> Enum.count()
   end
 
   def row(map, r) do

@@ -57,11 +57,6 @@ defmodule Aoc.Day5 do
     # |> IO.inspect(label: "disjoints")
   end
 
-  def grow2(_rules, "location", vals), do: vals
-
-  def grow2(rules, state, vals) do
-  end
-
   def fkey("seed"), do: "seed-to-soil"
   def fkey("soil"), do: "soil-to-fertilizer"
   def fkey("fertilizer"), do: "fertilizer-to-water"

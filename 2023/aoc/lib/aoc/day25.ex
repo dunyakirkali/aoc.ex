@@ -1,61 +1,65 @@
 defmodule Aoc.Day25 do
+  alias Nx.Stream
+
   @doc """
       iex> "priv/day25/example.txt" |> Aoc.Day25.input() |> Aoc.Day25.part1()
       54
   """
   def part1(g) do
-    g
-    |> Graph.vertices()
-    |> Comb.combinations(2)
-    |> Enum.take_random(100_000)
-    |> Stream.flat_map(fn [from, to] ->
-      case Graph.get_shortest_path(g, from, to) do
-        nil -> []
-        path -> Enum.chunk_every(path, 2, 1, :discard)
-      end
-    end)
-    |> Enum.reduce(%{}, fn edge, acc ->
-      Map.update(acc, Enum.sort(edge), 1, fn e -> e + 1 end)
-    end)
-    |> Enum.sort(fn {_, lhs}, {_, rhs} -> lhs > rhs end)
-    |> Enum.take(20)
-    |> Enum.map(fn {p, _} -> List.to_tuple(p) end)
-    |> Comb.combinations(3)
-    |> Enum.reduce_while(1, fn edges, acc ->
-      sg =
-        Graph.delete_edges(g, edges)
+    # Graph.new(type: :undirected)
+    # |> Graph.add_edge(:a, :b, label: 3)
 
-      res =
-        edges
-        |> Enum.all?(fn {f, t} ->
-          nv1 =
-            Graph.reachable(sg, [f])
-            |> MapSet.new()
+    contract(g)
+    |> Graph.edges()
+    |> List.first()
+  end
 
-          nv2 =
-            Graph.reachable(sg, [t])
-            |> MapSet.new()
+  def contract(g) do
+    Graph.num_vertices(g)
+    |> IO.inspect()
 
-          MapSet.disjoint?(nv1, nv2) and
-            Enum.count(nv1) + Enum.count(nv2) == Graph.num_vertices(sg)
+    if Graph.num_vertices(g) > 2 do
+      e =
+        Graph.edges(g)
+        |> Enum.random()
+        |> IO.inspect()
+
+      v1 = e.v1
+      v2 = e.v2
+
+      nv1 =
+        Graph.neighbors(g, v1)
+        |> List.delete(v2)
+        |> IO.inspect()
+
+      nv2 =
+        Graph.neighbors(g, v2)
+        |> List.delete(v1)
+        |> IO.inspect()
+
+      nv = nv1 ++ nv2
+
+      g = Graph.delete_vertex(g, v1)
+      g = Graph.delete_vertex(g, v2)
+
+      vn = "#{v1}_#{v2}" |> String.to_atom()
+
+      g = Graph.add_vertex(g, vn)
+
+      g =
+        nv
+        |> Enum.frequencies()
+        |> Enum.reduce(g, fn {n, freq}, acc ->
+          Graph.add_edge(acc, vn, n, label: freq)
         end)
 
-      if res do
-        {f, t} = List.first(edges)
+      Graph.num_vertices(g)
+      |> IO.inspect()
 
-        nv1 =
-          Graph.reachable(sg, [f])
-          |> MapSet.new()
-
-        nv2 =
-          Graph.reachable(sg, [t])
-          |> MapSet.new()
-
-        {:halt, Enum.count(nv1) * Enum.count(nv2)}
-      else
-        {:cont, acc}
-      end
-    end)
+      contract(g)
+    else
+      g
+    end
   end
 
   def input(filename) do

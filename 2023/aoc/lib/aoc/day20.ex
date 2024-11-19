@@ -93,14 +93,32 @@ defmodule Aoc.Day20 do
 
   def run([], state, {hc, lc}), do: {state, {hc, lc}}
 
-  # @doc """
-  #     iex> "priv/day20/example.txt" |> Aoc.Day20.input() |> Aoc.Day20.part2()
-  #     167409079868000
-  # """
-  # def part2({workflows, _}) do
-  #
-  # end
-  #
+  def part2(state) do
+    # Stream.iterate(0, &(&1 + 1))
+    # |> Enum.reduce_while(state, fn i, s ->
+    #   {ns, _} = run([{:button, "broadcaster", :low}], s, {0, 0})
+    #
+    #   {:cont, ns}
+    # end)
+    ["sj", "qq", "ls", "bg"]
+
+    ["hb", "hf", "dl", "lq"]
+
+    Stream.iterate(0, &(&1 + 1))
+    |> Enum.reduce_while(state, fn i, s ->
+      IO.inspect(i)
+      {ns, _} = run([{:button, "broadcaster", :low}], s, {0, 0})
+      sj = ns |> Enum.find(fn obj -> obj.name == "qq" end)
+
+      sjs = Enum.all?(sj.states, fn {_, v} -> v == :high end)
+
+      if sjs == false do
+        {:halt, i}
+      else
+        {:cont, ns}
+      end
+    end)
+  end
 
   def input(filename) do
     state =

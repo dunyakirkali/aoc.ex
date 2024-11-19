@@ -321,7 +321,6 @@ defmodule Aoc.Day7 do
         :gt -> false
       end
     end)
-    |> IO.inspect(label: "Part 2: sorted")
     |> Enum.with_index()
     |> Enum.map(fn {%HandWithBid{bid: bid}, rank} -> bid * (rank + 1) end)
     |> Enum.sum()

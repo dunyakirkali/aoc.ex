@@ -49,10 +49,13 @@ defmodule Aoc.Day4 do
     if score(winning, numbers) == 0 do
       process(cards_map, t, processed + 1)
     else
-      process(cards_map, t ++ cards_to_add(cards_map, ind, score(winning, numbers)), processed + 1)
+      process(
+        cards_map,
+        t ++ cards_to_add(cards_map, ind, score(winning, numbers)),
+        processed + 1
+      )
     end
   end
-
 
   defmemo score(winning, numbers) do
     MapSet.intersection(winning, numbers)
