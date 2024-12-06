@@ -10,16 +10,38 @@ defmodule Aoc.Day6 do
     |> Enum.count()
   end
 
+  @doc """
+      iex> "priv/day6/example.txt" |> Aoc.Day6.input() |> elem(0) |> Aoc.Day6.size()
+      {9, 9}
+
+      iex> "priv/day6/input.txt" |> Aoc.Day6.input() |> elem(0) |> Aoc.Day6.size()
+      {129, 129}
+  """
+  def size(map) do
+    {max_x, max_y} =
+      map
+      |> Enum.reduce({0, 0}, fn {{x, y}, _}, {max_x, max_y} ->
+        {max(x, max_x), max(y, max_y)}
+      end)
+
+    {max_x, max_y}
+  end
+
   defp solve(m, c) do
+    {sx, sy} = size(m)
     Stream.iterate(1, &(&1 + 1))
     |> Enum.reduce_while({m, c, "^", [{c, "^"}]}, fn _, {map, cp, dir, visited} ->
       {cx, cy} = cp
       np = dir(dir, {cx, cy})
-      case Map.get(map, np, " ") do
-        # Turn 90
-        "#" -> {:cont, {map, {cx, cy}, turn(dir), visited}}
-        "." -> {:cont, {map, np, dir, [{np, dir} | visited]}}
-        " " -> {:halt, visited}
+      {nx, ny} = np
+
+      if nx < 0 or ny < 0 or nx > sx or ny > sy do
+        {:halt, visited}
+      else
+        case Map.get(map, np, ".") do
+          "#" -> {:cont, {map, {cx, cy}, turn(dir), visited}}
+          "." -> {:cont, {map, np, dir, [{np, dir} | visited]}}
+        end
       end
     end)
     |> Enum.map(fn {k, _} -> k end)
@@ -42,22 +64,28 @@ defmodule Aoc.Day6 do
   """
   def part2(list) do
     {m, c} = list
-
+    {sx, sy} = size(m)
     solve(m, c)
-    |> Enum.map(fn obstacle ->
+    |> Enum.with_index()
+    |> Enum.map(fn {obstacle, i} ->
       Stream.iterate(1, &(&1 + 1))
-      |> Enum.reduce_while({Map.put(m, obstacle, "#"), c, "^", [{c, "^"}]}, fn _, {map, cp, dir, visited} ->
+      |> Enum.reduce_while({Map.put(m, obstacle, "#"), c, "^", MapSet.new([{c, "^"}])}, fn _, {map, cp, dir, visited} ->
         {cx, cy} = cp
         np = dir(dir, {cx, cy})
-        case Map.get(map, np, " ") do
-          "#" -> {:cont, {map, {cx, cy}, turn(dir), visited}}
-          "." ->
-            if Enum.member?(visited, {np, dir}) do
-              {:halt, 1}
-            else
-              {:cont, {map, np, dir, [{np, dir} | visited]}}
-            end
-          " " -> {:halt, 0}
+        {nx, ny} = np
+
+        if nx < 0 or ny < 0 or nx > sx or ny > sy do
+          {:halt, 0}
+        else
+          case Map.get(map, np, ".") do
+            "#" -> {:cont, {map, {cx, cy}, turn(dir), visited}}
+            "." ->
+              if MapSet.member?(visited, {np, dir}) do
+                {:halt, 1}
+              else
+                {:cont, {map, np, dir, MapSet.put(visited, {np, dir})}}
+              end
+          end
         end
       end)
     end)
@@ -83,6 +111,6 @@ defmodule Aoc.Day6 do
     {pp, _} =
       Enum.find(map, fn {_, v} -> v != "." and v != "#" end)
 
-    {Map.put(map, pp, "."), pp}
+    {Map.delete(map, pp), pp}
   end
 end
