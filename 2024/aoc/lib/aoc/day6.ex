@@ -22,37 +22,15 @@ defmodule Aoc.Day6 do
     |> Enum.count()
   end
 
-  def turn("^") do
-    ">"
-  end
+  def turn("^"), do: ">"
+  def turn(">"), do: "v"
+  def turn("v"), do: "<"
+  def turn("<"), do: "^"
 
-  def turn(">") do
-    "v"
-  end
-
-  def turn("v") do
-    "<"
-  end
-
-  def turn("<") do
-    "^"
-  end
-
-  def dir("^", {x, y}) do
-    {x, y - 1}
-  end
-
-  def dir("v", {x, y}) do
-    {x, y + 1}
-  end
-
-  def dir(">", {x, y}) do
-    {x + 1, y}
-  end
-
-  def dir("<", {x, y}) do
-    {x - 1, y}
-  end
+  def dir("^", {x, y}), do: {x, y - 1}
+  def dir("v", {x, y}), do: {x, y + 1}
+  def dir(">", {x, y}), do: {x + 1, y}
+  def dir("<", {x, y}), do: {x - 1, y}
 
   @doc """
       iex> "priv/day6/example.txt" |> Aoc.Day6.input() |> Aoc.Day6.part2()
@@ -75,7 +53,6 @@ defmodule Aoc.Day6 do
       end)
       |> Enum.map(fn {k, _} -> k end)
       |> Enum.uniq()
-      |> IO.inspect
 
 
     all_empty
