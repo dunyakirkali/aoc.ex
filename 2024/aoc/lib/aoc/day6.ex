@@ -6,6 +6,11 @@ defmodule Aoc.Day6 do
   def part1(list) do
     {m, c} = list
 
+    solve(m, c)
+    |> Enum.count()
+  end
+
+  defp solve(m, c) do
     Stream.iterate(1, &(&1 + 1))
     |> Enum.reduce_while({m, c, "^", [{c, "^"}]}, fn _, {map, cp, dir, visited} ->
       {cx, cy} = cp
@@ -19,7 +24,6 @@ defmodule Aoc.Day6 do
     end)
     |> Enum.map(fn {k, _} -> k end)
     |> Enum.uniq()
-    |> Enum.count()
   end
 
   def turn("^"), do: ">"
@@ -37,25 +41,9 @@ defmodule Aoc.Day6 do
       6
   """
   def part2(list) do
-
     {m, c} = list
-    all_empty =
-      Stream.iterate(1, &(&1 + 1))
-      |> Enum.reduce_while({m, c, "^", [{c, "^"}]}, fn _, {map, cp, dir, visited} ->
-        {cx, cy} = cp
-        np = dir(dir, {cx, cy})
-        case Map.get(map, np, " ") do
-          # Turn 90
-          "#" -> {:cont, {map, {cx, cy}, turn(dir), visited}}
-          "." -> {:cont, {map, np, dir, [{np, dir} | visited]}}
-          " " -> {:halt, visited}
-        end
-      end)
-      |> Enum.map(fn {k, _} -> k end)
-      |> Enum.uniq()
 
-
-    all_empty
+    solve(m, c)
     |> Enum.map(fn obstacle ->
       Stream.iterate(1, &(&1 + 1))
       |> Enum.reduce_while({Map.put(m, obstacle, "#"), c, "^", [{c, "^"}]}, fn _, {map, cp, dir, visited} ->
