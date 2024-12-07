@@ -6,49 +6,23 @@ defmodule Aoc.Day7 do
   def part1(list) do
     list
     |> Enum.filter(fn {test_val, nums} ->
-      generate_combinations(nums, ["+", "*"])
-      |> Enum.map(fn equ ->
-        evaluate(equ)
-      end)
-      |> Enum.member?(test_val)
+      dfs(0, nums, test_val)
     end)
-    |> Enum.map(fn {test_val, _} -> test_val end)
+    |> Stream.map(fn {test_val, _} -> test_val end)
     |> Enum.sum()
   end
 
-  def evaluate(equation) do
-    equation
-    |> String.split(~r/(\+|\*|\|\|)/, trim: true, include_captures: true)
-    |> evaluate_left_to_right()
+  def dfs(sum, [], test_val), do: sum == test_val
+
+  def dfs(sum, [l], test_val) do
+    dfs(sum + l, [], test_val) || dfs(sum * l, [], test_val)
   end
 
-  defp evaluate_left_to_right([number]), do: String.to_integer(number)
-
-  defp evaluate_left_to_right([left, operator, right | rest]) do
-    result =
-      case operator do
-        "+" -> String.to_integer(left) + String.to_integer(right)
-        "*" -> String.to_integer(left) * String.to_integer(right)
-        "||" -> String.to_integer(left <> right)
-      end
-
-    evaluate_left_to_right([Integer.to_string(result) | rest])
-  end
-
-  def generate_combinations(numbers, operators) do
-    generate_combinations(numbers, operators, [])
-  end
-
-  defp generate_combinations([number], _operators, acc) do
-    # When there's only one number left, combine it with the accumulator
-    [Enum.join(acc ++ [to_string(number)], "")]
-  end
-
-  defp generate_combinations([first, second | rest], operators, acc) do
-    for operator <- operators,
-        combination <-
-          generate_combinations([second | rest], operators, acc ++ [to_string(first), operator]) do
-      combination
+  def dfs(sum, [h | t], test_val) do
+    if sum == 0 do
+      dfs(sum + h, t, test_val)
+    else
+      dfs(sum + h, t, test_val) || dfs(sum * h, t, test_val)
     end
   end
 
@@ -59,12 +33,26 @@ defmodule Aoc.Day7 do
   def part2(list) do
     list
     |> Enum.filter(fn {test_val, nums} ->
-      generate_combinations(nums, ["+", "*", "||"])
-      |> Stream.map(&evaluate/1)
-      |> Enum.any?(&(&1 == test_val))
+      dfs2(0, nums, test_val)
     end)
-    |> Enum.map(fn {test_val, _} -> test_val end)
+    |> Stream.map(fn {test_val, _} -> test_val end)
     |> Enum.sum()
+  end
+
+  def dfs2(sum, [], test_val), do: sum == test_val
+
+  def dfs2(sum, [l], test_val) do
+    dfs2(sum + l, [], test_val) || dfs2(sum * l, [], test_val) ||
+      dfs2(String.to_integer(Integer.to_string(sum) <> Integer.to_string(l)), [], test_val)
+  end
+
+  def dfs2(sum, [h | t], test_val) do
+    if sum == 0 do
+      dfs2(sum + h, t, test_val)
+    else
+      dfs2(sum + h, t, test_val) || dfs2(sum * h, t, test_val) ||
+        dfs2(String.to_integer(Integer.to_string(sum) <> Integer.to_string(h)), t, test_val)
+    end
   end
 
   def input(filename) do
