@@ -29,6 +29,7 @@ defmodule Aoc.Day6 do
 
   defp solve(m, c) do
     {sx, sy} = size(m)
+
     Stream.iterate(1, &(&1 + 1))
     |> Enum.reduce_while({m, c, "^", [{c, "^"}]}, fn _, {map, cp, dir, visited} ->
       {cx, cy} = cp
@@ -65,11 +66,16 @@ defmodule Aoc.Day6 do
   def part2(list) do
     {m, c} = list
     {sx, sy} = size(m)
+
     solve(m, c)
     |> Enum.with_index()
-    |> Enum.map(fn {obstacle, i} ->
+    |> Enum.map(fn {obstacle, _} ->
       Stream.iterate(1, &(&1 + 1))
-      |> Enum.reduce_while({Map.put(m, obstacle, "#"), c, "^", MapSet.new([{c, "^"}])}, fn _, {map, cp, dir, visited} ->
+      |> Enum.reduce_while({Map.put(m, obstacle, "#"), c, "^", MapSet.new([{c, "^"}])}, fn _,
+                                                                                           {map,
+                                                                                            cp,
+                                                                                            dir,
+                                                                                            visited} ->
         {cx, cy} = cp
         np = dir(dir, {cx, cy})
         {nx, ny} = np
@@ -78,7 +84,9 @@ defmodule Aoc.Day6 do
           {:halt, 0}
         else
           case Map.get(map, np, ".") do
-            "#" -> {:cont, {map, {cx, cy}, turn(dir), visited}}
+            "#" ->
+              {:cont, {map, {cx, cy}, turn(dir), visited}}
+
             "." ->
               if MapSet.member?(visited, {np, dir}) do
                 {:halt, 1}
@@ -89,7 +97,7 @@ defmodule Aoc.Day6 do
         end
       end)
     end)
-    |> Enum.sum
+    |> Enum.sum()
   end
 
   def input(filename) do
