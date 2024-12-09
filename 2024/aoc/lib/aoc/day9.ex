@@ -6,35 +6,23 @@ defmodule Aoc.Day9 do
   def part1(list) do
     list
     |> expand(0, :file, [])
-    |> move()
+    |> then(fn list ->
+      rel = Enum.reverse(list) |> Enum.reject(fn item -> item == "." end)
+      size = Enum.count(rel)
+      step(list, rel, [], size, 0)
+    end)
     |> score()
   end
 
-  def move(list) do
-    first_free = Enum.find_index(list, fn x -> x == "." end)
-
-    last_file =
-      list
-      |> Enum.with_index()
-      |> Enum.reduce(nil, fn
-        {x, i}, _acc when is_integer(x) -> i
-        _, acc -> acc
-      end)
-
-    if first_free > last_file do
-      list
+  def step([hl | tl], [hrl | trl], acc, size, prog) do
+    if prog == size do
+      Enum.reverse(acc)
     else
-      move(swap(list, first_free, last_file))
+      case hl do
+        "." -> step(tl, trl, [hrl | acc], size, prog + 1)
+        _ -> step(tl, [hrl | trl], [hl | acc], size, prog + 1)
+      end
     end
-  end
-
-  def swap(a, i1, i2) do
-    e1 = Enum.at(a, i1)
-    e2 = Enum.at(a, i2)
-
-    a
-    |> List.replace_at(i1, e2)
-    |> List.replace_at(i2, e1)
   end
 
   @doc """
