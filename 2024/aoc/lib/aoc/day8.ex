@@ -13,7 +13,7 @@ defmodule Aoc.Day8 do
     |> Enum.map(fn {an, poss} ->
       {an, Enum.map(poss, fn {p, _} -> p end)}
     end)
-    |> Enum.flat_map(fn {an, poss} ->
+    |> Enum.flat_map(fn {_, poss} ->
       poss
       |> Comb.combinations(2)
       |> Enum.flat_map(fn [{xa, ya}, {xb, yb}] ->
@@ -57,7 +57,7 @@ defmodule Aoc.Day8 do
     |> Enum.map(fn {an, poss} ->
       {an, Enum.map(poss, fn {p, _} -> p end)}
     end)
-    |> Enum.flat_map(fn {an, poss} ->
+    |> Enum.flat_map(fn {_, poss} ->
       poss
       |> Comb.combinations(2)
       |> Enum.flat_map(fn [{xa, ya}, {xb, yb}] ->
