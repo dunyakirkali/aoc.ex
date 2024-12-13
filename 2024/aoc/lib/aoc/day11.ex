@@ -19,7 +19,7 @@ defmodule Aoc.Day11 do
   """
   def part1(list, blink) do
     1..blink
-    |> Enum.reduce(list, fn item, acc ->
+    |> Enum.reduce(list, fn _, acc ->
       Enum.flat_map(acc, fn stone -> change(stone) end)
     end)
   end
