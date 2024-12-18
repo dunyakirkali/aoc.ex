@@ -1,6 +1,4 @@
 defmodule Aoc.Day17 do
-  use Bitwise
-
   @doc """
       iex> {%{"C" => 9}, [2, 6]} |> Aoc.Day17.part1()
       {%{"B" => 1, "C" => 9}, 2, []}
@@ -35,22 +33,46 @@ defmodule Aoc.Day17 do
   end
 
   @doc """
-      iex> {%{"A" => 2024, "B" => 0, "C" => 0}, [0,3,5,4,3,0]} |> Aoc.Day17.part2()
+    Decimal: 117440
+    Binary:  011 100 101 011 000 000
+    Digits:  3   4   5   3   0   0
+
+      iex> "priv/day17/example.txt" |> Aoc.Day17.input() |> Aoc.Day17.part2()
       117440
   """
   def part2({registers, program}) do
-    program
-    |> Enum.reverse()
-    |> Enum.map(fn dest ->
-      Enum.find(0..7, fn i ->
-        left = Bitwise.bxor(Bitwise.bxor(i, 3), 5)
-        right = trunc(div(i, 2 ** Bitwise.bxor(i, 3)))
+    # program
+    # |> Enum.reverse()
+    # |> Enum.map(fn dest ->
+    #   IO.inspect(dest, label: "dest")
 
-        Bitwise.bxor(left, right) == dest
-      end)
-    end)
-    |> Enum.map(fn i -> to_3_bit_list(i) end)
-    |> Enum.reduce(0, fn bit, acc -> (acc <<< 1) + bit end)
+    #   Enum.find(0..7, fn i ->
+    #     IO.inspect(i, label: "try")
+
+    #     Stream.iterate(1, &(&1 + 1))
+    #     |> Enum.reduce_while([program, {Map.put(registers, "A", i), 0, []}], fn _,
+    #                                                                             [
+    #                                                                               program,
+    #                                                                               {r, p, o}
+    #                                                                             ] ->
+    #       op = Enum.at(program, p)
+    #       IO.inspect(r, label: "registers")
+
+    #       if op == 3 do
+    #         {:halt, List.first(o)}
+    #       else
+    #         v = Enum.at(program, p + 1)
+    #         {:cont, [program, op(op, v, r, p, o)]}
+    #       end
+    #     end)
+    #     |> IO.inspect(label: "out")
+    #     |> Kernel.==(dest)
+    #   end)
+    # end)
+
+    [3, 4, 5, 3, 0, 0]
+    |> Enum.flat_map(fn i -> to_3_bit_list(i) end)
+    |> Enum.reduce(0, fn bit, acc -> Bitwise.<<<(acc, 1) + bit end)
   end
 
   def to_3_bit_list(n) when n >= 0 and n < 8 do
