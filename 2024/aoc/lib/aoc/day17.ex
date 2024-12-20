@@ -40,7 +40,7 @@ defmodule Aoc.Day17 do
       iex> "priv/day17/example.txt" |> Aoc.Day17.input() |> Aoc.Day17.part2()
       117440
   """
-  def part2({registers, program}) do
+  def part2({_registers, _program}) do
     # program
     # |> Enum.reverse()
     # |> Enum.map(fn dest ->
@@ -76,7 +76,7 @@ defmodule Aoc.Day17 do
   end
 
   def to_3_bit_list(n) when n >= 0 and n < 8 do
-    for i <- 2..0, do: Bitwise.band(Bitwise.bsr(n, i), 1)
+    for i <- 2..0//-1, do: Bitwise.band(Bitwise.bsr(n, i), 1)
   end
 
   def combo(v, _registers) when v >= 0 and v <= 3, do: v
