@@ -38,7 +38,9 @@ defmodule Aoc.Day13 do
     machines
     |> Enum.map(fn machine ->
       machine
-      |> Map.get_and_update!(:p, fn {x, y} -> {{x, y}, {x + 10000000000000, y + 10000000000000}} end)
+      |> Map.get_and_update!(:p, fn {x, y} ->
+        {{x, y}, {x + 10_000_000_000_000, y + 10_000_000_000_000}}
+      end)
       |> then(fn {_, nm} ->
         solve(nm)
       end)
