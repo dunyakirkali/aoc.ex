@@ -57,23 +57,10 @@ defmodule Aoc.Day21 do
   def part1(codes) do
     codes
     |> Enum.map(fn code ->
-      {number, _} =
-        code
-        |> String.graphemes()
-        |> Enum.join()
-        |> Integer.parse()
-        |> IO.inspect(label: "number")
+      {number, _} = Integer.parse(code)
+      length = solve(code, :num, 2)
 
-      Enum.reduce(0..1, solve(code, :num), fn _, acc ->
-        acc
-        |> Enum.flat_map(fn seq ->
-          solve(seq, :dir)
-        end)
-      end)
-      |> Enum.min_by(fn str -> String.length(str) end)
-      |> IO.inspect(label: "number")
-      |> String.length()
-      |> Kernel.*(number)
+      length * number
     end)
     |> Enum.sum()
   end
@@ -81,115 +68,59 @@ defmodule Aoc.Day21 do
   def part2(codes) do
     codes
     |> Enum.map(fn code ->
-      {number, _} =
-        code
-        |> String.graphemes()
-        |> Enum.join()
-        |> Integer.parse()
+      {number, _} = Integer.parse(code)
+      length = solve(code, :num, 25)
 
-      # Pre-calculate all possible sequences once
-      sequences = solve(code, :num)
-
-      # Find shortest sequence after 25 iterations
-      final_sequence =
-        Enum.reduce(1..25, sequences, fn i, acc ->
-          IO.inspect(i, label: "i")
-          Enum.flat_map(acc, &solve(&1, :dir))
-        end)
-        |> Enum.min_by(&String.length/1)
-
-      # Calculate result
-      String.length(final_sequence) * number
+      length * number
     end)
     |> Enum.sum()
   end
 
-  defmemo solve(line, keypad) do
-    initial_position = "A"
-
-    movements =
-      line
-      |> String.graphemes()
-      |> build_path_segments(initial_position)
-      |> calculate_paths(keypad)
-      |> flatten_and_format_paths(keypad)
-      |> generate_unique_solutions()
+  def solve(line, type, dest) do
+    do_solve(line, type, dest + 1, 0)
   end
 
-  defp build_path_segments(chars, start_pos) do
-    chars
-    |> List.insert_at(0, start_pos)
+  defmemo(do_solve(line, _type, dest, depth) when dest == depth, do: String.length(line))
+
+  defmemo do_solve(line, type, dest, depth) do
+    line
+    |> String.graphemes()
+    |> List.insert_at(0, "A")
     |> Enum.chunk_every(2, 1, :discard)
-  end
-
-  defp calculate_paths(segments, keypad_type) do
-    keypad = get_keypad_for_type(keypad_type)
-
-    Enum.map(segments, fn [from, to] ->
-      keypad
+    |> Enum.map(fn [from, to] ->
+      type
+      |> keypad()
       |> Graph.get_paths(from, to)
-      |> find_shortest_lists()
-    end)
-  end
-
-  defp flatten_and_format_paths(paths, keypad_type) do
-    Enum.map(paths, fn path ->
-      path
-      |> Enum.chunk_every(2, 1, :discard)
-      |> Enum.map(&convert_step(&1, keypad_type))
-      |> append_final_position()
-      |> find_shortest_lists()
-    end)
-  end
-
-  defp get_keypad_for_type(:num), do: @num_keypad
-  defp get_keypad_for_type(_), do: @dir_keypad
-
-  defp convert_step(step, :num), do: numerical(step)
-  defp convert_step(step, _), do: directional(step)
-
-  defp append_final_position(path), do: path ++ ["A"]
-
-  defp generate_unique_solutions(paths) do
-    paths
-    |> generate()
-    |> Enum.uniq()
-  end
-
-  def generate(arrays) do
-    arrays
-    |> Enum.map(fn subarray ->
-      subarray
-      |> Enum.map(fn x ->
-        List.flatten([x]) |> Enum.join()
+      |> filter_by_shortest_length()
+      |> Enum.map(fn path ->
+        path
+        |> Enum.chunk_every(2, 1, :discard)
+        |> Enum.map(fn step ->
+          if type == :num do
+            numerical(step)
+          else
+            directional(step)
+          end
+        end)
+        |> Kernel.++(["A"])
+        |> Enum.join()
+        |> do_solve(:dir, dest, depth + 1)
       end)
-    end)
-    |> combine_all([])
-  end
-
-  defp combine_all([head | tail], []) do
-    combine_all(tail, head)
-  end
-
-  defp combine_all([head | tail], acc) do
-    new_acc =
-      for x <- acc,
-          y <- head,
-          do: x <> y
-
-    combine_all(tail, new_acc)
-  end
-
-  defp combine_all([], acc), do: acc
-
-  def find_shortest_lists(lists) do
-    min_length =
-      lists
-      |> Enum.map(&length/1)
       |> Enum.min()
-
-    lists |> Enum.filter(fn list -> length(list) == min_length end)
+    end)
+    |> Enum.sum()
   end
+
+  def filter_by_shortest_length(lists) do
+    # Find the length of the shortest list
+    shortest_length = lists |> Enum.map(&length/1) |> Enum.min()
+
+    # Filter the lists by the shortest length
+    Enum.filter(lists, fn list -> length(list) == shortest_length end)
+  end
+
+  def keypad(:num), do: @num_keypad
+  def keypad(:dir), do: @dir_keypad
 
   def directional(["^", "A"]), do: ">"
   def directional(["^", "v"]), do: "v"
