@@ -150,6 +150,6 @@ defmodule Aoc.Day17 do
 
     pieces = pieces |> String.split(",", trim: true) |> Enum.map(&String.to_integer/1)
 
-    {registers, pieces} |> IO.inspect()
+    {registers, pieces}
   end
 end

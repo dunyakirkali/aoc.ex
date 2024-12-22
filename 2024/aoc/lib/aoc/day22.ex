@@ -81,8 +81,6 @@ defmodule Aoc.Day22 do
   def generate(seed, n) do
     Stream.unfold({0, seed}, fn
       {index, sn} ->
-        # IO.inspect({index, sn})
-
         case rem(index, 3) do
           0 ->
             s1 = sn * 64

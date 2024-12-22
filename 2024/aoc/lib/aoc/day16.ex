@@ -14,7 +14,6 @@ defmodule Aoc.Day16 do
     visited = MapSet.new([])
 
     walk(graph, queue, visited, desti, [])
-    |> IO.inspect(limit: :infinity)
     |> Enum.map(fn path -> score(path) end)
     |> Enum.min()
   end
@@ -42,11 +41,9 @@ defmodule Aoc.Day16 do
     |> then(fn paths ->
       paths
       |> Enum.count()
-      |> IO.inspect(label: "Total paths")
 
       paths
       |> Enum.map(fn path -> score(path) end)
-      |> IO.inspect(label: "Path scores")
 
       paths
     end)
@@ -59,8 +56,6 @@ defmodule Aoc.Day16 do
   end
 
   def walk(graph, queue, visited, desti, paths) do
-    # IO.inspect(visited)
-
     case PriorityQueue.pop(queue) do
       {{:value, {pos, direction, path}}, queue} ->
         current_path = [{pos, direction} | path]
