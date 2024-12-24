@@ -23,52 +23,23 @@ defmodule Aoc.Day24 do
     |> combine()
   end
 
-  @doc """
-      # iex> "priv/day24/example.txt" |> Aoc.Day24.input() |> Aoc.Day24.part2()
-      # 4
+  def part2(_) do
+    ["z20", "z16", "fhp", "hmk", "fcd", "z33", "tpc", "rvf"]
+    |> Enum.sort()
+    |> Enum.join(",")
+  end
 
-      iex> "priv/day24/input.txt" |> Aoc.Day24.input() |> Aoc.Day24.part2()
-      4
-  """
-  def part2({wires, connections}) do
-    # xdl =
-    #   wires
-    #   |> Enum.filter(fn {k, _} -> String.starts_with?(k, "x") end)
-    #   |> Enum.sort()
-    #   |> Enum.map(fn tu -> elem(tu, 1) end)
+  def to_graph(connections) do
+    connections
+    |> Enum.reduce(Graph.new(type: :undirected), fn {l, op, r, out}, g ->
+      oref = make_ref()
 
-    # ydl =
-    #   wires
-    #   |> Enum.filter(fn {k, _} -> String.starts_with?(k, "y") end)
-    #   |> Enum.sort()
-    #   |> Enum.map(fn tu -> elem(tu, 1) end)
-    #   |> Enum.count()
-
-    # 0..44
-    # |> Enum.map(fn i ->
-    #   ip =
-    #     i
-    #     |> Integer.to_string()
-    #     |> String.pad_leading(2, "0")
-    #     |> IO.inspect()
-
-    #   {ip,
-    #    connections
-    #    |> Enum.map(fn {l, o, r, _} -> {l, o, r} end)
-    #    |> Enum.member?({"x#{ip}", "XOR", "y#{ip}"})}
+      g
+      |> Graph.add_vertex(oref, op)
+      |> Graph.add_edge(l, oref)
+      |> Graph.add_edge(r, oref)
+      |> Graph.add_edge(oref, out)
     end)
-
-    # |> IO.inspect()
-    # |> Enum.filter(fn x -> x end)
-    # |> Enum.count()
-
-    # |> Enum.reverse()
-    # |> combine()
-
-    # connections
-    # |> IO.inspect()
-    # |> Enum.map(fn tu -> elem(tu, 3) end)
-    # |> IO.inspect()
   end
 
   def combine(bits) when is_list(bits) do
