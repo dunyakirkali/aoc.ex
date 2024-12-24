@@ -1,0 +1,141 @@
+defmodule Aoc.Day24 do
+  use Memoize
+
+  @doc """
+      iex> "priv/day24/example.txt" |> Aoc.Day24.input() |> Aoc.Day24.part1()
+      4
+
+      iex> "priv/day24/example2.txt" |> Aoc.Day24.input() |> Aoc.Day24.part1()
+      2024
+  """
+  def part1({wires, connections}) do
+    zs =
+      connections
+      |> Enum.map(fn tu -> elem(tu, 3) end)
+      |> Enum.filter(fn x -> String.starts_with?(x, "z") end)
+      |> Enum.reduce(wires, fn x, ws -> find(ws, x, connections) end)
+
+    zs
+    |> Enum.filter(fn {k, _} -> String.starts_with?(k, "z") end)
+    |> Enum.sort()
+    |> Enum.map(fn tu -> elem(tu, 1) end)
+    |> Enum.reverse()
+    |> combine()
+  end
+
+  @doc """
+      # iex> "priv/day24/example.txt" |> Aoc.Day24.input() |> Aoc.Day24.part2()
+      # 4
+
+      iex> "priv/day24/input.txt" |> Aoc.Day24.input() |> Aoc.Day24.part2()
+      4
+  """
+  def part2({wires, connections}) do
+    # xdl =
+    #   wires
+    #   |> Enum.filter(fn {k, _} -> String.starts_with?(k, "x") end)
+    #   |> Enum.sort()
+    #   |> Enum.map(fn tu -> elem(tu, 1) end)
+
+    # ydl =
+    #   wires
+    #   |> Enum.filter(fn {k, _} -> String.starts_with?(k, "y") end)
+    #   |> Enum.sort()
+    #   |> Enum.map(fn tu -> elem(tu, 1) end)
+    #   |> Enum.count()
+
+    # 0..44
+    # |> Enum.map(fn i ->
+    #   ip =
+    #     i
+    #     |> Integer.to_string()
+    #     |> String.pad_leading(2, "0")
+    #     |> IO.inspect()
+
+    #   {ip,
+    #    connections
+    #    |> Enum.map(fn {l, o, r, _} -> {l, o, r} end)
+    #    |> Enum.member?({"x#{ip}", "XOR", "y#{ip}"})}
+    end)
+
+    # |> IO.inspect()
+    # |> Enum.filter(fn x -> x end)
+    # |> Enum.count()
+
+    # |> Enum.reverse()
+    # |> combine()
+
+    # connections
+    # |> IO.inspect()
+    # |> Enum.map(fn tu -> elem(tu, 3) end)
+    # |> IO.inspect()
+  end
+
+  def combine(bits) when is_list(bits) do
+    bits
+    |> Enum.reduce(0, fn bit, acc -> Bitwise.<<<(acc, 1) + bit end)
+  end
+
+  def find(wires, wire, connections) do
+    if Map.get(wires, wire) != nil do
+      wires
+    else
+      {l, o, r, _r} =
+        Enum.find(connections, fn {_, _, _, r} -> r == wire end)
+
+      v = gate(wires, l, o, r, connections)
+
+      Map.put(wires, wire, v)
+    end
+  end
+
+  def gate(map, l, o, r, connections) do
+    lv = Map.get(find(map, l, connections), l)
+    rv = Map.get(find(map, r, connections), r)
+    do_gate(lv, o, rv)
+  end
+
+  def do_gate(0, "AND", 0), do: 0
+  def do_gate(0, "AND", 1), do: 0
+  def do_gate(1, "AND", 0), do: 0
+  def do_gate(1, "AND", 1), do: 1
+
+  def do_gate(0, "OR", 0), do: 0
+  def do_gate(0, "OR", 1), do: 1
+  def do_gate(1, "OR", 0), do: 1
+  def do_gate(1, "OR", 1), do: 1
+
+  def do_gate(0, "XOR", 0), do: 0
+  def do_gate(0, "XOR", 1), do: 1
+  def do_gate(1, "XOR", 0), do: 1
+  def do_gate(1, "XOR", 1), do: 0
+
+  def input(filename) do
+    [top, bottom] =
+      filename
+      |> File.read!()
+      |> String.split("\n\n", trim: true)
+
+    t =
+      top
+      |> String.split("\n", trim: true)
+      |> Enum.map(fn line ->
+        [n, v] = String.split(line, ": ", trim: true)
+
+        {n, String.to_integer(v)}
+      end)
+      |> Map.new()
+
+    b =
+      bottom
+      |> String.split("\n", trim: true)
+      |> Enum.map(fn line ->
+        [l, r] = String.split(line, " -> ", trim: true)
+        [o, t, th] = String.split(l, " ", trim: true)
+
+        {o, t, th, r}
+      end)
+
+    {t, b}
+  end
+end
