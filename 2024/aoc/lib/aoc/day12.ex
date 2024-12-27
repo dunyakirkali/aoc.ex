@@ -105,11 +105,10 @@ defmodule Aoc.Day12 do
       [[{2, 1}, {2, 2}, {3, 2}, {3, 3}], [{0, 0}, {1, 0}, {2, 0}, {3, 0}], [{0, 1}, {0, 2}, {1, 1}, {1, 2}], [{0, 3}, {1, 3}, {2, 3}], [{3, 1}]]
   """
   def groups(graph) do
-    # Graph.loop_vertices(graph)
     graph
-    |> Graph.vertices()
+    |> Giraffe.Graph.vertices()
     |> Enum.map(fn vertex ->
-      Graph.reachable(graph, [vertex])
+      Giraffe.Graph.reachable(graph, [vertex])
       |> Enum.sort()
     end)
     |> Enum.uniq()
