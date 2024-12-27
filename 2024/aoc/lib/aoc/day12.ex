@@ -191,15 +191,14 @@ defmodule Aoc.Day12 do
 
   def to_graph(map) do
     map
-    |> Enum.reduce(Graph.new(type: :directed), fn {pos, plant}, g ->
+    |> Enum.reduce(Giraffe.Graph.new(type: :undirected), fn {pos, plant}, g ->
       pos
       |> neighbors()
-      |> Enum.reduce(Graph.add_vertex(g, pos, plant), fn npos, gg ->
+      |> Enum.reduce(Giraffe.Graph.add_vertex(g, pos, plant), fn npos, gg ->
         nchar = Map.get(map, npos, "#")
 
         if nchar == plant do
-          Graph.add_edge(gg, pos, npos)
-          |> Graph.add_edge(npos, pos)
+          Giraffe.Graph.add_edge(gg, pos, npos)
         else
           gg
         end
