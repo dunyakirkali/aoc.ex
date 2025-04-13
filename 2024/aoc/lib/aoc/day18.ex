@@ -16,7 +16,7 @@ defmodule Aoc.Day18 do
     |> Enum.into(%{})
     # |> draw(desti)
     |> to_graph(desti)
-    |> Graph.dijkstra({0, 0}, desti)
+    |> Giraffe.Graph.dijkstra({0, 0}, desti)
     |> Enum.count()
     |> Kernel.-(1)
   end
@@ -47,7 +47,7 @@ defmodule Aoc.Day18 do
       |> Enum.into(%{})
       |> draw(target)
       |> to_graph(target)
-      |> Graph.dijkstra({0, 0}, target)
+      |> Giraffe.Graph.dijkstra({0, 0}, target)
       |> Kernel.!=(nil)
 
     case mid_has_path do
@@ -60,16 +60,15 @@ defmodule Aoc.Day18 do
   end
 
   def to_graph(map, {sx, sy}) do
-    Enum.reduce(0..sy, Graph.new(type: :directed), fn y, g ->
+    Enum.reduce(0..sy, Giraffe.Graph.new(type: :undirected), fn y, g ->
       Enum.reduce(0..sx, g, fn x, gg ->
         if Map.get(map, {x, y}, ".") == "." do
           {x, y}
           |> neighbors()
           |> Enum.reject(fn {x, y} -> x < 0 or x > sx or y < 0 or y > sy end)
-          |> Enum.reduce(Graph.add_vertex(gg, {x, y}, "."), fn npos, ggg ->
+          |> Enum.reduce(Giraffe.Graph.add_vertex(gg, {x, y}, "."), fn npos, ggg ->
             if Map.get(map, npos, ".") == "." do
-              Graph.add_edge(ggg, {x, y}, npos)
-              |> Graph.add_edge(npos, {x, y})
+              Giraffe.Graph.add_edge(ggg, {x, y}, npos)
             else
               ggg
             end
