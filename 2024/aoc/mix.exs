@@ -38,7 +38,7 @@ defmodule Aoc.MixProject do
       {:cll, "~> 0.2.0"},
       {:nx, "~> 0.5"},
       {:math, "~> 0.7.0"},
-      {:giraffe, "~> 0.1.4"}
+      {:giraffe, "~> 0.2.1"}
     ]
   end
 end
