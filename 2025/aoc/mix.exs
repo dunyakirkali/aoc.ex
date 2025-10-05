@@ -22,21 +22,13 @@ defmodule Aoc.MixProject do
   defp deps do
     [
       {:nimble_parsec, "~> 1.4.2"},
-      # {:memoize, "~> 1.4.3"},
-      # {:benchee, "~> 1.3.1"},
-      # {:benchee_html, "~> 1.0.1", only: [:dev, :test]},
-      # {:printex, "~> 1.1.0"},
-      # {:distance, "~> 1.1.2"},
-      # {:poison, "~> 6.0.0"},
-      # {:comb, git: "https://github.com/tallakt/comb.git"},
-      # {:tensor, "~> 2.0"},
-      # {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      # {:exprof, "~> 0.2.0"},
-      # {:flow, "~> 1.2.4"},
-      # {:deque, "~> 1.2.0"},
-      # {:cll, "~> 0.2.0"},
-      # {:nx, "~> 0.5"},
-      # {:math, "~> 0.7.0"}
+      {:memoize, "~> 1.4.3"},
+      {:poison, "~> 6.0.0"},
+      {:comb, git: "https://github.com/tallakt/comb.git"},
+      {:flow, "~> 1.2.4"},
+      {:okasaki, "~> 1.0.1"},
+      {:cll, "~> 0.2.0"},
+      {:math, "~> 0.7.0"}
     ]
   end
 end
