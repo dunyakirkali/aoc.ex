@@ -6,14 +6,10 @@ defmodule Aoc.Day1 do
   def part1(list) do
     list
     |> Enum.reduce({50, 0}, fn {dir, amt}, {acc, cnt} ->
-      na = turn(dir, acc, amt)
-      if(na == 0, do: {na, cnt + 1}, else: {na, cnt})
+      turn(dir, amt, {acc, cnt})
     end)
     |> elem(1)
   end
-
-  defp turn(:right, current, amount), do: rem(current + amount, 100)
-  defp turn(:left, current, amount), do: rem(rem(current - amount, 100) + 100, 100)
 
   @doc """
       iex> Aoc.Day1.part2([right: 1000])
@@ -28,30 +24,40 @@ defmodule Aoc.Day1 do
   def part2(list) do
     list
     |> Enum.reduce({50, 0}, fn {dir, amt}, {acc, cnt} ->
-      passes = passes_through_zero(acc, dir, amt)
-
-      na = turn(dir, acc, amt)
-      {na, cnt + passes}
+      pass(dir, amt, {acc, cnt})
     end)
     |> elem(1)
   end
 
-  defp passes_through_zero(p, :right, amt), do: div(p + amt, 100)
-  defp passes_through_zero(0, :left, amt), do: div(amt, 100)
-  defp passes_through_zero(p, :left, amt) when amt < p, do: 0
-  defp passes_through_zero(p, :left, amt), do: 1 + div(amt - p, 100)
+  defp pass(:left, 0, {position, acc}), do: {position, acc}
+
+  defp pass(:left, amount, {position, acc}) when rem(position, 100) == 0,
+    do: pass(:left, amount - 1, {-1, acc + 1})
+
+  defp pass(:left, amount, {position, acc}), do: pass(:left, amount - 1, {position - 1, acc})
+
+  defp pass(:right, 0, {position, acc}), do: {position, acc}
+
+  defp pass(:right, amount, {position, acc}) when rem(position, 100) == 0,
+    do: pass(:right, amount - 1, {1, acc + 1})
+
+  defp pass(:right, amount, {position, acc}), do: pass(:right, amount - 1, {position + 1, acc})
+
+  defp turn(:left, 0, {position, acc}) when rem(position, 100) == 0, do: {0, acc + 1}
+  defp turn(:left, 0, {position, acc}), do: {position, acc}
+  defp turn(:left, amount, {position, acc}), do: turn(:left, amount - 1, {position - 1, acc})
+
+  defp turn(:right, 0, {position, acc}) when rem(position, 100) == 0, do: {0, acc + 1}
+  defp turn(:right, 0, {position, acc}), do: {position, acc}
+  defp turn(:right, amount, {position, acc}), do: turn(:right, amount - 1, {position + 1, acc})
+
+  defp parse_turn(<<"L", rest::binary>>), do: {:left, String.to_integer(rest)}
+  defp parse_turn(<<"R", rest::binary>>), do: {:right, String.to_integer(rest)}
 
   def input(filename) do
     filename
     |> File.read!()
     |> String.split("\n", trim: true)
-    |> Enum.map(fn x ->
-      [dir | rest] = String.graphemes(x)
-
-      case dir do
-        "R" -> {:right, String.to_integer(Enum.join(rest))}
-        "L" -> {:left, String.to_integer(Enum.join(rest))}
-      end
-    end)
+    |> Enum.map(&parse_turn/1)
   end
 end
