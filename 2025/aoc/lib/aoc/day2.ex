@@ -8,13 +8,7 @@ defmodule Aoc.Day2 do
     |> Enum.flat_map(fn range ->
       range
       |> Enum.to_list()
-      |> Enum.reduce([], fn n, acc ->
-        if is_invalid_1(n) do
-          [n | acc]
-        else
-          acc
-        end
-      end)
+      |> Enum.filter(&is_invalid_1/1)
     end)
     |> Enum.sum()
   end
@@ -28,13 +22,7 @@ defmodule Aoc.Day2 do
     |> Enum.flat_map(fn range ->
       range
       |> Enum.to_list()
-      |> Enum.reduce([], fn n, acc ->
-        if is_invalid_2(n) do
-          [n | acc]
-        else
-          acc
-        end
-      end)
+      |> Enum.filter(&is_invalid_2/1)
     end)
     |> Enum.sum()
   end
