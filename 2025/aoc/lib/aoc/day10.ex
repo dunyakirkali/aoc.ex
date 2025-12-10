@@ -1,4 +1,6 @@
 defmodule Aoc.Day10 do
+  use Memoize
+
   @doc """
       iex> "priv/day10/example.txt" |> Aoc.Day10.input() |> Aoc.Day10.part1()
       7
@@ -12,13 +14,99 @@ defmodule Aoc.Day10 do
   end
 
   @doc """
+      iex> "priv/day10/example.txt" |> Aoc.Day10.input() |> Aoc.Day10.part2()
+      33
+  """
+  def part2(input) do
+    input
+    |> Enum.map(fn {_indicators, wiring, joltage} ->
+      solve_with_linear_programming(wiring, joltage)
+    end)
+    |> Enum.sum()
+  end
+
+  @doc """
+      iex> {[".", "#", "#", "."], [[0, 1], [0, 2], [2, 3], [2], [1, 3], [3]], [3, 5, 4, 7]} |> Aoc.Day10.count_min_press_for_j()
+      10
+
+      iex> {[".", ".", ".", "#", "."], [[1, 2, 3, 4], [0, 1, 2], [0, 4], [2, 3], [0, 2, 3, 4]], [7, 5, 12, 7, 2]} |> Aoc.Day10.count_min_press_for_j()
+      12
+  """
+  def count_min_press_for_j({_indicators, wiring, joltage}) do
+    solve_with_linear_programming(wiring, joltage)
+  end
+
+  defp solve_with_linear_programming(wiring, joltage) do
+    problem = Dantzig.Problem.new(direction: :minimize)
+
+    {problem, variables} =
+      Enum.reduce(
+        1..length(wiring),
+        {problem, []},
+        fn num, {problem, variables} ->
+          {problem, variable} =
+            Dantzig.Problem.new_variable(problem, "#{num}",
+              min: 0,
+              type: :integer
+            )
+
+          {problem, [variable | variables]}
+        end
+      )
+
+    variables = Enum.reverse(variables)
+
+    size = length(joltage) - 1
+
+    matrices =
+      Enum.map(wiring, fn button ->
+        for i <- 0..size do
+          if i in button, do: 1, else: 0
+        end
+      end)
+      |> transpose()
+
+    {:ok, solution} =
+      matrices
+      |> Enum.with_index()
+      |> Enum.reduce(problem, fn {matrix, index}, problem ->
+        applied_vars =
+          Enum.zip(matrix, variables)
+          |> Enum.filter(fn {val, _var} -> val == 1 end)
+          |> Enum.map(&elem(&1, 1))
+
+        Dantzig.Problem.add_constraint(
+          problem,
+          Dantzig.Constraint.new(
+            Dantzig.Polynomial.sum(applied_vars),
+            :==,
+            Enum.at(joltage, index)
+          )
+        )
+      end)
+      |> Dantzig.Problem.increment_objective(Dantzig.Polynomial.sum(variables))
+      |> DantzigHiGHSFixed.solve()
+
+    solution.variables
+    |> Map.values()
+    |> Enum.sum()
+    |> round()
+  end
+
+  defp transpose(rows) do
+    rows
+    |> Enum.zip()
+    |> Enum.map(&Tuple.to_list/1)
+  end
+
+  @doc """
       iex> {[".", "#", "#", "."], [[0, 1], [0, 2], [2, 3], [2], [1, 3], [3]], [3, 5, 4, 7]} |> Aoc.Day10.count_min_press()
       2
-      
+
       iex> {[".", ".", ".", "#", "."], [[1, 2, 3, 4], [0, 1, 2], [0, 4], [2, 3], [0, 2, 3, 4]], [7, 5, 12, 7, 2]} |> Aoc.Day10.count_min_press()
       3
   """
-  def count_min_press({indicators, wiring, joltage}) do
+  def count_min_press({indicators, wiring, _joltage}) do
     wiring
     |> Enum.count()
     |> generate()
@@ -36,11 +124,10 @@ defmodule Aoc.Day10 do
     |> Enum.filter(fn {c, _} ->
       c != 0
     end)
-    |> IO.inspect()
     |> Enum.map(fn {count, arr} ->
       {count,
        arr
-       |> Enum.reduce(for(x <- 1..length(indicators), do: "."), fn c, acc ->
+       |> Enum.reduce(for(_x <- 1..length(indicators), do: "."), fn c, acc ->
          case Enum.at(acc, c) do
            "#" -> List.replace_at(acc, c, ".")
            "." -> List.replace_at(acc, c, "#")
@@ -50,14 +137,13 @@ defmodule Aoc.Day10 do
     |> Enum.filter(fn {_, x} ->
       x == indicators
     end)
-    |> IO.inspect(label: "!")
     |> Enum.min_by(fn {c, _} -> c end)
     |> elem(0)
   end
 
-  def generate(0), do: [[]]
+  defmemo(generate(0), do: [[]])
 
-  def generate(n) when n > 0 do
+  defmemo generate(n) when n > 0 do
     for i <- 0..(2 ** n - 1) do
       Integer.to_string(i, 2)
       |> String.pad_leading(n, "0")
@@ -96,6 +182,7 @@ defmodule Aoc.Day10 do
 
       wiring =
         r
+        |> Enum.reverse()
         |> Enum.map(fn b ->
           b
           |> String.graphemes()

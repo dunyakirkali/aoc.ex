@@ -28,7 +28,9 @@ defmodule Aoc.MixProject do
       {:flow, "~> 1.2.4"},
       {:okasaki, "~> 1.0.1"},
       {:cll, "~> 0.2.0"},
-      {:math, "~> 0.7.0"}
+      {:math, "~> 0.7.0"},
+      {:fixpoint, "~> 0.6.1"},
+      {:dantzig, "~> 0.2.0"}
     ]
   end
 end
